@@ -16,10 +16,10 @@ export const NextButton = (props) => {
   const { children, ...restProps } = props;
   return (
     <button
-      className="touch-manipulation btn bg-success aspect-square w-10 px-0 flex justify-center items-center rounded-full me-5 cursor-pointer absolute bottom-5 left-90 shadow"
+      className="touch-manipulation btn bg-success aspect-square w-10 px-0 flex justify-center items-center rounded-full me-5 cursor-pointer absolute bottom-5 left-110 shadow"
       {...restProps}
     >
-      <i className="bx bx-left-arrow-alt bx-sm"></i>
+      <i className="bx bx-right-arrow-alt bx-sm"></i>
       {children}
     </button>
   );

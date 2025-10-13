@@ -1,18 +1,91 @@
 import Header from "./Header";
 import useEmblaCarousel from "embla-carousel-react";
 import { usePrevNextButtons } from "./hooks/usePrevNextButtons";
+import { useDotButton } from "./hooks/useDotBtn";
+import { DotButton } from "./embela/embelaDotBtn";
 import { NextButton, PrevButton } from "./embela/EmblaCarouselArrowButtons";
 
-export default function Main(props) {
-  const [emblaRef] = useEmblaCarousel();
-    const { slides, options } = props;
-  const [emblaRef, emblaApi] = useEmblaCarousel(options);
-   const {
-      prevBtnDisabled,
-      nextBtnDisabled,
-      onPrevButtonClick,
-      onNextButtonClick,
-    } = usePrevNextButtons(emblaApi);
+export default function Main() {
+  const slides = [
+    <div className="h-53 w-80 p-5 rounded-4xl flex flex-col bg-blue-300">
+      <p className="text-3xl text-gray-800 font-bold h-[85%]">
+        Never had such great service before
+      </p>
+      <div className="flex items-center">
+        <div className="w-12 aspect-square avatar rounded-4xl bg-primary"></div>
+        <div className="ms-1.5">
+          <p className="font-bold text-sm">John Doe</p>{" "}
+          <div>
+            <i className="bx bxs-star text-warning"></i>
+            <i className="bx bxs-star text-warning"></i>
+            <i className="bx bxs-star text-warning"></i>
+            <i className="bx bxs-star text-warning"></i>
+          </div>
+        </div>
+      </div>
+    </div>,
+    <div className="h-53 w-80 p-5 rounded-4xl flex flex-col bg-blue-400">
+      <p className="text-3xl  text-gray-800 font-bold h-[85%]">
+        Love working with my pals here
+      </p>
+      <div className="flex items-center">
+        <div className="w-12 aspect-square avatar rounded-4xl bg-primary"></div>
+        <div className="ms-1.5">
+          <p className="font-bold text-sm">John Doe</p>{" "}
+          <div>
+            <i className="bx bxs-star text-warning"></i>
+            <i className="bx bxs-star text-warning"></i>
+            <i className="bx bxs-star text-warning"></i>
+            <i className="bx bxs-star text-warning"></i>
+          </div>
+        </div>
+      </div>
+    </div>,
+
+    <div className="h-53 w-80 p-5 rounded-4xl flex flex-col bg-blue-400">
+      <p className="text-3xl  text-gray-800 font-bold h-[85%]">
+        Love working with my pals here
+      </p>
+      <div className="flex items-center">
+        <div className="w-12 aspect-square avatar rounded-4xl bg-primary"></div>
+        <div className="ms-1.5">
+          <p className="font-bold text-sm">John Doe</p>{" "}
+          <div>
+            <i className="bx bxs-star text-warning"></i>
+            <i className="bx bxs-star text-warning"></i>
+            <i className="bx bxs-star text-warning"></i>
+            <i className="bx bxs-star text-warning"></i>
+          </div>
+        </div>
+      </div>
+    </div>,
+
+    <div className="h-53 w-80 p-5 rounded-4xl flex flex-col bg-blue-500">
+      <p className="text-3xl  text-gray-800 font-bold h-[85%]">
+        i could stay here forever
+      </p>
+      <div className="flex items-center">
+        <div className="w-12 aspect-square avatar rounded-4xl bg-primary"></div>
+        <div className="ms-1.5">
+          <p className="font-bold text-sm">John Doe</p>{" "}
+          <div>
+            <i className="bx bxs-star text-warning"></i>
+            <i className="bx bxs-star text-warning"></i>
+            <i className="bx bxs-star text-warning"></i>
+            <i className="bx bxs-star text-warning"></i>
+          </div>
+        </div>
+      </div>
+    </div>,
+  ];
+  const [emblaRef, emblaApi] = useEmblaCarousel({loop:true});
+
+  const {
+    prevBtnDisabled,
+    nextBtnDisabled,
+    onPrevButtonClick,
+    onNextButtonClick,
+  } = usePrevNextButtons(emblaApi);
   return (
     <section>
       <Header />
@@ -232,71 +305,30 @@ export default function Main(props) {
         </section>
         <section className="w-[85%] mx-auto min-h-[200px] flex mt-20">
           <div className="w-[30%]">
-            <p className="text-7xl w-90 font-extrabold box-decoration-clone leading-[1.2]">
-              loved by many!🤩
+            <p className="text-7xl w-90 font-extrabold leading-[1.2]">
+              loved by many! 🤩
             </p>
             <p className="mt-3 text-gray-500 w-[85%]">
               Our customers are our biggest fans. See what they have to say
               about us.
             </p>
           </div>
+
+          {/* ✅ Embla carousel wrapper */}
           <div
-            className="embla overflow-x-hidden overflow-y-clip h-[300px] W-fit ps-5 relative"
+            className="embla relative overflow-hidden ps-5 w-fit h-[300px]"
             ref={emblaRef}
           >
-            <div className="flex gap-x-6 w-fit">
-              <div className="h-53 w-80 p-5 rounded-4xl flex flex-col bg-blue-300">
-                <p className="text-3xl text-gray-800 font-bold h-[85%]">
-                  Never had such great service before
-                </p>
-                <div className="flex items-center">
-                  <div className="w-12 aspect-square avatar rounded-4xl bg-primary"></div>
-                  <div className="ms-1.5">
-                    <p className="font-bold text-sm">John Doe</p>{" "}
-                    <div>
-                      <i className="bx bxs-star text-warning"></i>
-                      <i className="bx bxs-star text-warning"></i>
-                      <i className="bx bxs-star text-warning"></i>
-                      <i className="bx bxs-star text-warning"></i>
-                    </div>
-                  </div>
+            {/* ✅ Embla container */}
+            <div className="embla__container flex flex-nowrap gap-x-6 px-6">
+              {slides.map((slide, index) => (
+                <div key={index} className="embla__slide flex-none w-80 h-fit">
+                  {slide}
                 </div>
-              </div>
-              <div className="h-53 w-80 p-5 rounded-4xl flex flex-col bg-blue-400">
-                <p className="text-3xl text-gray-800 font-bold h-[85%]">
-                  It always feels like home here!
-                </p>
-                <div className="flex items-center">
-                  <div className="w-12 aspect-square avatar rounded-4xl bg-primary"></div>
-                  <div className="ms-1.5">
-                    <p className="font-bold text-sm">John Doe</p>{" "}
-                    <div>
-                      <i className="bx bxs-star text-warning"></i>
-                      <i className="bx bxs-star text-warning"></i>
-                      <i className="bx bxs-star text-warning"></i>
-                      <i className="bx bxs-star text-warning"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="h-53 w-80 p-5 rounded-4xl flex flex-col bg-blue-500">
-                <p className="text-3xl  text-gray-800 font-bold h-[85%]">
-                  Love working with my pals here
-                </p>
-                <div className="flex items-center">
-                  <div className="w-12 aspect-square avatar rounded-4xl bg-primary"></div>
-                  <div className="ms-1.5">
-                    <p className="font-bold text-sm">John Doe</p>{" "}
-                    <div>
-                      <i className="bx bxs-star text-warning"></i>
-                      <i className="bx bxs-star text-warning"></i>
-                      <i className="bx bxs-star text-warning"></i>
-                      <i className="bx bxs-star text-warning"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
+
+            {/* ✅ Buttons */}
             <PrevButton
               onClick={onPrevButtonClick}
               disabled={prevBtnDisabled}
@@ -305,6 +337,7 @@ export default function Main(props) {
               onClick={onNextButtonClick}
               disabled={nextBtnDisabled}
             />
+
           </div>
         </section>
         <footer className="footer sm:footer-horizontal bg-neutral text-neutral-content grid-rows-2 pt-15 mt-25 ps-25">
