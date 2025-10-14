@@ -1,8 +1,7 @@
 import Header from "./Header";
 import useEmblaCarousel from "embla-carousel-react";
 import { usePrevNextButtons } from "./hooks/usePrevNextButtons";
-import { useDotButton } from "./hooks/useDotBtn";
-import { DotButton } from "./embela/embelaDotBtn";
+import { useVerticalCarousel } from "./hooks/useVerticalCarousel";
 import { NextButton, PrevButton } from "./embela/EmblaCarouselArrowButtons";
 
 export default function Main() {
@@ -78,7 +77,7 @@ export default function Main() {
       </div>
     </div>,
   ];
-  const [emblaRef, emblaApi] = useEmblaCarousel({loop:true});
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
 
   const {
     prevBtnDisabled,
@@ -161,7 +160,27 @@ export default function Main() {
           </div>
         </section>
         <section className="flex w-[80%] mx-auto mt-20">
-          <div className="bg-emerald-400 w-[45%] min-h-[300px] max-h-[300px] rounded-4xl border border-t-5"></div>
+          
+          <div className="bg-emerald-400 w-[45%] min-h-[300px] max-h-[300px] rounded-4xl border border-t-5 overflow-x-hidden">
+            <div className="bg-accent w-full h-full fle overflow-y-clip ">
+          
+              <div>
+                 <img
+                src="/images/coffee.jpg"
+                className="object-cover h-full w-full"
+                alt=""
+              />
+              </div>
+               <div>
+                 <img
+                src="/images/pizza.jpg"
+                className="object-cover h-full w-full"
+                alt=""
+              />
+              </div>
+             
+            </div>
+          </div>
           <div className="w-[55%] mx-auto flex justify-center">
             <div className="w-[70%]">
               <p className="text-4xl font-extrabold">
@@ -337,7 +356,6 @@ export default function Main() {
               onClick={onNextButtonClick}
               disabled={nextBtnDisabled}
             />
-
           </div>
         </section>
         <footer className="footer sm:footer-horizontal bg-neutral text-neutral-content grid-rows-2 pt-15 mt-25 ps-25">
