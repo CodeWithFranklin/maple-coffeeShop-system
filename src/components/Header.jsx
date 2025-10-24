@@ -62,9 +62,6 @@ export default function Header() {
               </details>
             </li>
             <li>
-              <a className="font-bold">About Us</a>
-            </li>
-            <li>
               <a className="font-bold">Contact</a>
             </li>
           </ul>

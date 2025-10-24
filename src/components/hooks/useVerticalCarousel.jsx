@@ -1,13 +1,5 @@
 import { useEffect, useCallback, useState } from "react";
-import useEmblaCarousel from "embla-carousel-react";
-import Autoplay from "embla-carousel-autoplay";
-
-export const useVerticalCarousel = (options = {}, delay = 5000) => {
-  const [emblaRef, emblaApi] = useEmblaCarousel(
-    { axis: "y", loop: true, ...options },
-    [Autoplay({ delay })]
-  );
-
+export const useVerticalCarousel = (emblaApi) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [scrollSnaps, setScrollSnaps] = useState([]);
 
@@ -28,7 +20,6 @@ export const useVerticalCarousel = (options = {}, delay = 5000) => {
   );
 
   return {
-    emblaRef,
     selectedIndex,
     scrollSnaps,
     scrollTo,

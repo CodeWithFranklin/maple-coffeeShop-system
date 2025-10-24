@@ -1,5 +1,6 @@
 import Header from "./Header";
 import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
 import { usePrevNextButtons } from "./hooks/usePrevNextButtons";
 import { useVerticalCarousel } from "./hooks/useVerticalCarousel";
 import { NextButton, PrevButton } from "./embela/EmblaCarouselArrowButtons";
@@ -7,7 +8,7 @@ import { NextButton, PrevButton } from "./embela/EmblaCarouselArrowButtons";
 export default function Main() {
   const slides = [
     <div className="h-53 w-80 p-5 rounded-4xl flex flex-col bg-blue-300">
-      <p className="text-3xl text-gray-800 font-bold h-[85%]">
+      <p className="text-3xl text-gray-800 font-extrabold h-[85%]">
         Never had such great service before
       </p>
       <div className="flex items-center">
@@ -24,8 +25,8 @@ export default function Main() {
       </div>
     </div>,
     <div className="h-53 w-80 p-5 rounded-4xl flex flex-col bg-blue-400">
-      <p className="text-3xl  text-gray-800 font-bold h-[85%]">
-        Love working with my pals here
+      <p className="text-3xl  text-gray-800 font-extrabold h-[85%]">
+        Can't wait tell my friends all about this place
       </p>
       <div className="flex items-center">
         <div className="w-12 aspect-square avatar rounded-4xl bg-primary"></div>
@@ -42,7 +43,7 @@ export default function Main() {
     </div>,
 
     <div className="h-53 w-80 p-5 rounded-4xl flex flex-col bg-blue-400">
-      <p className="text-3xl  text-gray-800 font-bold h-[85%]">
+      <p className="text-3xl  text-gray-800 font-extrabold h-[85%]">
         Love working with my pals here
       </p>
       <div className="flex items-center">
@@ -60,8 +61,8 @@ export default function Main() {
     </div>,
 
     <div className="h-53 w-80 p-5 rounded-4xl flex flex-col bg-blue-500">
-      <p className="text-3xl  text-gray-800 font-bold h-[85%]">
-        i could stay here forever
+      <p className="text-3xl  text-gray-800 font-extrabold h-[85%]">
+        i could stay here until my lunch break is over
       </p>
       <div className="flex items-center">
         <div className="w-12 aspect-square avatar rounded-4xl bg-primary"></div>
@@ -77,14 +78,26 @@ export default function Main() {
       </div>
     </div>,
   ];
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
+  const [horizontalaRef, horizontalApi] = useEmblaCarousel({ loop: true });
+  const [verticalRef, verticalApi] = useEmblaCarousel(
+    { axis: "y", loop: true },
+    [Autoplay({ delay: 5000 })]
+  );
 
+  // Pass emblaApi to the vertical carousel hook
+  const { selectedIndex, scrollSnaps, scrollTo } =
+    useVerticalCarousel(verticalApi);
+
+  // Pass emblaApi to the prev/next hook for controls
   const {
     prevBtnDisabled,
     nextBtnDisabled,
     onPrevButtonClick,
     onNextButtonClick,
-  } = usePrevNextButtons(emblaApi);
+  } = usePrevNextButtons(horizontalApi);
+
+  const images = ["/images/coffee.jpg", "/images/pizza.jpg"];
+
   return (
     <section>
       <Header />
@@ -112,9 +125,51 @@ export default function Main() {
               </div>
             </div>
           </div>
-          <div className="flex flex-col gap-7 w-full mt-15 ps-15">
-            <div className="bg-primary h-[50%] rounded-4xl"></div>
-            <div className="bg-indigo-400 h-[50%] rounded-4xl"></div>
+          <div className="flex flex-col gap-7 w-full mt-8 ps-15">
+            <div className="bg-indigo-400 h-[47%] rounded-4xl relative pt-5 ps-5 overflow-hidden">
+              <p className="text-2xl font-extrabold">Top pick!</p>
+              <p className="w-[45%]">
+                Lorem ipsum dolor, sit amet consectetur adipisicing elit.
+              </p>
+              <img
+                src="/images/ad-image-2.png"
+                className="w-60 absolute right-[-10px] bottom-0 "
+                alt=""
+              />
+              <button className="btn mt-3 h-7 pe-0.5 ps-3 rounded-3xl">
+                Add to cart{" "}
+                <span className="bg-success rounded-full avatar w-6 aspect-square flex items-center justify-center">
+                  <i className="bx bx-cart-add bx-xs"></i>
+                </span>{" "}
+              </button>
+            </div>
+            <div className="bg-indigo-300 h-[53%] pt-5 ps-5 bg-[url('/images/i-like-food.svg')] bg-no-repeat bg-position-[left_10.1rem_top_7.1rem]">
+              <p className="text-4xl font-extrabold w-[80%] leading-[1.1] h-[175px]">
+                "Leche wednesday or supreme friday?"
+              </p>
+              <div className="avatar-group -space-x-3 h-8 w-fit mt-5">
+                <div className="avatar w-8 border-0">
+                  <div className="">
+                    <img src="https://img.daisyui.com/images/profile/demo/batperson@192.webp" />
+                  </div>
+                </div>
+                <div className="avatar w-8 border-0">
+                  <div className="">
+                    <img src="https://img.daisyui.com/images/profile/demo/spiderperson@192.webp" />
+                  </div>
+                </div>
+                <div className="avatar w-8 border-0">
+                  <div className="">
+                    <img src="https://img.daisyui.com/images/profile/demo/averagebulk@192.webp" />
+                  </div>
+                </div>
+                <div className="avatar avatar-placeholder w-8 border-0">
+                  <div className="bg-neutral text-neutral-content text-xs">
+                    <span>10k+</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
         <section className="min-h-fit mt-25 mx-auto w-[80%]">
@@ -159,26 +214,41 @@ export default function Main() {
             </div>
           </div>
         </section>
-        <section className="flex w-[80%] mx-auto mt-20">
-          
-          <div className="bg-emerald-400 w-[45%] min-h-[300px] max-h-[300px] rounded-4xl border border-t-5 overflow-x-hidden">
-            <div className="bg-accent w-full h-full fle overflow-y-clip ">
-          
-              <div>
-                 <img
-                src="/images/coffee.jpg"
-                className="object-cover h-full w-full"
-                alt=""
-              />
+        <section className="flex w-[80%] mx-auto mt-20 items-center py-5">
+          <div className="gap-10">
+            {/* Carousel container */}
+            <div
+              className="w-full h-[300px] overflow-hidden rounded-3xl relative"
+              ref={verticalRef}
+            >
+              {/* Slides */}
+              <div className="flex flex-col h-full w-full ">
+                {images.map((src, index) => (
+                  <div
+                    key={index}
+                    className="flex-[0_0_100%] h-full w-full relative"
+                  >
+                    <img
+                      src={src}
+                      alt=""
+                      className="object-cover flex-[0_0_100%]  w-full h-full rounded-3xl"
+                    />
+                  </div>
+                ))}
               </div>
-               <div>
-                 <img
-                src="/images/pizza.jpg"
-                className="object-cover h-full w-full"
-                alt=""
-              />
+
+              {/* Vertical badges (like dots) */}
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-2 ">
+                {scrollSnaps.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => scrollTo(index)}
+                    className={`w-3 h-3 rounded-full cursor-pointer transition-all duration-300 ${
+                      index === selectedIndex ? "bg-white" : "bg-gray-400/70"
+                    }`}
+                  />
+                ))}
               </div>
-             
             </div>
           </div>
           <div className="w-[55%] mx-auto flex justify-center">
@@ -336,7 +406,7 @@ export default function Main() {
           {/* ✅ Embla carousel wrapper */}
           <div
             className="embla relative overflow-hidden ps-5 w-fit h-[300px]"
-            ref={emblaRef}
+            ref={horizontalaRef}
           >
             {/* ✅ Embla container */}
             <div className="embla__container flex flex-nowrap gap-x-6 px-6">
@@ -358,7 +428,7 @@ export default function Main() {
             />
           </div>
         </section>
-        <footer className="footer sm:footer-horizontal bg-neutral text-neutral-content grid-rows-2 pt-15 mt-25 ps-25">
+        <footer className="footer sm:footer-horizontal bg-neutral text-neutral-content grid-rows-2 pt-15 pb-7 mt-25 ps-25">
           <aside>
             <svg
               width="50"
