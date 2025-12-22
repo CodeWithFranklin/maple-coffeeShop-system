@@ -434,9 +434,6 @@ export default function Main() {
                         <p className="badge badge-soft font-semibold text-[13px] h-[21px] flex items-center rounded-4xl bg-red-200 text-red-900 border-0">
                           Lounge
                         </p>
-                        <p className="badge badge-soft font-semibold text-[13px] h-[21px] flex items-center rounded-4xl bg-red-200 text-red-900 border-0">
-                          Lounge
-                        </p>
                       </div>
                       <p
                         className="font-light text-sm mt-2 line-clamp-2 max-h-[40px]"
