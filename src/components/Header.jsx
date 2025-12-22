@@ -1,7 +1,7 @@
 export default function Header() {
   return (
-    <div className="flex justify-center pt-3">
-      <div className="navbar bg-base-100 w-[85%]">
+    <div className="flex justify-center pt-3 mb-20">
+      <div className="navbar w-[85%] bg-white/30 backdrop-blur-lg rounded-3xl py-3 pe-5 fixed z-1">
         <div className="navbar-start">
           <div className="dropdown">
             <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">

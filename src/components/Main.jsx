@@ -7,7 +7,7 @@ import { NextButton, PrevButton } from "./embela/EmblaCarouselArrowButtons";
 
 export default function Main() {
   const slides = [
-    <div className="h-53 w-80 p-5 rounded-4xl flex flex-col bg-blue-300">
+    <div className="h-53 w-80 p-5 rounded-4xl flex flex-col bg-blue-300 bg-[url('/images/wiggle.svg')] bg-no-repeat bg-size-[auto_100px]">
       <p className="text-3xl text-gray-800 font-extrabold h-[85%]">
         Never had such great service before
       </p>
@@ -24,7 +24,7 @@ export default function Main() {
         </div>
       </div>
     </div>,
-    <div className="h-53 w-80 p-5 rounded-4xl flex flex-col bg-blue-400">
+    <div className="h-53 w-80 p-5 rounded-4xl flex flex-col bg-blue-400 bg-[url('/images/wiggle.svg')] bg-no-repeat bg-size-[auto_100px]">
       <p className="text-3xl  text-gray-800 font-extrabold h-[85%]">
         Can't wait tell my friends all about this place
       </p>
@@ -42,7 +42,7 @@ export default function Main() {
       </div>
     </div>,
 
-    <div className="h-53 w-80 p-5 rounded-4xl flex flex-col bg-blue-400">
+    <div className="h-53 w-80 p-5 rounded-4xl flex flex-col bg-blue-400 bg-[url('/images/wiggle.svg')] bg-no-repeat bg-size-[auto_100px]">
       <p className="text-3xl  text-gray-800 font-extrabold h-[85%]">
         Love working with my pals here
       </p>
@@ -60,7 +60,7 @@ export default function Main() {
       </div>
     </div>,
 
-    <div className="h-53 w-80 p-5 rounded-4xl flex flex-col bg-blue-500">
+    <div className="h-53 w-80 p-5 rounded-4xl flex flex-col bg-blue-500 bg-[url('/images/wiggle.svg')] bg-no-repeat bg-size-[auto_100px]">
       <p className="text-3xl  text-gray-800 font-extrabold h-[85%]">
         i could stay here until my lunch break is over
       </p>
@@ -115,7 +115,7 @@ export default function Main() {
                 <p className="">save up to 20% off your first order.</p>
               </div>
 
-              <div className="badge badge-soft py-[23px] pe-0 font-semibold px-5 mt-6 bg-success rounded-3xl">
+              <div className="badge badge-soft py-[23px] pe-0 font-semibold px-5 mt-6 bg-lime-400 rounded-3xl">
                 <a href="">
                   Our Services?
                   <span className="avatar rounded-full aspect-square bg-blue-40 ms-2 min-w-9 justify-center items-center">
@@ -126,99 +126,102 @@ export default function Main() {
             </div>
           </div>
           <div className="flex flex-col gap-7 w-full mt-8 ps-15">
-            <div className="bg-indigo-400 h-[47%] rounded-4xl relative pt-5 ps-5 overflow-hidden">
-              <p className="text-2xl font-extrabold">Top pick!</p>
-              <p className="w-[45%]">
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit.
-              </p>
+            <div className="bg-yellow-800 h-[47%] rounded-4xl relative pt-5 ps-5 overflow-hidden flex flex-col justify-center">
+              <div className="text-3xl font-extrabold w-[45%]">
+                <p className="text-white">pick for the week!</p>
+                <p className="text-yellow-500 text-amber-500">13$</p>
+              </div>
+
               <img
                 src="/images/ad-image-2.png"
                 className="w-60 absolute right-[-10px] bottom-0 "
                 alt=""
               />
-              <button className="btn mt-3 h-7 pe-0.5 ps-3 rounded-3xl">
+
+              <button className="btn mt-4 h-7 pe-0.5 ps-3 rounded-3xl w-fit">
                 Add to cart{" "}
-                <span className="bg-success rounded-full avatar w-6 aspect-square flex items-center justify-center">
+                <span className="bg-lime-400 rounded-full avatar w-6 aspect-square flex items-center justify-center">
                   <i className="bx bx-cart-add bx-xs"></i>
                 </span>{" "}
               </button>
             </div>
-            <div className="bg-indigo-300 h-[53%] pt-5 ps-5 bg-[url('/images/i-like-food.svg')] bg-no-repeat bg-position-[left_10.1rem_top_7.1rem]">
-              <p className="text-4xl font-extrabold w-[80%] leading-[1.1] h-[175px]">
-                "Leche wednesday or supreme friday?"
-              </p>
-              <div className="avatar-group -space-x-3 h-8 w-fit mt-5">
-                <div className="avatar w-8 border-0">
+            <div className="bg-blue-300 h-[53%] pt-5 ps-5 bg-[url('/images/i-like-food.svg')] bg-no-repeat bg-position-[left_10.1rem_top_7.1rem]">
+              <div className="avatar-group -space-x-2 h-9 w-fit mt-1 float-right me-3">
+                <div className="avatar w-9 border-1">
                   <div className="">
                     <img src="https://img.daisyui.com/images/profile/demo/batperson@192.webp" />
                   </div>
                 </div>
-                <div className="avatar w-8 border-0">
+                <div className="avatar w-9 border-1">
                   <div className="">
                     <img src="https://img.daisyui.com/images/profile/demo/spiderperson@192.webp" />
                   </div>
                 </div>
-                <div className="avatar w-8 border-0">
+                <div className="avatar w-9 border-1">
                   <div className="">
                     <img src="https://img.daisyui.com/images/profile/demo/averagebulk@192.webp" />
                   </div>
                 </div>
-                <div className="avatar avatar-placeholder w-8 border-0">
-                  <div className="bg-neutral text-neutral-content text-xs">
-                    <span>10k+</span>
+                <div className="avatar avatar-placeholder w-9 border-1">
+                  <div className="text-black bg-white text-xs font-bold">
+                    <span>
+                      10k<i className="text-orange-400">+</i>
+                    </span>
                   </div>
                 </div>
               </div>
+              <p className="text-4xl font-extrabold w-[80%] leading-[1.1] h-[175px]">
+                <span className="text-lime-200">"</span>Leche wednesday or
+                supreme friday?<span className="text-lime-200">"</span>
+              </p>
+              <button className="btn btn-primary h-8">Our book club</button>
             </div>
           </div>
         </section>
         <section className="min-h-fit mt-25 mx-auto w-[80%]">
           <div className="flex justify-between gap-x-10">
             <div className="w-[45%] flex justify-center flex-col">
-              <p className="text-5xl pb-2 w-[90%] font-extrabold box-decoration-clone leading-[1.1]">
+              <p className="text-5xl pb-2 w-[90%] font-extrabold box-decoration-clone leading-[1.2]">
                 Maple is so more than just coffee{""}
-                <span className="text-warning">
-                  <i className="bx bxs-coffee-bean bx-md"></i>
-                </span>
               </p>
               <p className="mt-2 mb-2 text-[18px] w-[85%] text-gray-500">
                 Have a look at some of our various services we offer, we make
                 every visit count.
               </p>
             </div>
-            <div className="h-[150px] py-5 flex gap-x-5 justify-end flex-wrap items-center w-[55%]">
-              <p className="badge badge-soft font-semibold py-[16px] flex items-center rounded-4xl">
-                Cafe & Dinning
-                <i className="bx bx-sm mx-1 bx-restaurant"></i>
+            <div className="h-[150px] py-5 flex gap-x-5 justify-end flex-wrap items-center w-[45%]">
+              <p className="badge font-semibold py-[16px] flex items-center rounded-4xl bg-sky-100 text-green-900 border-0">
+                Cafe
+                <i className="bx bx-sm bx-coffee-togo"></i>
               </p>
-              <p className="badge badge-soft font-semibold py-[16px] flex items-center rounded-4xl">
+              <p className="badge font-semibold py-[16px] flex items-center rounded-4xl bg-yellow-200 text-yellow-900 border-0">
                 Delivery Service
-                <i className="bx bx-sm mx-1 bxs-truck"></i>
+                <i className="bx bx-sm bxs-truck"></i>
               </p>
-              <p className="badge badge-soft font-semibold py-[16px] flex items-center rounded-4xl">
+              <p className="badge badge-soft font-semibold py-[16px] flex items-center rounded-4xl border-0">
                 Co-work-Hub
-                <i className="bx bx-sm mx-1 bxs-group"></i>
+                <i className="bx bx-sm bxs-group"></i>
               </p>
-              <p className="badge badge-soft font-semibold py-[16px] flex items-center rounded-4xl">
+              <p className="badge font-semibold py-[16px] flex items-center rounded-4xl bg-green-100 text-green-900 border-0">
                 Library
-                <i className="bx bx-sm mx-1 bxs-book"></i>
+                <i className="bx bx-sm bxs-book"></i>
               </p>
-              <p className="badge badge-soft font-semibold py-[16px] flex items-center rounded-4xl">
+              <p className="badge badge-soft font-semibold py-[16px] flex items-center rounded-4xl bg-red-200 text-red-900 border-0">
                 Lounge
-                <i className="bx bx-sm mx-1 bxs-drink"></i>
+                <i className="bx bx-sm bxs-drink"></i>
               </p>
-              <p className="badge badge-soft font-semibold py-[16px] flex items-center rounded-4xl">
+              <p className="badge badge-soft font-semibold py-[16px] flex items-center rounded-4xl bg-lime-200 text-lime-900 border-0">
                 Spa
                 <i className="bx bx-sm mx-1 bxs-spa"></i>
               </p>
             </div>
           </div>
         </section>
-        <section className="flex w-[80%] mx-auto mt-20 items-center py-5">
+        <section className="flex w-[80%] mx-auto mt-20 items-center py-13 ps-10 shadow-xl rounded-4xl">
           <div className="gap-10">
             {/* Carousel container */}
             <div
-              className="w-full h-[300px] overflow-hidden rounded-3xl relative"
+              className="w-full h-[270px] overflow-hidden rounded-3xl relative"
               ref={verticalRef}
             >
               {/* Slides */}
@@ -231,7 +234,7 @@ export default function Main() {
                     <img
                       src={src}
                       alt=""
-                      className="object-cover flex-[0_0_100%]  w-full h-full rounded-3xl"
+                      className="object-cover flex-[0_0_100%] w-full h-full rounded-4xl"
                     />
                   </div>
                 ))}
@@ -256,29 +259,28 @@ export default function Main() {
               <p className="text-4xl font-extrabold">
                 Book your experience with us today!
               </p>
-              <p className="mt-4 text-[18px]">
-                Whether you're looking for a cozy spot to work, a relaxing
-                lounge to unwind, or a refreshing spa experience, we've got you
-                covered.
+              <p className="mt-4 text-[18px] font- text-gray-600">
+                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ut
+                sequi, impedit.
               </p>
-              <ul className="font-extralight text-gray-600 mt-2">
-                <li>
-                  <i class="bx bx-badge-check text-amber-300 me-1"></i>choose
+              <ul className="font-semibold text-gray-600 mt-2">
+                <li className="flex items-center">
+                  <i class="bx bx-badge-check me-1 text-yellow-400"></i>choose
                   from dining, workspace, lounge or spa
                 </li>
                 <li>
-                  <i class="bx bx-badge-check text-amber-300 me-1"></i>Easy
+                  <i class="bx bx-badge-check me-1 text-yellow-400"></i>easy
                   online booking
                 </li>
                 <li>
-                  <i class="bx bx-badge-check text-amber-300 me-1"></i>Flexible
+                  <i class="bx bx-badge-check me-1 text-yellow-400"></i>flexible
                   time slots to fit your schedule
                 </li>
               </ul>
-              <button className="bg-primary btn text-white rounded-4xl pe-1 mt-3">
+              <button className="bg-lime-300 btn rounded-4xl pe-1 mt-3 border-0">
                 Book a space!{" "}
                 <span className="bg-black rounded-full avatar w-8 aspect-square flex items-center justify-center">
-                  <i className="bx bx-right-arrow-alt bx-sm"></i>
+                  <i className="bx bx-right-arrow-alt bx-sm text-white"></i>
                 </span>
               </button>
             </div>
@@ -312,77 +314,306 @@ export default function Main() {
               <p className="text-4xl w-fit font-extrabold text-center">
                 We're cooking!
               </p>
-              <p className="w-130 text-center mt-4 mb-3 text-[20px] font-extralight">
+              <p className="w-150 text-center mt-4 mb-3 text-[20px] font-extralight">
                 We are always looking out for your tastes that's why we serve
                 the tastiest of our dishes for the best prices. Breakfast, lunch
                 and dinner we are always here for you.
               </p>
             </div>
             <div className="w-[90%] min-h-fit flex items-center flex-col mt-5 py-5">
-              <div className="flex justify-between w-[85%]">
-                <div className="flex flex-col justify-center items-center">
-                  <div className="flex justify-center relative">
-                    <div className="w-40 aspect-square avatar overflow-hidden rounded-full">
-                      <img src="/images/pizza.jpg" alt="pizza" />
+              <div className="flex flex-wrap gap-4 w-full justify-center">
+                <div className="w-[32%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
+                  <p className="text-3xl font-extrabold line-clamp-1">Pizza</p>
+                  <div className="flex h-55">
+                    <div className="w-[50%] grid">
+                      <p className="font-black text-lime-300 text-3xl mb-3">
+                        17$
+                      </p>
+                      <div className="flex gap-2 flex-wrap min-h-[20px]">
+                        <p className="badge font-semibold text-[13px] h-[21px] flex items-center rounded-4xl badge-soft border-0">
+                          Cafe
+                        </p>
+                        <p className="badge badge-soft font-semibold text-[13px] h-[21px] flex items-center rounded-4xl bg-red-200 text-red-900 border-0">
+                          Lounge
+                        </p>
+                        <p className="badge badge-soft font-semibold text-[13px] h-[21px] flex items-center rounded-4xl bg-red-200 text-red-900 border-0">
+                          Lounge
+                        </p>
+                      </div>
+                      <p
+                        className="font-light text-sm mt-2 line-clamp-2 max-h-[40px]"
+                        title="Lorem ipsum dolor sit, amet consectetur adipisicing
+                        elit.orem ipsum dolor sit, amet consectetur adipisicing
+                        elit."
+                      >
+                        Lorem ipsum dolor sit, amet consectetur adipisicing
+                        elit.orem ipsum dolor sit, amet consectetur adipisicing
+                        elit.
+                      </p>
+                      <div className="flex gap-x-1 items-center pb-4">
+                        <button className="mt-2 font-bold border-0 btn h-7 rounded-xl gap-x-1 bg-lime-300">
+                          Place order
+                        </button>
+                        <button
+                          className="btn rounded-full text-center mt-2 w-10 px-2 tooltip tooltip-top"
+                          data-tip="view menu"
+                        >
+                          <i className="bx bxs-food-menu bx-sm"></i>
+                        </button>
+                      </div>
                     </div>
-                    <div className="absolute btn h-7 min-w-12 rounded bottom-[-10px] flex flex-row justify-center items-center px-1 gap-x-0.5 text-[12px] font-extrabold text-gray-700">
-                      4.7k<i className="bx bx-heart bx-xs text-warning"></i>
+                    <div className="w-[48%] flex justify-center ">
+                      <img
+                        src="/images/pizza.jpg"
+                        className="h-[160px] aspect-square rounded-full"
+                        alt=""
+                      />
                     </div>
-                  </div>
-                  <div className="w-70 text-center mt-5">
-                    <p className="font-bold">Pizza</p>
-                    <p className="text-gray-600">
-                      Lorem ipsum dolor sit amet consectetur adipisicing elit
-                      sit amet consectetur adipisicing elit.
-                    </p>
-                    <button className="mt-2 pe-0 ps-2 text-center btn btn-soft h-7 rounded-full gap-x-1">
-                      Place order{" "}
-                      <i class="bx bxs-plus-circle bx-sm mt-[3px]"></i>{" "}
-                    </button>
                   </div>
                 </div>
-
-                <div className="flex flex-col justify-center items-center">
-                  <div className="flex justify-center relative">
-                    <div className="w-40 aspect-square avatar overflow-hidden rounded-full">
-                      <img src="/images/pizza.jpg" alt="pizza" />
+                <div className="w-[32%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
+                  <p className="text-3xl font-extrabold line-clamp-1">Pizza</p>
+                  <div className="flex h-55">
+                    <div className="w-[50%] grid">
+                      <p className="font-black text-lime-300 text-3xl mb-3">
+                        17$
+                      </p>
+                      <div className="flex gap-2 flex-wrap min-h-[20px]">
+                        <p className="badge font-semibold text-[13px] h-[21px] flex items-center rounded-4xl badge-soft border-0">
+                          Cafe
+                        </p>
+                        <p className="badge badge-soft font-semibold text-[13px] h-[21px] flex items-center rounded-4xl bg-red-200 text-red-900 border-0">
+                          Lounge
+                        </p>
+                        <p className="badge badge-soft font-semibold text-[13px] h-[21px] flex items-center rounded-4xl bg-red-200 text-red-900 border-0">
+                          Lounge
+                        </p>
+                      </div>
+                      <p
+                        className="font-light text-sm mt-2 line-clamp-2 max-h-[40px]"
+                        title="Lorem ipsum dolor sit, amet consectetur adipisicing
+                        elit.orem ipsum dolor sit, amet consectetur adipisicing
+                        elit."
+                      >
+                        Lorem ipsum dolor sit, amet consectetur adipisicing
+                        elit.orem ipsum dolor sit, amet consectetur adipisicing
+                        elit.
+                      </p>
+                      <div className="flex gap-x-1 items-center pb-4">
+                        <button className="mt-2 font-bold border-0 btn h-7 rounded-xl gap-x-1 bg-lime-300">
+                          Place order
+                        </button>
+                        <button
+                          className="btn rounded-full text-center mt-2 w-10 px-2 tooltip tooltip-top"
+                          data-tip="view menu"
+                        >
+                          <i className="bx bxs-food-menu bx-sm"></i>
+                        </button>
+                      </div>
                     </div>
-                    <div className="absolute btn h-7 min-w-12 rounded bottom-[-10px] flex flex-row justify-center items-center px-1 gap-x-0.5 text-[12px] font-extrabold text-gray-700">
-                      4.7k<i className="bx bx-heart bx-xs text-warning"></i>
+                    <div className="w-[48%] flex justify-center ">
+                      <img
+                        src="/images/pizza.jpg"
+                        className="h-[160px] aspect-square rounded-full"
+                        alt=""
+                      />
                     </div>
-                  </div>
-                  <div className="w-70 text-center mt-5">
-                    <p className="font-bold">Pizza</p>
-                    <p className="text-gray-600">
-                      Lorem ipsum dolor sit amet consectetur adipisicing elit
-                      sit amet consectetur adipisicing elit.
-                    </p>
-                    <button className="mt-2 pe-0 ps-2 text-center btn btn-soft h-7 rounded-full gap-x-1">
-                      Place order{" "}
-                      <i class="bx bxs-plus-circle bx-sm mt-[3px]"></i>{" "}
-                    </button>
                   </div>
                 </div>
-
-                <div className="flex flex-col justify-center items-center">
-                  <div className="flex justify-center relative">
-                    <div className="w-40 aspect-square avatar overflow-hidden rounded-full">
-                      <img src="/images/pizza.jpg" alt="pizza" />
+                <div className="w-[32%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
+                  <p className="text-3xl font-extrabold line-clamp-1">Pizza</p>
+                  <div className="flex h-55">
+                    <div className="w-[50%] grid">
+                      <p className="font-black text-lime-300 text-3xl mb-3">
+                        17$
+                      </p>
+                      <div className="flex gap-2 flex-wrap min-h-[20px]">
+                        <p className="badge font-semibold text-[13px] h-[21px] flex items-center rounded-4xl badge-soft border-0">
+                          Cafe
+                        </p>
+                        <p className="badge badge-soft font-semibold text-[13px] h-[21px] flex items-center rounded-4xl bg-red-200 text-red-900 border-0">
+                          Lounge
+                        </p>
+                        <p className="badge badge-soft font-semibold text-[13px] h-[21px] flex items-center rounded-4xl bg-red-200 text-red-900 border-0">
+                          Lounge
+                        </p>
+                      </div>
+                      <p
+                        className="font-light text-sm mt-2 line-clamp-2 max-h-[40px]"
+                        title="Lorem ipsum dolor sit, amet consectetur adipisicing
+                        elit.orem ipsum dolor sit, amet consectetur adipisicing
+                        elit."
+                      >
+                        Lorem ipsum dolor sit, amet consectetur adipisicing
+                        elit.orem ipsum dolor sit, amet consectetur adipisicing
+                        elit.
+                      </p>
+                      <div className="flex gap-x-1 items-center pb-4">
+                        <button className="mt-2 font-bold border-0 btn h-7 rounded-xl gap-x-1 bg-lime-300">
+                          Place order
+                        </button>
+                        <button
+                          className="btn rounded-full text-center mt-2 w-10 px-2 tooltip tooltip-top"
+                          data-tip="view menu"
+                        >
+                          <i className="bx bxs-food-menu bx-sm"></i>
+                        </button>
+                      </div>
                     </div>
-                    <div className="absolute btn h-7 min-w-12 rounded bottom-[-10px] flex flex-row justify-center items-center px-1 gap-x-0.5 text-[12px] font-extrabold text-gray-700">
-                      4.7k<i className="bx bx-heart bx-xs text-warning"></i>
+                    <div className="w-[48%] flex justify-center ">
+                      <img
+                        src="/images/pizza.jpg"
+                        className="h-[160px] aspect-square rounded-full"
+                        alt=""
+                      />
                     </div>
                   </div>
-                  <div className="w-70 text-center mt-5">
-                    <p className="font-bold">Pizza</p>
-                    <p className="text-gray-600">
-                      Lorem ipsum dolor sit amet consectetur adipisicing elit
-                      sit amet consectetur adipisicing elit.
-                    </p>
-                    <button className="mt-2 pe-0 ps-2 text-center btn btn-soft h-7 rounded-full gap-x-1">
-                      Place order{" "}
-                      <i class="bx bxs-plus-circle bx-sm mt-[3px]"></i>{" "}
-                    </button>
+                </div>
+                <div className="w-[32%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
+                  <p className="text-3xl font-extrabold line-clamp-1">Pizza</p>
+                  <div className="flex h-55">
+                    <div className="w-[50%] grid">
+                      <p className="font-black text-lime-300 text-3xl mb-3">
+                        17$
+                      </p>
+                      <div className="flex gap-2 flex-wrap min-h-[20px]">
+                        <p className="badge font-semibold text-[13px] h-[21px] flex items-center rounded-4xl badge-soft border-0">
+                          Cafe
+                        </p>
+                        <p className="badge badge-soft font-semibold text-[13px] h-[21px] flex items-center rounded-4xl bg-red-200 text-red-900 border-0">
+                          Lounge
+                        </p>
+                        <p className="badge badge-soft font-semibold text-[13px] h-[21px] flex items-center rounded-4xl bg-red-200 text-red-900 border-0">
+                          Lounge
+                        </p>
+                      </div>
+                      <p
+                        className="font-light text-sm mt-2 line-clamp-2 max-h-[40px]"
+                        title="Lorem ipsum dolor sit, amet consectetur adipisicing
+                        elit.orem ipsum dolor sit, amet consectetur adipisicing
+                        elit."
+                      >
+                        Lorem ipsum dolor sit, amet consectetur adipisicing
+                        elit.orem ipsum dolor sit, amet consectetur adipisicing
+                        elit.
+                      </p>
+                      <div className="flex gap-x-1 items-center pb-4">
+                        <button className="mt-2 font-bold border-0 btn h-7 rounded-xl gap-x-1 bg-lime-300">
+                          Place order
+                        </button>
+                        <button
+                          className="btn rounded-full text-center mt-2 w-10 px-2 tooltip tooltip-top"
+                          data-tip="view menu"
+                        >
+                          <i className="bx bxs-food-menu bx-sm"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="w-[48%] flex justify-center ">
+                      <img
+                        src="/images/pizza.jpg"
+                        className="h-[160px] aspect-square rounded-full"
+                        alt=""
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="w-[32%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
+                  <p className="text-3xl font-extrabold line-clamp-1">Pizza</p>
+                  <div className="flex h-55">
+                    <div className="w-[50%] grid">
+                      <p className="font-black text-lime-300 text-3xl mb-3">
+                        17$
+                      </p>
+                      <div className="flex gap-2 flex-wrap min-h-[20px]">
+                        <p className="badge font-semibold text-[13px] h-[21px] flex items-center rounded-4xl badge-soft border-0">
+                          Cafe
+                        </p>
+                        <p className="badge badge-soft font-semibold text-[13px] h-[21px] flex items-center rounded-4xl bg-red-200 text-red-900 border-0">
+                          Lounge
+                        </p>
+                        <p className="badge badge-soft font-semibold text-[13px] h-[21px] flex items-center rounded-4xl bg-red-200 text-red-900 border-0">
+                          Lounge
+                        </p>
+                      </div>
+                      <p
+                        className="font-light text-sm mt-2 line-clamp-2 max-h-[40px]"
+                        title="Lorem ipsum dolor sit, amet consectetur adipisicing
+                        elit.orem ipsum dolor sit, amet consectetur adipisicing
+                        elit."
+                      >
+                        Lorem ipsum dolor sit, amet consectetur adipisicing
+                        elit.orem ipsum dolor sit, amet consectetur adipisicing
+                        elit.
+                      </p>
+                      <div className="flex gap-x-1 items-center pb-4">
+                        <button className="mt-2 font-bold border-0 btn h-7 rounded-xl gap-x-1 bg-lime-300">
+                          Place order
+                        </button>
+                        <button
+                          className="btn rounded-full text-center mt-2 w-10 px-2 tooltip tooltip-top"
+                          data-tip="view menu"
+                        >
+                          <i className="bx bxs-food-menu bx-sm"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="w-[48%] flex justify-center ">
+                      <img
+                        src="/images/pizza.jpg"
+                        className="h-[160px] aspect-square rounded-full"
+                        alt=""
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="w-[32%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
+                  <p className="text-3xl font-extrabold line-clamp-1">Pizza</p>
+                  <div className="flex h-55">
+                    <div className="w-[50%] grid">
+                      <p className="font-black text-lime-300 text-3xl mb-3">
+                        17$
+                      </p>
+                      <div className="flex gap-2 flex-wrap min-h-[20px]">
+                        <p className="badge font-semibold text-[13px] h-[21px] flex items-center rounded-4xl badge-soft border-0">
+                          Cafe
+                        </p>
+                        <p className="badge badge-soft font-semibold text-[13px] h-[21px] flex items-center rounded-4xl bg-red-200 text-red-900 border-0">
+                          Lounge
+                        </p>
+                        <p className="badge badge-soft font-semibold text-[13px] h-[21px] flex items-center rounded-4xl bg-red-200 text-red-900 border-0">
+                          Lounge
+                        </p>
+                      </div>
+                      <p
+                        className="font-light text-sm mt-2 line-clamp-2 max-h-[40px]"
+                        title="Lorem ipsum dolor sit, amet consectetur adipisicing
+                        elit.orem ipsum dolor sit, amet consectetur adipisicing
+                        elit."
+                      >
+                        Lorem ipsum dolor sit, amet consectetur adipisicing
+                        elit.orem ipsum dolor sit, amet consectetur adipisicing
+                        elit.
+                      </p>
+                      <div className="flex gap-x-1 items-center pb-4">
+                        <button className="mt-2 font-bold border-0 btn h-7 rounded-xl gap-x-1 bg-lime-300">
+                          Place order
+                        </button>
+                        <button
+                          className="btn rounded-full text-center mt-2 w-10 px-2 tooltip tooltip-top"
+                          data-tip="view menu"
+                        >
+                          <i className="bx bxs-food-menu bx-sm"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="w-[48%] flex justify-center ">
+                      <img
+                        src="/images/pizza.jpg"
+                        className="h-[160px] aspect-square rounded-full"
+                        alt=""
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -463,35 +694,35 @@ export default function Main() {
           <nav>
             <h6 className="footer-title">Social</h6>
             <div className="grid grid-flow-col gap-4">
-              <a>
+              <a href="#">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
                   height="24"
                   viewBox="0 0 24 24"
-                  className="fill-current"
+                  className="fill-current hover:text-blue-400"
                 >
                   <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"></path>
                 </svg>
               </a>
-              <a>
+              <a href="#">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
                   height="24"
                   viewBox="0 0 24 24"
-                  className="fill-current"
+                  className="fill-current hover:text-red-500"
                 >
                   <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path>
                 </svg>
               </a>
-              <a>
+              <a href="#">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
                   height="24"
                   viewBox="0 0 24 24"
-                  className="fill-current"
+                  className="fill-current hover:text-blue-500"
                 >
                   <path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"></path>
                 </svg>
@@ -500,10 +731,26 @@ export default function Main() {
           </nav>
           <nav>
             <h6 className="footer-title">Contact</h6>
-            <a className="link link-hover">Features</a>
-            <a className="link link-hover">Enterprise</a>
-            <a className="link link-hover">Security</a>
-            <a className="link link-hover">Pricing</a>
+            <div className="flex items-center">
+              <p className="bg-primary rounded-full avatar w-8 aspect-square flex items-center justify-center me-2">
+                <i className="bx bxs-phone bx-xs"></i>
+              </p>
+              <p>+234-785-986-564</p>
+            </div>
+            <div className="flex items-center">
+              <p className="bg-primary rounded-full avatar w-8 aspect-square flex items-center justify-center me-2">
+                <i className="bx bxs-envelope bx-xs"></i>
+              </p>
+              <p>MapleWorld@gamil.com</p>
+            </div>
+            <div className="flex items-center">
+              <p className="bg-primary rounded-full avatar w-8 aspect-square flex items-center justify-center me-2">
+                <i className="bx bxs-map bx-xs"></i>
+              </p>
+              <p>
+                Lake wood street off simba close, behind morph hotel 5 Az B3SFT
+              </p>
+            </div>
           </nav>
           <form>
             <h6 className="footer-title">Newsletter</h6>
