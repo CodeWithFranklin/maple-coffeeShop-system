@@ -630,8 +630,8 @@ export default function Main() {
             </div>
           </div>
         </section>
-        <section className="w-[100%] lg:w-[85%] mx-auto min-h-[200px] flex flex-col lg:flex-row mt-20">
-          <div className="w-full lg:w-[45%] mb-8 ps-7">
+        <section className="w-[100%] lg:w-[85%] mx-auto min-h-[200px] flex flex-col lg:flex-row mt-7 lg:mt-20">
+          <div className="w-full lg:w-[47%] mb-8 ps-7">
             <p className="text-4xl lg:text-7xl w-fit font-extrabold leading-[1.2]">
               loved by many! 🤩
             </p>
@@ -643,7 +643,7 @@ export default function Main() {
 
           {/* ✅ Embla carousel wrapper */}
           <div
-            className="embla relative overflow-hidden ps-5 w-full h-[300px] bg-blue-200"
+            className="embla relative overflow-hidden ps-5 w-full h-[300px]"
             ref={horizontalaRef}
           >
             {/* ✅ Embla container */}
@@ -666,7 +666,7 @@ export default function Main() {
             />
           </div>
         </section>
-        <footer className="footer sm:footer-horizontal bg-neutral text-neutral-content grid-rows-2 pt-15 pb-7 mt-25 ps-25">
+        <footer className="footer sm:footer-horizontal bg-neutral text-neutral-content grid-rows-2 pt-15 pb-7 mt-25 ps-7 lg:ps-25">
           <aside>
             <svg
               width="50"
