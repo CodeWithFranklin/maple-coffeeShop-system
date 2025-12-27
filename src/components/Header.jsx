@@ -1,7 +1,7 @@
 export default function Header() {
   return (
     <div className="flex justify-center pt-3 mb-20">
-      <div className="navbar w-[85%] bg-white/30 backdrop-blur-lg rounded-3xl py-3 pe-5 fixed z-1">
+      <div className="navbar lg:w-[85%] w-[93%] bg-white/30 backdrop-blur-lg rounded-3xl py-3 pe-5 fixed z-1">
         <div className="navbar-start">
           <div className="dropdown">
             <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
@@ -26,10 +26,10 @@ export default function Header() {
               className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
             >
               <li>
-                <a>Item 1</a>
+                <a>Home</a>
               </li>
               <li>
-                <a>Parent</a>
+                <a>Services</a>
                 <ul className="p-2">
                   <li>
                     <a>Submenu 1</a>
@@ -40,11 +40,11 @@ export default function Header() {
                 </ul>
               </li>
               <li>
-                <a>Item 3</a>
+                <a>Contact</a>
               </li>
             </ul>
           </div>
-          <ul className="menu menu-horizontal px-1">
+          <ul className="menu menu-horizontal hidden lg:flex px-1">
             <li>
               <a className="font-bold">Home</a>
             </li>
@@ -66,12 +66,12 @@ export default function Header() {
             </li>
           </ul>
         </div>
-        <div className="navbar-center hidden lg:flex">
+        <div className="navbar-center flex">
           <a className="text-3xl font-extrabold flex items-center">
             Maple{" "}
             <img
               src="/images/bx-coffee-togo.svg"
-              className="w-6 mt-[7px]"
+              className="w-6 lg:mt-[7px]"
               alt=""
             />
           </a>
@@ -79,15 +79,15 @@ export default function Header() {
         <div className="navbar-end avatar-group">
           <a
             href=""
-            className="avatar aspect-square border border-black w-11 flex justify-center items-center me-2"
+            className="avatar aspect-square border border-black w-11 hidden lg:flex justify-center items-center me-2"
           >
             <i className="bx bx-search"></i>
           </a>
           <a
             href=""
-            className="avatar aspect-square border border-black w-11 flex justify-center items-center me-2"
+            className="avatar aspect-square border border-black w-11 hidden lg:flex justify-center items-center me-2"
           >
-            <i className="bx bx-cart" style={{ fontWeight: "bod" }}></i>
+            <i className="bx bx-cart"></i>
           </a>
           <a
             href=""

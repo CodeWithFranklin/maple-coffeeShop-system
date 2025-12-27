@@ -99,23 +99,23 @@ export default function Main() {
   const images = ["/images/coffee.jpg", "/images/pizza.jpg"];
 
   return (
-    <section>
+    <section className="bg-purple-50 overflow-x-hidden">
       <Header />
       <div className="min-h-[570px]">
-        <section className="min-h-fit flex mx-auto w-[87%]">
-          <div className="min-h-fit min-w-[64%] mt-20">
-            <div className="w-[80%]">
-              <p className="text-8xl font-extrabold box-decoration-clone leading-[1.1]">
+        <section className="min-h-fit flex flex-col lg:flex-row mx-auto w-[87%]">
+          <div className="min-h-fit min-w-[64%] lg:mt-13 mt-8">
+            <div className="lg:w-[80%] w-full">
+              <p className="lg:text-[100px] text-[52px] font-extrabold box-decoration-clone leading-[1.2] ">
                 Get the best of your day from us!
               </p>
-              <div className="w-[92%] text-gray-500">
+              <div className="lg:w-[92%] w-[92%] text-gray-500">
                 <p className="text-xl mt-6 font-semibold">
                   The flavour, the comfort, the moments that you deserve. <br />
                 </p>
                 <p className="">save up to 20% off your first order.</p>
               </div>
 
-              <div className="badge badge-soft py-[23px] pe-0 font-semibold px-5 mt-6 bg-lime-400 rounded-3xl">
+              <div className="badge badge-soft border-0 py-[23px] pe-0 font-semibold px-5 mt-6 bg-lime-300 rounded-3xl">
                 <a href="">
                   Our Services?
                   <span className="avatar rounded-full aspect-square bg-blue-40 ms-2 min-w-9 justify-center items-center">
@@ -125,40 +125,46 @@ export default function Main() {
               </div>
             </div>
           </div>
-          <div className="flex flex-col gap-7 w-full mt-8 ps-15">
-            <div className="bg-yellow-800 h-[47%] rounded-4xl relative pt-5 ps-5 overflow-hidden flex flex-col justify-center">
-              <div className="text-3xl font-extrabold w-[45%]">
-                <p className="text-white">pick for the week!</p>
-                <p className="text-yellow-500 text-amber-500">13$</p>
+          <div className="flex flex-col gap-7 w-full mt-8 lg:ps-15">
+            <div className="bg-blue-300 w-[90%] lg:w-full lg:h-[250px] h-[230px] rounded-4xl relative ps-5 overflow-hidden flex flex-col justify-center">
+              <div className="lg:text-4xl text-3xl font-extrabold w-[45%]">
+                <p className="text-white">weekly pick!</p>
+                <p className="text-yellow-400 mt-2">13$</p>
               </div>
 
               <img
                 src="/images/ad-image-2.png"
-                className="w-60 absolute right-[-10px] bottom-0 "
+                className="lg:w-60 w-52 absolute right-[-10px] bottom-0 "
                 alt=""
               />
 
-              <button className="btn mt-4 h-7 pe-0.5 ps-3 rounded-3xl w-fit">
-                Add to cart{" "}
-                <span className="bg-lime-400 rounded-full avatar w-6 aspect-square flex items-center justify-center">
-                  <i className="bx bx-cart-add bx-xs"></i>
-                </span>{" "}
-              </button>
+              <div className="flex gap-x-1 items-center mt-3 w-fit">
+                <button className="mt-2 font-bold border-0 btn h-7 rounded-2xl gap-x-1">
+                  Explore
+                </button>
+                <button
+                  className="btn rounded-full border-0 text-center mt-2 pt-1 w-10 aspect-square tooltip tooltip-top bg-lime-300"
+                  data-tip="add to cart"
+                >
+                  <i className="bx bx-heart bx-sm"></i>
+                </button>
+              </div>
             </div>
-            <div className="bg-blue-300 h-[53%] pt-5 ps-5 bg-[url('/images/i-like-food.svg')] bg-no-repeat bg-position-[left_10.1rem_top_7.1rem]">
-              <div className="avatar-group -space-x-2 h-9 w-fit mt-1 float-right me-3">
+
+            <div className="bg-purple-300 lg:h-[250px] h-[240px] w-[90%] lg:w-full self-end pt-5 ps-5 bg-[url('/images/i-like-food.svg')] bg-size-[160px] lg:bg-size-[185px] bg-no-repeat bg-position-[left_9rem_top_7.6rem] lg:bg-position-[left_11.4rem_top_7.1rem]">
+              <div className="avatar-group -space-x-2 lg:h-9 h-8 lg:w-fit w-26 mt-1 float-right me-3">
                 <div className="avatar w-9 border-1">
-                  <div className="">
+                  <div>
                     <img src="https://img.daisyui.com/images/profile/demo/batperson@192.webp" />
                   </div>
                 </div>
                 <div className="avatar w-9 border-1">
-                  <div className="">
+                  <div>
                     <img src="https://img.daisyui.com/images/profile/demo/spiderperson@192.webp" />
                   </div>
                 </div>
                 <div className="avatar w-9 border-1">
-                  <div className="">
+                  <div>
                     <img src="https://img.daisyui.com/images/profile/demo/averagebulk@192.webp" />
                   </div>
                 </div>
@@ -170,26 +176,28 @@ export default function Main() {
                   </div>
                 </div>
               </div>
-              <p className="text-4xl font-extrabold w-[80%] leading-[1.1] h-[175px]">
-                <span className="text-lime-200">"</span>Leche wednesday or
-                supreme friday?<span className="text-lime-200">"</span>
+              <p className="text-4xl lg:text-[40px] font-extrabold w-[60%] leading-[1.2] h-[150px] mt-5">
+                <span className="text-lime-200">"</span>will big foot love
+                coffee?<span className="text-lime-200">"</span>
               </p>
-              <button className="btn btn-primary h-8">Our book club</button>
+              <button className="btn h-8 rounded-xl mt-0 lg:mt-2 border-0 bg-orange-200 ">
+                Check out
+              </button>
             </div>
           </div>
         </section>
-        <section className="min-h-fit mt-25 mx-auto w-[80%]">
-          <div className="flex justify-between gap-x-10">
-            <div className="w-[45%] flex justify-center flex-col">
-              <p className="text-5xl pb-2 w-[90%] font-extrabold box-decoration-clone leading-[1.2]">
+        <section className="min-h-fit mt-25 mx-auto w-[85%] lg:w-[80%]">
+          <div className="flex flex-col lg:flex-row justify-between gap-x-10">
+            <div className="w-[full] lg:w-[45%] flex justify-center flex-col ">
+              <p className="text-4xl lg:text-5xl pb-2 lg:w-[90%] w-full font-extrabold box-decoration-clone leading-[1.2]">
                 Maple is so more than just coffee{""}
               </p>
-              <p className="mt-2 mb-2 text-[18px] w-[85%] text-gray-500">
+              <p className="mt-2 mb-2 text-md lg:text-[18px] lg:w-[85%] w-[95%] text-gray-500">
                 Have a look at some of our various services we offer, we make
                 every visit count.
               </p>
             </div>
-            <div className="h-[150px] py-5 flex gap-x-5 justify-end flex-wrap items-center w-[45%]">
+            <div className="min-h-fit lg:h-[150px] lg:w-[45%] py-5 flex gap-y-5 lg:gap-y-0 gap-x-7 lg:gap-x-5 lg:justify-end flex-wrap items-center">
               <p className="badge font-semibold py-[16px] flex items-center rounded-4xl bg-sky-100 text-green-900 border-0">
                 Cafe
                 <i className="bx bx-sm bx-coffee-togo"></i>
@@ -217,7 +225,10 @@ export default function Main() {
             </div>
           </div>
         </section>
-        <section className="flex w-[80%] mx-auto mt-20 items-center py-13 ps-10 shadow-xl rounded-4xl">
+        <section
+          className="flex lg:flex-row flex-col-reverse lg:w-[80%] w-[90%] mx-auto mt-20 items-center 
+        lg:gap-y-0 gap-y-10 lg:py-13 py-10 px-5 lg:px-0 lg:ps-10 shadow-xl rounded-4xl bg-white"
+        >
           <div className="gap-10">
             {/* Carousel container */}
             <div
@@ -254,27 +265,27 @@ export default function Main() {
               </div>
             </div>
           </div>
-          <div className="w-[55%] mx-auto flex justify-center">
-            <div className="w-[70%]">
-              <p className="text-4xl font-extrabold">
+          <div className="lg:w-[55%] mx-auto flex lg:justify-center">
+            <div className="lg:w-[70%]">
+              <p className="text-4xl font-extrabold ">
                 Book your experience with us today!
               </p>
-              <p className="mt-4 text-[18px] font- text-gray-600">
+              <p className="mt-4 lg:text-[17px] w-[95%] text-md text-gray-600">
                 Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ut
                 sequi, impedit.
               </p>
               <ul className="font-semibold text-gray-600 mt-2">
-                <li className="flex items-center">
-                  <i class="bx bx-badge-check me-1 text-yellow-400"></i>choose
-                  from dining, workspace, lounge or spa
+                <li className="flex">
+                  <i class="bx bx-badge-check me-1 mt-[5px] text-yellow-400"></i>
+                  choose from dining, workspace, lounge or spa
                 </li>
-                <li>
-                  <i class="bx bx-badge-check me-1 text-yellow-400"></i>easy
-                  online booking
+                <li className="flex">
+                  <i class="bx bx-badge-check me-1 mt-[5px] text-yellow-400"></i>
+                  easy online booking
                 </li>
-                <li>
-                  <i class="bx bx-badge-check me-1 text-yellow-400"></i>flexible
-                  time slots to fit your schedule
+                <li className="flex">
+                  <i class="bx bx-badge-check me-1 mt-[5px] text-yellow-400"></i>
+                  flexible time slots to fit your schedule
                 </li>
               </ul>
               <button className="bg-lime-300 btn rounded-4xl pe-1 mt-3 border-0">
@@ -286,14 +297,13 @@ export default function Main() {
             </div>
           </div>
         </section>
-        <section className="min-h-[500px] mt-25 flex justify-center">
+        <section className="min-h-[500px] lg:mt-25 mt-17 flex justify-center">
           <div
-            className="min-h-full flex flex-col justify-center items-center w-[95%] rounded-[70px] overflow-hidden
+            className="min-h-full flex flex-col justify-center items-center w-[95%] overflow-hidden
            py-10"
           >
-            <div className="w-[45%] flex flex-col justify-center items-center">
-              <div className="badge border-gray-300 rounded-4xl font-semibold mb-3 px-5 py-[17px]">
-                {" "}
+            <div className="lg:w-[45%] flex flex-col justify-center items-center">
+              <div className="badge border-gray-300 rounded-4xl lg:font-semibold font-extrabold mb-3 lg:px-5 px-3 py-[17px]">
                 <div className="text-warning">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -309,20 +319,20 @@ export default function Main() {
                     ></path>
                   </svg>
                 </div>
-                <div className="font-bold">10.4K loved this</div>
+                <div className="font-black text-gray-600">10.4K loved this</div>
               </div>
-              <p className="text-4xl w-fit font-extrabold text-center">
+              <p className="text-4xl w-fit font-extrabold mt-2">
                 We're cooking!
               </p>
-              <p className="w-150 text-center mt-4 mb-3 text-[20px] font-extralight">
+              <p className="lg:w-150 w-[95%] text-center mt-4 mb-3 lg:text-[20px] text-[18px] lg:font-extralight font-bold text-gray-700">
                 We are always looking out for your tastes that's why we serve
                 the tastiest of our dishes for the best prices. Breakfast, lunch
                 and dinner we are always here for you.
               </p>
             </div>
-            <div className="w-[90%] min-h-fit flex items-center flex-col mt-5 py-5">
-              <div className="flex flex-wrap gap-4 w-full justify-center">
-                <div className="w-[32%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
+            <div className="lg:w-[90%] w-[95%] min-h-fit flex items-center flex-col mt-5 py-5">
+              <div className="flex flex-wrap lg:flex-row flex-col gap-4 w-full justify-center">
+                <div className="lg:w-[32%] h-65 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
                   <p className="text-3xl font-extrabold line-clamp-1">Pizza</p>
                   <div className="flex h-55">
                     <div className="w-[50%] grid">
@@ -365,13 +375,13 @@ export default function Main() {
                     <div className="w-[48%] flex justify-center ">
                       <img
                         src="/images/pizza.jpg"
-                        className="h-[160px] aspect-square rounded-full"
+                        className="lg:h-[160px] h-[140px] aspect-square rounded-full"
                         alt=""
                       />
                     </div>
                   </div>
                 </div>
-                <div className="w-[32%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
+                <div className="lg:w-[32%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
                   <p className="text-3xl font-extrabold line-clamp-1">Pizza</p>
                   <div className="flex h-55">
                     <div className="w-[50%] grid">
@@ -414,13 +424,13 @@ export default function Main() {
                     <div className="w-[48%] flex justify-center ">
                       <img
                         src="/images/pizza.jpg"
-                        className="h-[160px] aspect-square rounded-full"
+                        className="lg:h-[160px] h-[140px] aspect-square rounded-full"
                         alt=""
                       />
                     </div>
                   </div>
                 </div>
-                <div className="w-[32%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
+                <div className="lg:w-[32%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
                   <p className="text-3xl font-extrabold line-clamp-1">Pizza</p>
                   <div className="flex h-55">
                     <div className="w-[50%] grid">
@@ -460,13 +470,13 @@ export default function Main() {
                     <div className="w-[48%] flex justify-center ">
                       <img
                         src="/images/pizza.jpg"
-                        className="h-[160px] aspect-square rounded-full"
+                        className="lg:h-[160px] h-[140px] aspect-square rounded-full"
                         alt=""
                       />
                     </div>
                   </div>
                 </div>
-                <div className="w-[32%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
+                <div className="lg:w-[32%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
                   <p className="text-3xl font-extrabold line-clamp-1">Pizza</p>
                   <div className="flex h-55">
                     <div className="w-[50%] grid">
@@ -509,13 +519,13 @@ export default function Main() {
                     <div className="w-[48%] flex justify-center ">
                       <img
                         src="/images/pizza.jpg"
-                        className="h-[160px] aspect-square rounded-full"
+                        className="lg:h-[160px] h-[140px] aspect-square rounded-full"
                         alt=""
                       />
                     </div>
                   </div>
                 </div>
-                <div className="w-[32%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
+                <div className="lg:w-[32%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
                   <p className="text-3xl font-extrabold line-clamp-1">Pizza</p>
                   <div className="flex h-55">
                     <div className="w-[50%] grid">
@@ -558,13 +568,13 @@ export default function Main() {
                     <div className="w-[48%] flex justify-center ">
                       <img
                         src="/images/pizza.jpg"
-                        className="h-[160px] aspect-square rounded-full"
+                        className="lg:h-[160px] h-[140px] aspect-square rounded-full"
                         alt=""
                       />
                     </div>
                   </div>
                 </div>
-                <div className="w-[32%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
+                <div className="lg:w-[32%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
                   <p className="text-3xl font-extrabold line-clamp-1">Pizza</p>
                   <div className="flex h-55">
                     <div className="w-[50%] grid">
@@ -607,7 +617,7 @@ export default function Main() {
                     <div className="w-[48%] flex justify-center ">
                       <img
                         src="/images/pizza.jpg"
-                        className="h-[160px] aspect-square rounded-full"
+                        className="lg:h-[160px] h-[140px] aspect-square rounded-full"
                         alt=""
                       />
                     </div>
@@ -620,20 +630,20 @@ export default function Main() {
             </div>
           </div>
         </section>
-        <section className="w-[85%] mx-auto min-h-[200px] flex mt-20">
-          <div className="w-[30%]">
-            <p className="text-7xl w-90 font-extrabold leading-[1.2]">
+        <section className="w-[100%] lg:w-[85%] mx-auto min-h-[200px] flex flex-col lg:flex-row mt-20">
+          <div className="w-full lg:w-[45%] mb-8 ps-7">
+            <p className="text-4xl lg:text-7xl w-fit font-extrabold leading-[1.2]">
               loved by many! 🤩
             </p>
-            <p className="mt-3 text-gray-500 w-[85%]">
-              Our customers are our biggest fans. See what they have to say
+            <p className="mt-3 text-gray-500 w-[85%] lg:w-[85%]">
+              Our customers are our biggest fans, see what they have to say
               about us.
             </p>
           </div>
 
           {/* ✅ Embla carousel wrapper */}
           <div
-            className="embla relative overflow-hidden ps-5 w-fit h-[300px]"
+            className="embla relative overflow-hidden ps-5 w-full h-[300px] bg-blue-200"
             ref={horizontalaRef}
           >
             {/* ✅ Embla container */}
