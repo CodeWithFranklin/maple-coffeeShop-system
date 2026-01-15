@@ -1,7 +1,9 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
-
+@theme{
+  --breakpoint-mls: 480px;
+}
 @plugin "daisyui/theme" {
   name: "light";
   default: true;

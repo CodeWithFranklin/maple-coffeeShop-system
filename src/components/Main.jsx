@@ -99,17 +99,17 @@ export default function Main() {
   const images = ["/images/coffee.jpg", "/images/pizza.jpg"];
 
   return (
-    <section className="bg-purple-50 overflow-x-hidden">
+    <section className="bg-purple-50 overflow-x-hidden selection:bg-purple-300">
       <Header />
       <div className="min-h-[570px]">
         <section className="min-h-fit flex flex-col lg:flex-row mx-auto w-[87%]">
           <div className="min-h-fit min-w-[64%] lg:mt-13 mt-8">
-            <div className="lg:w-[80%] w-full">
+            <div className="lg:w-[80%] sm:w-[75%] w-full">
               <p className="lg:text-[100px] text-[52px] font-extrabold box-decoration-clone leading-[1.2] ">
                 Get the best of your day from us!
               </p>
               <div className="lg:w-[92%] w-[92%] text-gray-500">
-                <p className="text-xl mt-6 font-semibold">
+                <p className="text-xl mt-6 font-semibold sm:w-[80%] lg:w-full ">
                   The flavour, the comfort, the moments that you deserve. <br />
                 </p>
                 <p className="">save up to 20% off your first order.</p>
@@ -125,8 +125,8 @@ export default function Main() {
               </div>
             </div>
           </div>
-          <div className="flex flex-col gap-7 w-full mt-8 lg:ps-15">
-            <div className="bg-blue-300 w-[90%] lg:w-full lg:h-[250px] h-[230px] rounded-4xl relative ps-5 overflow-hidden flex flex-col justify-center">
+          <div className="flex flex-col sm:flex-row lg:flex-col gap-7 md:gap-x-15 lg:gap-x-0 w-full mt-8 lg:ps-15">
+            <div className="bg-blue-300 w-[90%] sm:w-[43%] lg:w-full lg:h-[250px] h-[230px] rounded-4xl relative ps-5 overflow-hidden flex flex-col justify-center">
               <div className="lg:text-4xl text-3xl font-extrabold w-[45%]">
                 <p className="text-white">weekly pick!</p>
                 <p className="text-yellow-400 mt-2">13$</p>
@@ -151,7 +151,7 @@ export default function Main() {
               </div>
             </div>
 
-            <div className="bg-purple-300 lg:h-[250px] h-[240px] w-[90%] lg:w-full self-end pt-5 ps-5 bg-[url('/images/i-like-food.svg')] bg-size-[160px] lg:bg-size-[185px] bg-no-repeat bg-position-[left_9rem_top_7.6rem] lg:bg-position-[left_11.4rem_top_7.1rem]">
+            <div className="bg-purple-300 lg:h-[250px] h-[240px] w-[90%] sm:w-[43%] lg:w-full self-end pt-5 ps-5 bg-[url('/images/i-like-food.svg')] bg-size-[160px] lg:bg-size-[185px] bg-no-repeat bg-position-[left_9rem_top_7.6rem] lg:bg-position-[left_11.4rem_top_7.1rem]">
               <div className="avatar-group -space-x-2 lg:h-9 h-8 lg:w-fit w-26 mt-1 float-right me-3">
                 <div className="avatar w-9 border-1">
                   <div>
@@ -176,7 +176,7 @@ export default function Main() {
                   </div>
                 </div>
               </div>
-              <p className="text-4xl lg:text-[40px] font-extrabold w-[60%] leading-[1.2] h-[150px] mt-5">
+              <p className="text-4xl lg:text-[40px] font-extrabold max-w-[70%] leading-[1.2] h-[150px] mt-5">
                 <span className="text-lime-200">"</span>will big foot love
                 coffee?<span className="text-lime-200">"</span>
               </p>
@@ -186,9 +186,9 @@ export default function Main() {
             </div>
           </div>
         </section>
-        <section className="min-h-fit mt-25 mx-auto w-[85%] lg:w-[80%]">
-          <div className="flex flex-col lg:flex-row justify-between gap-x-10">
-            <div className="w-[full] lg:w-[45%] flex justify-center flex-col ">
+        <section className="min-h-fit mt-25 mx-auto w-[85%] sm:w-[86%] lg:w-[80%]">
+          <div className="flex flex-col lg:flex-row sm:flex-row justify-between gap-x-10 md:gap-x-6 bg-amber-200">
+            <div className="w-full lg:w-[45%] sm:w-[50%] bg-blue-400 flex justify-center flex-col">
               <p className="text-4xl lg:text-5xl pb-2 lg:w-[90%] w-full font-extrabold box-decoration-clone leading-[1.2]">
                 Maple is so more than just coffee{""}
               </p>
@@ -197,7 +197,7 @@ export default function Main() {
                 every visit count.
               </p>
             </div>
-            <div className="min-h-fit lg:h-[150px] lg:w-[45%] py-5 flex gap-y-5 lg:gap-y-0 gap-x-7 lg:gap-x-5 lg:justify-end flex-wrap items-center">
+            <div className="min-h-fit lg:h-[150px] sm:h-[200px] bg-blue-800 lg:w-[45%] sm:w-[50%] py-5 flex gap-y-5 lg:gap-y-0 gap-x-7 sm:gap-x-5 lg:gap-x-5 sm:justify-end flex-wrap items-center">
               <p className="badge font-semibold py-[16px] flex items-center rounded-4xl bg-sky-100 text-green-900 border-0">
                 Cafe
                 <i className="bx bx-sm bx-coffee-togo"></i>
@@ -214,6 +214,7 @@ export default function Main() {
                 Library
                 <i className="bx bx-sm bxs-book"></i>
               </p>
+
               <p className="badge badge-soft font-semibold py-[16px] flex items-center rounded-4xl bg-red-200 text-red-900 border-0">
                 Lounge
                 <i className="bx bx-sm bxs-drink"></i>
@@ -226,10 +227,10 @@ export default function Main() {
           </div>
         </section>
         <section
-          className="flex lg:flex-row flex-col-reverse lg:w-[80%] w-[90%] mx-auto mt-20 items-center 
+          className="flex lg:flex-row flex-col-reverse md:flex-row w-[90%] sm:items-start sm:ps-15 md:w-[95%] lg:w-[80%] mx-auto mt-20 items-center 
         lg:gap-y-0 gap-y-10 lg:py-13 py-10 px-5 lg:px-0 lg:ps-10 shadow-xl rounded-4xl bg-white"
         >
-          <div className="gap-10">
+          <div className="gap-10 md:w-[45%] sm:w-[65%] lg:w-[40%]">
             {/* Carousel container */}
             <div
               className="w-full h-[270px] overflow-hidden rounded-3xl relative"
@@ -252,7 +253,7 @@ export default function Main() {
               </div>
 
               {/* Vertical badges (like dots) */}
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-2 ">
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-2">
                 {scrollSnaps.map((_, index) => (
                   <button
                     key={index}
@@ -265,8 +266,8 @@ export default function Main() {
               </div>
             </div>
           </div>
-          <div className="lg:w-[55%] mx-auto flex lg:justify-center">
-            <div className="lg:w-[70%]">
+          <div className="lg:w-[55%] md:w-[50%] sm:w-[85%] w-full sm:mx-0 mx-auto flex lg:justify-center">
+            <div className="lg:w-[70%] ">
               <p className="text-4xl font-extrabold ">
                 Book your experience with us today!
               </p>
@@ -276,15 +277,15 @@ export default function Main() {
               </p>
               <ul className="font-semibold text-gray-600 mt-2">
                 <li className="flex">
-                  <i class="bx bx-badge-check me-1 mt-[5px] text-yellow-400"></i>
+                  <i className="bx bx-badge-check me-1 mt-[5px] text-yellow-400"></i>
                   choose from dining, workspace, lounge or spa
                 </li>
                 <li className="flex">
-                  <i class="bx bx-badge-check me-1 mt-[5px] text-yellow-400"></i>
+                  <i className="bx bx-badge-check me-1 mt-[5px] text-yellow-400"></i>
                   easy online booking
                 </li>
                 <li className="flex">
-                  <i class="bx bx-badge-check me-1 mt-[5px] text-yellow-400"></i>
+                  <i className="bx bx-badge-check me-1 mt-[5px] text-yellow-400"></i>
                   flexible time slots to fit your schedule
                 </li>
               </ul>
@@ -302,8 +303,8 @@ export default function Main() {
             className="min-h-full flex flex-col justify-center items-center w-[95%] overflow-hidden
            py-10"
           >
-            <div className="lg:w-[45%] flex flex-col justify-center items-center">
-              <div className="badge border-gray-300 rounded-4xl lg:font-semibold font-extrabold mb-3 lg:px-5 px-3 py-[17px]">
+            <div className="lg:w-[45%] flex flex-col justify-center items-center bg-amber-300">
+              <div className="badge border-gray-200 rounded-4xl lg:font-semibold font-extrabold mb-3 lg:px-5 px-3 py-[17px]">
                 <div className="text-warning">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -324,15 +325,15 @@ export default function Main() {
               <p className="text-4xl w-fit font-extrabold mt-2">
                 We're cooking!
               </p>
-              <p className="lg:w-150 w-[95%] text-center mt-4 mb-3 lg:text-[20px] text-[18px] lg:font-extralight font-bold text-gray-700">
+              <p className="lg:w-150 w-[95%] md:w-[65%] sm:w-[75%] text-center mt-4 mb-3 lg:text-[20px] text-[17px] font-light lg:font-extralight text-gray-700">
                 We are always looking out for your tastes that's why we serve
                 the tastiest of our dishes for the best prices. Breakfast, lunch
                 and dinner we are always here for you.
               </p>
             </div>
             <div className="lg:w-[90%] w-[95%] min-h-fit flex items-center flex-col mt-5 py-5">
-              <div className="flex flex-wrap lg:flex-row flex-col gap-4 w-full justify-center">
-                <div className="lg:w-[32%] h-65 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
+              <div className="flex flex-wrap sm:flex-row md:flex-row lg:flex-row flex-col gap-4 md:gap-5 w-full justify-center bg-blue-300">
+                <div className="lg:w-[32%] sm:w-[48%] md:w-[45%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
                   <p className="text-3xl font-extrabold line-clamp-1">Pizza</p>
                   <div className="flex h-55">
                     <div className="w-[50%] grid">
@@ -381,7 +382,7 @@ export default function Main() {
                     </div>
                   </div>
                 </div>
-                <div className="lg:w-[32%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
+                <div className="lg:w-[32%] sm:w-[48%] md:w-[45%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
                   <p className="text-3xl font-extrabold line-clamp-1">Pizza</p>
                   <div className="flex h-55">
                     <div className="w-[50%] grid">
@@ -430,7 +431,7 @@ export default function Main() {
                     </div>
                   </div>
                 </div>
-                <div className="lg:w-[32%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
+                <div className="lg:w-[32%] sm:w-[48%] md:w-[45%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
                   <p className="text-3xl font-extrabold line-clamp-1">Pizza</p>
                   <div className="flex h-55">
                     <div className="w-[50%] grid">
@@ -476,56 +477,7 @@ export default function Main() {
                     </div>
                   </div>
                 </div>
-                <div className="lg:w-[32%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
-                  <p className="text-3xl font-extrabold line-clamp-1">Pizza</p>
-                  <div className="flex h-55">
-                    <div className="w-[50%] grid">
-                      <p className="font-black text-lime-300 text-3xl mb-3">
-                        17$
-                      </p>
-                      <div className="flex gap-2 flex-wrap min-h-[20px]">
-                        <p className="badge font-semibold text-[13px] h-[21px] flex items-center rounded-4xl badge-soft border-0">
-                          Cafe
-                        </p>
-                        <p className="badge badge-soft font-semibold text-[13px] h-[21px] flex items-center rounded-4xl bg-red-200 text-red-900 border-0">
-                          Lounge
-                        </p>
-                        <p className="badge badge-soft font-semibold text-[13px] h-[21px] flex items-center rounded-4xl bg-red-200 text-red-900 border-0">
-                          Lounge
-                        </p>
-                      </div>
-                      <p
-                        className="font-light text-sm mt-2 line-clamp-2 max-h-[40px]"
-                        title="Lorem ipsum dolor sit, amet consectetur adipisicing
-                        elit.orem ipsum dolor sit, amet consectetur adipisicing
-                        elit."
-                      >
-                        Lorem ipsum dolor sit, amet consectetur adipisicing
-                        elit.orem ipsum dolor sit, amet consectetur adipisicing
-                        elit.
-                      </p>
-                      <div className="flex gap-x-1 items-center pb-4">
-                        <button className="mt-2 font-bold border-0 btn h-7 rounded-xl gap-x-1 bg-lime-300">
-                          Place order
-                        </button>
-                        <button
-                          className="btn rounded-full text-center mt-2 w-10 px-2 tooltip tooltip-top"
-                          data-tip="view menu"
-                        >
-                          <i className="bx bxs-food-menu bx-sm"></i>
-                        </button>
-                      </div>
-                    </div>
-                    <div className="w-[48%] flex justify-center ">
-                      <img
-                        src="/images/pizza.jpg"
-                        className="lg:h-[160px] h-[140px] aspect-square rounded-full"
-                        alt=""
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="lg:w-[32%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
+                <div className="lg:w-[32%] sm:w-[48%] md:w-[45%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
                   <p className="text-3xl font-extrabold line-clamp-1">Pizza</p>
                   <div className="flex h-55">
                     <div className="w-[50%] grid">
@@ -574,7 +526,56 @@ export default function Main() {
                     </div>
                   </div>
                 </div>
-                <div className="lg:w-[32%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
+                <div className="lg:w-[32%] sm:w-[48%] md:w-[45%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
+                  <p className="text-3xl font-extrabold line-clamp-1">Pizza</p>
+                  <div className="flex h-55">
+                    <div className="w-[50%] grid">
+                      <p className="font-black text-lime-300 text-3xl mb-3">
+                        17$
+                      </p>
+                      <div className="flex gap-2 flex-wrap min-h-[20px]">
+                        <p className="badge font-semibold text-[13px] h-[21px] flex items-center rounded-4xl badge-soft border-0">
+                          Cafe
+                        </p>
+                        <p className="badge badge-soft font-semibold text-[13px] h-[21px] flex items-center rounded-4xl bg-red-200 text-red-900 border-0">
+                          Lounge
+                        </p>
+                        <p className="badge badge-soft font-semibold text-[13px] h-[21px] flex items-center rounded-4xl bg-red-200 text-red-900 border-0">
+                          Lounge
+                        </p>
+                      </div>
+                      <p
+                        className="font-light text-sm mt-2 line-clamp-2 max-h-[40px]"
+                        title="Lorem ipsum dolor sit, amet consectetur adipisicing
+                        elit.orem ipsum dolor sit, amet consectetur adipisicing
+                        elit."
+                      >
+                        Lorem ipsum dolor sit, amet consectetur adipisicing
+                        elit.orem ipsum dolor sit, amet consectetur adipisicing
+                        elit.
+                      </p>
+                      <div className="flex gap-x-1 items-center pb-4">
+                        <button className="mt-2 font-bold border-0 btn h-7 rounded-xl gap-x-1 bg-lime-300">
+                          Place order
+                        </button>
+                        <button
+                          className="btn rounded-full text-center mt-2 w-10 px-2 tooltip tooltip-top"
+                          data-tip="view menu"
+                        >
+                          <i className="bx bxs-food-menu bx-sm"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="w-[48%] flex justify-center ">
+                      <img
+                        src="/images/pizza.jpg"
+                        className="lg:h-[160px] h-[140px] aspect-square rounded-full"
+                        alt=""
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="lg:w-[32%] sm:w-[48%] md:w-[45%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden">
                   <p className="text-3xl font-extrabold line-clamp-1">Pizza</p>
                   <div className="flex h-55">
                     <div className="w-[50%] grid">
@@ -631,11 +632,11 @@ export default function Main() {
           </div>
         </section>
         <section className="w-[100%] lg:w-[85%] mx-auto min-h-[200px] flex flex-col lg:flex-row mt-7 lg:mt-20">
-          <div className="w-full lg:w-[47%] mb-8 ps-7">
-            <p className="text-4xl lg:text-7xl w-fit font-extrabold leading-[1.2]">
+          <div className="w-full lg:w-[47%] lg:w-[50%] mb-8 lg:ps-0 ps-7 sm:ps-10 md:ps-15">
+            <p className="text-4xl sm:5xl md:text-5xl lg:text-7xl w-fit font-extrabold leading-[1.2]">
               loved by many! 🤩
             </p>
-            <p className="mt-3 text-gray-500 w-[85%] lg:w-[85%]">
+            <p className="mt-3 text-gray-500 w-[85%] sm:w-[48%] md:w-[48%] lg:w-[85%]">
               Our customers are our biggest fans, see what they have to say
               about us.
             </p>
@@ -666,7 +667,7 @@ export default function Main() {
             />
           </div>
         </section>
-        <footer className="footer sm:footer-horizontal bg-neutral text-neutral-content grid-rows-2 pt-15 pb-7 mt-25 ps-7 lg:ps-25">
+        <footer className="footer sm:footer-horizontal sm:gap-x-10 bg-neutral text-neutral-content grid-rows-2 pt-15 pb-7 mt-25 ps-8 lg:ps-25">
           <aside>
             <svg
               width="50"
@@ -680,19 +681,19 @@ export default function Main() {
               <path d="M22.672 15.226l-2.432.811.841 2.515c.33 1.019-.209 2.127-1.23 2.456-1.15.325-2.148-.321-2.463-1.226l-.84-2.518-5.013 1.677.84 2.517c.391 1.203-.434 2.542-1.831 2.542-.88 0-1.601-.564-1.86-1.314l-.842-2.516-2.431.809c-1.135.328-2.145-.317-2.463-1.229-.329-1.018.211-2.127 1.231-2.456l2.432-.809-1.621-4.823-2.432.808c-1.355.384-2.558-.59-2.558-1.839 0-.817.509-1.582 1.327-1.846l2.433-.809-.842-2.515c-.33-1.02.211-2.129 1.232-2.458 1.02-.329 2.13.209 2.461 1.229l.842 2.515 5.011-1.677-.839-2.517c-.403-1.238.484-2.553 1.843-2.553.819 0 1.585.509 1.85 1.326l.841 2.517 2.431-.81c1.02-.33 2.131.211 2.461 1.229.332 1.018-.21 2.126-1.23 2.456l-2.433.809 1.622 4.823 2.433-.809c1.242-.401 2.557.484 2.557 1.838 0 .819-.51 1.583-1.328 1.847m-8.992-6.428l-5.01 1.675 1.619 4.828 5.011-1.674-1.62-4.829z"></path>
             </svg>
             <p>
-              ACME Industries Ltd.
+              Maple.
               <br />
               Providing reliable tech since 1992
             </p>
           </aside>
-          <nav>
+          <nav className="">
             <h6 className="footer-title">Legal</h6>
             <a className="link link-hover">Terms of use</a>
             <a className="link link-hover">Privacy policy</a>
             <a className="link link-hover">Cookie policy</a>
           </nav>
           <nav>
-            <h6 className="footer-title">Navigate</h6>
+            <h6 className="footer-title ">Navigate</h6>
             <a className="link link-hover">About us</a>
             <a className="link link-hover">Jobs</a>
             <a className="link link-hover">Press kit</a>
@@ -754,7 +755,7 @@ export default function Main() {
               <p className="bg-primary rounded-full avatar w-8 aspect-square flex items-center justify-center me-2">
                 <i className="bx bxs-map bx-xs"></i>
               </p>
-              <p>
+              <p className="w-[60%]">
                 Lake wood street off simba close, behind morph hotel 5 Az B3SFT
               </p>
             </div>
