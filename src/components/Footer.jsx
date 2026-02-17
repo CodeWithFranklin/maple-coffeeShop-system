@@ -95,10 +95,10 @@ export default function Footer() {
       </nav>
       <form>
         <h6 className="footer-title">Newsletter</h6>
-        <p className="w-70">
+        <p className="w-full max-w-sm">
           be the first to get new information and cool deals from us.
         </p>
-        <fieldset className="w-80">
+        <fieldset className="w-full max-w-sm">
           <label>Enter your email address</label>
           <div className="join mt-1">
             <input

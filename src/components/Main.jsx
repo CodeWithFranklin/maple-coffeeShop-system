@@ -5,8 +5,7 @@ import Autoplay from "embla-carousel-autoplay";
 import { usePrevNextButtons } from "./hooks/usePrevNextButtons";
 import { useVerticalCarousel } from "./hooks/useVerticalCarousel";
 import { NextButton, PrevButton } from "./embela/EmblaCarouselArrowButtons";
-import slides from "./Slides.js";
-import menuList from "./MenuList.js";
+import { menuList, feedBack } from "./ListItems.js";
 export default function Main() {
   const [horizontalaRef, horizontalApi] = useEmblaCarousel({ loop: true });
   const [verticalRef, verticalApi] = useEmblaCarousel(
@@ -31,11 +30,11 @@ export default function Main() {
   return (
     <section className="bg-purple-50 overflow-x-hidden selection:bg-purple-300">
       <Header />
-      <div className="min-h-[570px]">
-        <section className="min-h-fit flex flex-col lg:flex-row mx-auto w-[87%]">
-          <div className="min-h-fit min-w-[64%] lg:mt-13 mt-8">
-            <div className="lg:w-[80%] sm:w-[75%] w-full">
-              <p className="lg:text-[100px] text-[52px] font-extrabold box-decoration-clone leading-[1.2] ">
+      <div className="min-h-[570px] pt-7 sm:pt-10">
+        <section className="flex flex-col lg:flex-row sm:ps-10 lg:justify-between max-w-screen-xl mx-auto px-5 gap-y-10">
+          <div className="min-h-full lg:w-fit">
+            <div className="lg:w-150 sm:w-150 w-full">
+              <p className="lg:text-[100px] text-5xl md:text-6xl font-extrabold box-decoration-clone leading-[1.2] ">
                 Get the best of your day from us!
               </p>
               <div className="lg:w-[92%] w-[92%] text-gray-500">
@@ -55,8 +54,8 @@ export default function Main() {
               </div>
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row lg:flex-col gap-7 md:gap-x-15 lg:gap-x-0 w-full mt-8 lg:ps-15">
-            <div className="bg-blue-300 w-[90%] sm:w-[43%] lg:w-full lg:h-[250px] h-[230px] rounded-4xl relative ps-5 overflow-hidden flex flex-col justify-center">
+          <div className="flex flex-col sm:flex-row lg:flex-col gap-7 md:gap-x-15 lg:gap-x-0 w-full lg:items-end">
+            <div className="bg-blue-300 max-w-85 sm:w-80 flex-1 flex-wrap lg:w-full min-h-[230px] lg:min-h-[250px] rounded-4xl relative ps-5 overflow-hidden flex flex-col justify-center">
               <div className="lg:text-4xl text-3xl font-extrabold w-[45%]">
                 <p className="text-white">weekly pick!</p>
                 <p className="text-yellow-400 mt-2">13$</p>
@@ -64,8 +63,8 @@ export default function Main() {
 
               <img
                 src="/images/ad-image-2.png"
-                className="lg:w-60 w-52 absolute right-[-10px] bottom-0 "
-                alt=""
+                className="lg:w-55 w-52 absolute right-[-10px] bottom-0 "
+                alt="bread"
               />
 
               <div className="flex gap-x-1 items-center mt-3 w-fit">
@@ -81,7 +80,7 @@ export default function Main() {
               </div>
             </div>
 
-            <div className="bg-purple-300 lg:h-[250px] h-[240px] w-[90%] sm:w-[43%] lg:w-full self-end pt-5 ps-5 bg-[url('/images/i-like-food.svg')] bg-size-[160px] lg:bg-size-[185px] bg-no-repeat bg-position-[left_9rem_top_7.6rem] lg:bg-position-[left_11.4rem_top_7.1rem]">
+            <div className="bg-purple-300 min-h-[230px] lg:min-h-[250px] overflow-hidden max-w-85 sm:w-80 flex-1 lg:w-full self-end pt-5 ps-5 bg-[url('/images/i-like-food.svg')] bg-size-[160px] lg:bg-size-[185px] bg-no-repeat bg-position-[right_0_top_7rem]">
               <div className="avatar-group -space-x-2 lg:h-9 h-8 lg:w-fit w-26 mt-1 float-right me-3">
                 <div className="avatar w-9 border-1">
                   <div>
@@ -106,7 +105,7 @@ export default function Main() {
                   </div>
                 </div>
               </div>
-              <p className="text-4xl lg:text-[40px] font-extrabold max-w-[70%] leading-[1.2] h-[150px] mt-5">
+              <p className="text-4xl lg:text-[40px] font-extrabold max-w-[70%] leading-[1.2] line-clamp-3 h-36 sm:h-34 md:h-36 mb-4">
                 <span className="text-lime-200">"</span>will big foot love
                 coffee?<span className="text-lime-200">"</span>
               </p>
@@ -116,9 +115,9 @@ export default function Main() {
             </div>
           </div>
         </section>
-        <section className="min-h-fit mt-25 mx-auto w-[85%] sm:w-[86%] lg:w-[80%]">
-          <div className="flex flex-col lg:flex-row sm:flex-row justify-between gap-x-10 md:gap-x-6">
-            <div className="w-full lg:w-[45%] sm:w-[50%] flex justify-center flex-col">
+        <section className="mt-25 md:w-[85%] sm:w-[85%] lg:max-w-[80%] mx-auto px-6 sm:px-0">
+          <div className="flex flex-col lg:flex-row sm:flex-row justify-between gap-x-10 sm:gap-x-5 md:gap-x-6">
+            <div className="w-full sm:w-[50%] flex justify-center flex-col">
               <p className="text-4xl lg:text-5xl pb-2 lg:w-[90%] w-full font-extrabold box-decoration-clone leading-[1.2]">
                 Maple is so more than just coffee{""}
               </p>
@@ -127,7 +126,7 @@ export default function Main() {
                 every visit count.
               </p>
             </div>
-            <div className="min-h-fit lg:h-[150px] sm:h-[200px] lg:w-[45%] sm:w-[50%] py-5 flex gap-y-5 lg:gap-y-0 gap-x-7 sm:gap-x-5 lg:gap-x-5 sm:justify-end flex-wrap items-center">
+            <div className="min-h-fit sm:h-40 lg:w-[50%] sm:max-w-[50%] flex gap-y-5 lg:gap-y-0 gap-x-7 sm:gap-x-5 sm:justify-end flex-wrap items-center">
               <p className="badge font-semibold py-[16px] flex items-center rounded-4xl bg-sky-100 text-green-900 border-0">
                 Cafe
                 <i className="bx bx-sm bx-coffee-togo"></i>
@@ -156,13 +155,13 @@ export default function Main() {
           </div>
         </section>
         <section
-          className="flex lg:flex-row flex-col-reverse md:flex-row w-[90%] sm:items-start sm:ps-15 md:w-[95%] lg:w-[80%] mx-auto mt-20 items-center 
+          className="flex lg:flex-row flex-col-reverse md:flex-row md:w-[90%] lg:max-w-[80%] max-w-[95%] px-4 sm:px-6 lg:px-8 sm:ps-15 sm:items-start mx-auto mt-20 items-center 
         lg:gap-y-0 gap-y-10 lg:py-13 py-10 px-5 lg:px-0 lg:ps-10 shadow-xl rounded-4xl bg-white md:ps-0 md:ps-8 md:pe-8 md:gap-x-8"
         >
           <div className="gap-10 md:w-[45%] sm:w-[65%] lg:w-[40%]">
             {/* Carousel container */}
             <div
-              className="w-full h-[270px] overflow-hidden rounded-3xl relative"
+              className="w-full min-h-[240px] h-[270px] overflow-hidden rounded-3xl relative"
               ref={verticalRef}
             >
               {/* Slides */}
@@ -196,7 +195,7 @@ export default function Main() {
             </div>
           </div>
           <div className="lg:w-[55%] md:w-[60%] sm:w-[85%] w-full sm:mx-0 mx-auto flex lg:justify-center">
-            <div className="lg:w-[70%] ">
+            <div className="lg:w-[85%] ">
               <p className="text-4xl font-extrabold ">
                 Book your experience with us today!
               </p>
@@ -228,10 +227,7 @@ export default function Main() {
           </div>
         </section>
         <section className="min-h-[500px] lg:mt-25 mt-17 flex justify-center">
-          <div
-            className="min-h-full flex flex-col justify-center items-center w-[95%] overflow-hidden
-           py-10"
-          >
+          <div className="min-h- flex flex-col items-center w-[90%] mx-auto lg:px-0 overflow-hidden py-10">
             <div className="lg:w-[45%] flex flex-col justify-center items-center">
               <div className="badge border-gray-200 rounded-4xl lg:font-semibold font-extrabold mb-3 lg:px-5 px-3 py-[17px]">
                 <div className="text-warning">
@@ -251,7 +247,7 @@ export default function Main() {
                 </div>
                 <div className="font-black text-gray-600">10.4K loved this</div>
               </div>
-              <p className="text-4xl w-fit font-extrabold mt-2">
+              <p className="text-4xl w-fit text-center font-extrabold mt-2">
                 We're cooking!
               </p>
               <p className="lg:w-150 w-[95%] md:w-[65%] sm:w-[75%] text-center mt-4 mb-3 lg:text-[20px] text-[17px] font-light lg:font-extralight text-gray-700">
@@ -260,70 +256,85 @@ export default function Main() {
                 and dinner we are always here for you.
               </p>
             </div>
-            <div className="lg:w-[90%] w-[95%] min-h-fit flex items-center flex-col mt-5 py-5">
-              <div className="flex flex-wrap sm:flex-row md:flex-row lg:flex-row flex-col gap-4 md:gap-5 w-full justify-center">
+            <div className="flex flex-col items-center w-full lg:px-0 mt-5 py-5">
+              {/* Container for the cards */}
+              <div className="flex flex-wrap justify-center gap-6">
                 {menuList.map((menu, index) => (
                   <div
-                    className="lg:w-[32%] sm:w-[48%] md:w-[45%] h-67 ps-6 pt-3 pe-2 rounded-3xl bg-indigo-200 overflow-hidden"
                     key={index}
+                    className="flex flex-col max-w-95 sm:p-6 p-5 rounded-3xl bg-blue-200 overflow-hidden shadow-sm"
                   >
-                    <p className="text-3xl font-extrabold line-clamp-1">
+                    {/* Title */}
+                    <h3 className="text-3xl font-extrabold line-clamp-1 mb-2">
                       {menu.name}
-                    </p>
-                    <div className="flex h-55">
-                      <div className="w-[50%] grid">
-                        <p className="font-black text-lime-300 text-3xl mb-3">
+                    </h3>
+
+                    {/* Content Split: Left (Text) and Right (Circle) */}
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      {/* Text Side */}
+                      <div className="flex-1 flex flex-col gap-2">
+                        <p className="font-black text-lime-600 text-3xl">
                           {menu.price}$
                         </p>
-                        <div className="flex gap-2 flex-wrap min-h-[20px]">
-                          {menu.tags.map((tag, index) => (
-                            <p
-                              className={`badge font-semibold text-[13px] h-[21px] flex items-center rounded-4xl badge-soft border-0`}
-                              key={index}
+
+                        {/* Tags */}
+                        <div className="flex gap-2 flex-wrap min-h-[24px]">
+                          {menu.tags.map((tag, tIndex) => (
+                            <span
+                              key={tIndex}
+                              className="badge font-semibold text-[11px] px-2 py-1 rounded-full bg-white/50 border-0"
                             >
                               {tag}
-                            </p>
+                            </span>
                           ))}
                         </div>
+
+                        {/* Description */}
                         <p
-                          className="font-light text-sm mt-2 line-clamp-2 max-h-[40px]"
+                          className="font-light text-sm line-clamp-2"
                           title={menu.about}
                         >
                           {menu.about}
                         </p>
-                        <div className="flex gap-x-1 items-center pb-4">
-                          <button className="mt-2 font-bold border-0 btn h-7 rounded-xl gap-x-1 bg-lime-300">
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-2 items-center mt-2 w-fit">
+                          <button className="font-bold border-0 badge py-4 rounded-xl bg-lime-300 hover:bg-lime-400 transition-colors hover:cursor-pointer text-sm">
                             Place order
                           </button>
                           <button
-                            className="btn rounded-full text-center mt-2 w-10 px-2 tooltip tooltip-top"
+                            className="px-2 py-2 flex items-center rounded-full bg-white/40 hover:bg-white/60  hover:cursor-pointer tooltip tooltip-top"
                             data-tip="view menu"
                           >
-                            <i className="bx bxs-food-menu bx-sm"></i>
+                            <i className="bx bxs-food-menu text-lg"></i>
                           </button>
                         </div>
                       </div>
-                      <div className="w-[48%] flex justify-center ">
-                        <img
-                          src={menu.img}
-                          className="lg:h-[160px] h-[140px] aspect-square rounded-full"
-                          alt=""
-                        />
+
+                      {/* Image Side (The Circle) */}
+                      <div className="w-33 h-33 md:w-37 md:h-37 flex-shrink-0 ml-auto">
+                        <div className="w-full h-full aspect-square overflow-hidden rounded-full shadow-md">
+                          <img
+                            src={menu.img}
+                            className="w-full h-full object-cover"
+                            alt={menu.name}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
                 ))}
-
-                <button className="btn btn-primary mt-9 rounded-3xl h-8 text-warning gap-x-0">
-                  view more<i className="bx bx-chevron-right mt-1"></i>
-                </button>
               </div>
+
+              <button className="btn btn-primary mt-12 w-fit rounded-full h-9 text-warning flex items-center gap-1 transition-transform hover:scale-105">
+                View more <i className="bx bx-chevron-right text-xl"></i>
+              </button>
             </div>
           </div>
         </section>
         <section className="w-[100%] lg:w-[85%] mx-auto min-h-[200px] flex flex-col lg:flex-row mt-7 lg:mt-20">
-          <div className="w-full lg:w-[47%] lg:w-[50%] mb-8 lg:ps-0 ps-7 sm:ps-10 md:ps-15">
-            <p className="text-4xl sm:5xl md:text-5xl lg:text-7xl w-fit font-extrabold leading-[1.2]">
+          <div className="w-full lg:w-[50%] mb-8 lg:ps-0 ps-7 sm:ps-6 ">
+            <p className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl w-full pe- font-extrabold leading-[1.2]">
               loved by many! 🤩
             </p>
             <p className="mt-3 text-gray-500 w-[85%] sm:w-[48%] md:w-[48%] lg:w-[85%]">
@@ -334,21 +345,24 @@ export default function Main() {
 
           {/* ✅ Embla carousel wrapper */}
           <div
-            className="embla relative overflow-hidden ps-5 w-full h-[300px]"
+            className="embla relative overflow-hidden w-full h-[300px]"
             ref={horizontalaRef}
           >
             {/* ✅ Embla container */}
             <div className="embla__container flex flex-nowrap gap-x-6 px-6">
-              {slides.map((slide) => (
+              {feedBack.map((slide) => (
                 <div
                   key={slide.id}
                   className="embla__slide flex-none w-80 h-fit"
                 >
-                  <div className="h-53 w-80 p-5 rounded-4xl flex flex-col bg-blue-300 bg-[url('/images/wiggle.svg')] bg-no-repeat bg-size-[auto_100px]">
-                    <p className="text-3xl text-gray-800 font-extrabold h-[85%]">
+                  <div className="min-h-[210px] w-full p-5 gap-y-4 not-odd rounded-4xl flex flex-col bg-blue-300 bg-[url('/images/wiggle.svg')] bg-no-repeat bg-size-[auto_100px]">
+                    <p
+                      className="text-3xl text-gray-800 font-extrabold line-clamp-3 h-26"
+                      title={slide.review}
+                    >
                       {slide.review}
                     </p>
-                    <div className="flex items-center">
+                    <div className="flex items-center ">
                       <div className="w-12 aspect-square avatar rounded-4xl bg-primary"></div>
                       <div className="ms-1.5">
                         <p className="font-bold text-sm">{slide.name}</p>{" "}
@@ -364,16 +378,17 @@ export default function Main() {
                 </div>
               ))}
             </div>
-
-            {/* ✅ Buttons */}
-            <PrevButton
-              onClick={onPrevButtonClick}
-              disabled={prevBtnDisabled}
-            />
-            <NextButton
-              onClick={onNextButtonClick}
-              disabled={nextBtnDisabled}
-            />
+            <div className="flex justify-center mt-8 gap-x-15">
+              {/* ✅ Buttons */}
+              <PrevButton
+                onClick={onPrevButtonClick}
+                disabled={prevBtnDisabled}
+              />
+              <NextButton
+                onClick={onNextButtonClick}
+                disabled={nextBtnDisabled}
+              />
+            </div>
           </div>
         </section>
         <Footer />
