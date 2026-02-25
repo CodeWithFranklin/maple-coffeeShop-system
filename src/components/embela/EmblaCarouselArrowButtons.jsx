@@ -3,7 +3,6 @@ export const PrevButton = (props) => {
 
   return (
     <button
-      className="touch-manipulation btn bg-success aspect-square w-10 px-0 flex justify-center items-center rounded-full cursor-pointer shadow"
       {...restProps}
     >
       <i className="bx bx-left-arrow-alt bx-sm"></i>
@@ -16,7 +15,6 @@ export const NextButton = (props) => {
   const { children, ...restProps } = props;
   return (
     <button
-      className="touch-manipulation btn bg-success aspect-square w-10 px-0 flex justify-center items-center rounded-full cursor-pointer shadow"
       {...restProps}
     >
       <i className="bx bx-right-arrow-alt bx-sm"></i>

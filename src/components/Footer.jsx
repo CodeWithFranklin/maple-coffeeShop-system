@@ -1,6 +1,6 @@
 export default function Footer() {
   return (
-    <footer className="footer sm:footer-horizontal sm:gap-x-10 bg-neutral text-neutral-content grid-rows-2 pt-15 pb-7 mt-25 ps-8 lg:ps-25">
+    <footer className="footer sm:footer-horizontal sm:gap-x-10 bg-neutral text-neutral-content grid-rows-2 pt-15 pb-7 mt-25 ps-8 lg:ps-25 f">
       <aside>
         <svg
           width="50"
