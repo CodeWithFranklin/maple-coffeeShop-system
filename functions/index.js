@@ -1,6 +1,6 @@
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
-// Explicitly use the v1 SDK to match your existing code style
+
 const functions = require("firebase-functions/v1");
 
 initializeApp();

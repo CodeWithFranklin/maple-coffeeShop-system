@@ -129,12 +129,12 @@ export default function Header() {
           >
             <i className="bx bx-cart"></i>
           </NavLink>
-          <a
-            href=""
+          <NavLink
+            to="/signUp"
             className="avatar aspect-square border border-black w-11 flex justify-center items-center"
           >
             <i className="bx bx-user"></i>
-          </a>
+          </NavLink>
         </div>
       </nav>
     </header>

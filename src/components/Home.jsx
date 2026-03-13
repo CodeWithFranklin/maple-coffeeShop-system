@@ -1,3 +1,7 @@
+import React, { useEffect, useState } from "react";
+import { auth } from "../firebase";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { usePrevNextButtons } from "./hooks/usePrevNextButtons";
@@ -26,6 +30,41 @@ export default function Home() {
 
   //check this out latter and fix it
   const images = ["/images/coffee.jpg", "/images/pizza.jpg"];
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // This is the "Gold Standard" for Firebase Homepages
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+      } else {
+        // If not logged in, boot them to Login
+        navigate("/signIn");
+      }
+      setLoading(false);
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate("/signIn");
+    } catch (error) {
+      console.error("Logout Error:", error.message);
+    }
+  };
+
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Brewing your experience...
+      </div>
+    );
 
   return (
     <section>

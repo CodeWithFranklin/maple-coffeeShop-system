@@ -1,3 +1,4 @@
+import { NavLink } from "react-router-dom";
 import { useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { usePrevNextButtons } from "./hooks/usePrevNextButtons";
@@ -104,9 +105,9 @@ export default function Store() {
                     <button className="btn btn- h-9 border-0 rounded-3xl border-1 border-gray-400">
                       Preview Store
                     </button>
-                    <button className="btn btn- h-9 border-0 rounded-3xl border-1 border-gray-400">
+                    <NavLink to="/order" className="btn btn- h-9 border-0 rounded-3xl border-1 border-gray-400">
                       Order Here
-                    </button>
+                    </NavLink>
                   </div>
                 </div>
               ))}
