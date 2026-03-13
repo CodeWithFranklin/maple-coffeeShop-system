@@ -87,65 +87,70 @@ const feedBack = [
 ];
 
 const locations = [
-  { id: 1, label: "Book a Space" },
-  { id: 2, label: "Our Store, occstarp kfk 12 street" },
-  { id: 3, label: "Consultation" },
+  { id: 1, label: "Springfield" },
+  { id: 2, label: "Austin" },
+  { id: 3, label: "Denver" },
+  { id: 4, label: "Seattle" },
+  { id: 5, label: "Lagos" },
 ];
 
 const locatedStores = [
+  // SPRINGFIELD STORES
   {
     id: 1,
     name: "Maple Haven",
-    img: "/images/pizza.jpg",
+    img: "/images/store1.jpg",
     address: "123 Maple Street, Springfield, IL",
   },
   {
     id: 2,
+    name: "The Springfield Roastery",
+    img: "/images/store2.jpg",
+    address: "99 Oak Avenue, Springfield, IL",
+  },
+
+  // AUSTIN STORES
+  {
+    id: 3,
     name: "Coffee Corner",
-    img: "/images/pizza.jpg",
+    img: "/images/store3.jpg",
     address: "456 Elm Avenue, Austin, TX",
   },
   {
-    id: 3,
-    name: "Brewed Bliss",
-    img: "/images/pizza.jpg",
-    address: "789 Oak Lane, Denver, CO",
-  },
-  {
     id: 4,
-    name: "Caffeine Cove",
-    img: "/images/pizza.jpg",
-    address: "101 Pine Road, Seattle, WA",
+    name: "Keep Austin Brewed",
+    img: "/images/store4.jpg",
+    address: "22 Congress Ave, Austin, TX",
   },
+
+  // DENVER STORES
   {
     id: 5,
-    name: "Espresso Express",
-    img: "/images/pizza.jpg",
-    address: "202 Coffee Lane, Portland, OR",
+    name: "Brewed Bliss",
+    img: "/images/store5.jpg",
+    address: "789 Oak Lane, Denver, CO",
   },
+
+  // SEATTLE STORES
   {
     id: 6,
-    name: "Latte Lounge",
-    img: "/images/pizza.jpg",
-    address: "303 Java Street, Miami, FL",
+    name: "Caffeine Cove",
+    img: "/images/store6.jpg",
+    address: "101 Pine Road, Seattle, WA",
   },
+
+  // LAGOS STORES
   {
     id: 7,
-    name: "Mocha Manor",
-    img: "/images/pizza.jpg",
-    address: "404 Brew Boulevard, Chicago, IL",
+    name: "Maple Lekki",
+    img: "/images/store7.jpg",
+    address: "Plot 15, Admiralty Way, Lekki, Lagos",
   },
   {
     id: 8,
-    name: "Cuppa Charm",
-    img: "/images/pizza.jpg",
-    address: "505 Roast Road, Boston, MA",
-  },
-  {
-    id: 9,
-    name: "Bean Bliss",
-    img: "/images/pizza.jpg",
-    address: "606 Aroma Avenue, San Francisco, CA",
+    name: "Ikeja Espresso",
+    img: "/images/store8.jpg",
+    address: "Allen Avenue, Ikeja, Lagos",
   },
 ];
 

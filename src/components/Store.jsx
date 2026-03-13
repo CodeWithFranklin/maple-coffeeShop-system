@@ -5,15 +5,26 @@ import { usePrevNextButtons } from "./hooks/usePrevNextButtons";
 import { NextButton, PrevButton } from "./embela/EmblaCarouselArrowButtons";
 import { locations, locatedStores } from "./ListItems";
 export default function Store() {
-  const [selected, setSelected] = useState("Select Location");
+  const [selected, setSelected] = useState("Select Location"); // Track selected location
+  const [searchTerm, setSearchTerm] = useState(""); // Track search 
+  const [previewStore, setPreviewStore] = useState(null);
 
   const handleSelect = (label) => {
     setSelected(label);
-
+    setSearchTerm(""); // Clear search after selection
+    document.activeElement.blur();
     // DaisyUI dropdowns stay open because of focus.
     // This line "blurs" the current element to force the menu to close.
-    document.activeElement.blur();
   };
+  const filteredStores = locatedStores.filter((store) => {
+    if (selected === "Select Location") return true; // Show all initially
+    return store.address.toLowerCase().includes(selected.toLowerCase());
+  });
+
+  // LOGIC: Filter locations inside the dropdown for the search bar
+  const searchedLocations = locations.filter((loc) =>
+    loc.label.toLowerCase().includes(searchTerm.toLowerCase())
+  );
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
   const {
     prevBtnDisabled,
@@ -74,18 +85,38 @@ export default function Store() {
                 tabIndex={0}
                 className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-64 border border-base-200"
               >
-                {locations.map((location) => (
-                  <li key={location.id}>
-                    <a onClick={() => handleSelect(location.label)}>
-                      {location.label}
-                    </a>
-                  </li>
-                ))}
+                <div className="px-2 py-2">
+                  <label className="input input-sm border-gray-200 flex items-center gap-2">
+                    <i className="bx bx-search opacity-50"></i>
+                    <input
+                      type="text"
+                      className="grow"
+                      placeholder="Search location..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </label>
+                </div>
+                <div className="max-h-60 overflow-y-auto">
+                  {searchedLocations.length > 0 ? (
+                    searchedLocations.map((location) => (
+                      <li key={location.id}>
+                        <a onClick={() => handleSelect(location.label)}>
+                          {location.label}
+                        </a>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="disabled p-2 text-xs text-gray-400">
+                      No locations found
+                    </li>
+                  )}
+                </div>
               </ul>
             </div>
             <div>
-              <h4 className="font-bold mb-3">Select Store</h4>
-              {locatedStores.map((store) => (
+              <h4 className="font-bold mb-3">Stores in {selected}</h4>
+              {filteredStores.map((store) => (
                 <div
                   key={store.id}
                   className="flex items-center justify-between border-1 border-gray-400 min-h-22 w-full rounded-full px-5 py-3 mb-5"
@@ -102,10 +133,17 @@ export default function Store() {
                     </div>
                   </div>
                   <div className="flex gap-x-2">
-                    <button className="btn btn- h-9 border-0 rounded-3xl border-1 border-gray-400">
+                    {/* UPDATED: Click handler sets this store as the preview */}
+                    <button
+                      onClick={() => setPreviewStore(store)}
+                      className="btn h-9 border-0 rounded-3xl border-1 border-gray-400"
+                    >
                       Preview Store
                     </button>
-                    <NavLink to="/order" className="btn btn- h-9 border-0 rounded-3xl border-1 border-gray-400">
+                    <NavLink
+                      to="/order"
+                      className="btn h-9 border-0 rounded-3xl border-1 border-gray-400"
+                    >
                       Order Here
                     </NavLink>
                   </div>
@@ -155,12 +193,22 @@ export default function Store() {
 
               {/* THE STATIC CONTENT: This never moves */}
               <div className="card-body">
-                <h2 className="card-title">Maple Store Gallery</h2>
+                {/* DYNAMIC CONTENT: Using data from the clicked store */}
+                <h2 className="card-title">{previewStore?.name}</h2>
+                <p className="text-sm text-gray-500">{previewStore?.address}</p>
                 <p>
-                  The images above slide, but this text and the "Buy Now" button
-                  stay exactly where they are.
+                  Experience the finest maple blends at our {previewStore?.name}{" "}
+                  location. Great for study sessions or quick coffee runs.
                 </p>
-                <div className="card-actions justify-end">
+
+                <div className="card-actions justify-end mt-4">
+                  {/* Option to clear preview */}
+                  <button
+                    className="btn btn-ghost btn-xs"
+                    onClick={() => setPreviewStore(null)}
+                  >
+                    Close Preview
+                  </button>
                   <button className="btn btn-primary">Buy Now</button>
                 </div>
               </div>
