@@ -1,52 +1,34 @@
 import React, { useState } from "react";
 import { useFormik } from "formik";
-import { useNavigate, Link } from "react-router-dom"; // 1. Import useNavigate
+import { useNavigate, Link } from "react-router-dom";
 import { auth } from "../firebase.js";
 import {
-  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
-  updateProfile,
 } from "firebase/auth";
-import { signUpSchema } from "../functions/validationSchema.js";
+import { signInSchema } from "../functions/validationSchema.js"; // Using your signInSchema
 
-export default function SignUp() {
+export default function Login() {
   const googleProvider = new GoogleAuthProvider();
-  const navigate = useNavigate(); // 2. Initialize the hook
-
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const formik = useFormik({
     initialValues: {
-      name: "",
       email: "",
       password: "",
-      confirmPassword: "",
     },
-    validationSchema: signUpSchema,
+    validationSchema: signInSchema,
     onSubmit: async (values, { setSubmitting, setStatus }) => {
       try {
-        // Create the Auth User
-        const userCredential = await createUserWithEmailAndPassword(
-          auth,
-          values.email,
-          values.password
-        );
-
-        // Update profile for Cloud Function
-        await updateProfile(userCredential.user, {
-          displayName: values.name,
-        });
-
-        console.log("Signup Success!");
-
-        // 3. Send user to homepage
+        await signInWithEmailAndPassword(auth, values.email, values.password);
+        console.log("Login Success!");
         navigate("/");
       } catch (error) {
         const message =
-          error.code === "auth/email-already-in-use"
-            ? "This email is already in use."
+          error.code === "auth/invalid-credential"
+            ? "Invalid email or password."
             : error.message;
         setStatus(message);
       } finally {
@@ -59,7 +41,6 @@ export default function SignUp() {
     e.preventDefault();
     try {
       await signInWithPopup(auth, googleProvider);
-      // 4. Redirect after Google Login too
       navigate("/");
     } catch (error) {
       console.error("Google Auth Error:", error.message);
@@ -69,6 +50,7 @@ export default function SignUp() {
   return (
     <section className="min-h-full flex justify-center">
       <div className="flex flex-row w-full max-w-7xl p-8">
+        {/* Left Side Image */}
         <div className="hidden lg:flex flex-7">
           <img
             src="/images/login.svg"
@@ -76,21 +58,23 @@ export default function SignUp() {
             className="h-115 fixed mt-8"
           />
         </div>
+
+        {/* Right Side Form */}
         <div className="flex-6">
           <div className="flex flex-col mx-auto w-100 rounded-3xl bg-white p-7 mt-9">
             <div className="text-center mb-5">
-              <p className="text-2xl font-bold">Create your account</p>
+              <p className="text-2xl font-bold">Welcome Back</p>
               <p className="text-gray-600 mb-2">
-                Hey there, create a café one account to complete your order.
-                It's quick and easy!
+                Hey there, log in to your café one account to continue your
+                journey.
               </p>
               <p>
-                Already have an account?{" "}
+                Don't have an account?{" "}
                 <Link
-                  to={"/signIn"}
-                  className="text-primary font-semibold text-md "
+                  to={"/signUp"}
+                  className="text-primary font-semibold text-md"
                 >
-                  Login
+                  Create one
                 </Link>{" "}
               </p>
             </div>
@@ -99,27 +83,6 @@ export default function SignUp() {
               className="flex w-full max-w-md flex-col"
               onSubmit={formik.handleSubmit}
             >
-              {/* NAME INPUT */}
-              <label
-                className={`input validator mb-3 w-full ${
-                  formik.touched.name && formik.errors.name
-                    ? "border-red-500"
-                    : ""
-                }`}
-              >
-                <i className="bx bx-user opacity-50"></i>
-                <input
-                  type="text"
-                  placeholder="Username"
-                  {...formik.getFieldProps("name")}
-                />
-              </label>
-              {formik.touched.name && formik.errors.name && (
-                <div className="text-red-500 text-xs mb-2">
-                  {formik.errors.name}
-                </div>
-              )}
-
               {/* EMAIL INPUT */}
               <label
                 className={`input validator mb-3 w-full ${
@@ -173,40 +136,6 @@ export default function SignUp() {
                 </div>
               )}
 
-              {/* CONFIRM PASSWORD INPUT */}
-              <label
-                className={`input validator mb-3 w-full relative ${
-                  formik.touched.confirmPassword &&
-                  formik.errors.confirmPassword
-                    ? "border-red-500"
-                    : ""
-                }`}
-              >
-                <i className="bx bx-lock-alt opacity-50"></i>
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm Password"
-                  {...formik.getFieldProps("confirmPassword")}
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  <i
-                    className={`bx ${
-                      showConfirmPassword ? "bx-show" : "bx-hide"
-                    } opacity-50 text-xl`}
-                  ></i>
-                </button>
-              </label>
-              {formik.touched.confirmPassword &&
-                formik.errors.confirmPassword && (
-                  <div className="text-red-500 text-xs mb-2">
-                    {formik.errors.confirmPassword}
-                  </div>
-                )}
-
               {formik.status && (
                 <div className="text-red-600 font-bold mb-3">
                   {formik.status}
@@ -218,7 +147,7 @@ export default function SignUp() {
                 className="btn btn-primary mt-4"
                 disabled={formik.isSubmitting}
               >
-                {formik.isSubmitting ? "Processing..." : "Sign Up"}
+                {formik.isSubmitting ? "Checking..." : "Log In"}
               </button>
 
               <div className="divider text-gray-600">or</div>
@@ -232,6 +161,7 @@ export default function SignUp() {
                 Continue with Google
               </button>
             </form>
+
             <p className="text-sm text-center text-gray-600 mt-5">
               By continuing, you agree to our{" "}
               <a
