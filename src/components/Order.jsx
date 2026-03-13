@@ -1,8 +1,24 @@
-import { useLocation, Navigate } from "react-router-dom";
+import { useLocation, Navigate, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { menuList } from "./ListItems";
 
 export default function Order() {
+  const navigate = useNavigate();
+  const user = null; // Replace this with your actual auth state (e.g., from a Context or Firebase)
+
+  const handleCheckout = () => {
+    if (!user) {
+      // 1. Save the current cart to localStorage
+      localStorage.setItem("pending_cart", JSON.stringify(cart));
+      localStorage.setItem("pending_store", JSON.stringify(store));
+
+      // 2. Redirect to signup
+      navigate("/signup");
+    } else {
+      // Proceed to payment/checkout logic
+      console.log("Processing order...", cart);
+    }
+  };
   const location = useLocation();
   const store = location.state?.selectedStore;
   const [activeItem, setActiveItem] = useState(null);
@@ -95,6 +111,21 @@ export default function Order() {
       setFilteredMenu(filtered);
     }
   };
+  useEffect(() => {
+    const savedCart = localStorage.getItem("pending_cart");
+    const savedStore = localStorage.getItem("pending_store");
+
+    if (savedCart && savedStore) {
+      // 1. Restore the cart and store data
+      setCart(JSON.parse(savedCart));
+      // Note: If your app requires the 'store' state to be in location.state,
+      // you might need to handle the redirect back carefully.
+
+      // 2. Clear the storage so it doesn't double-load next time
+      localStorage.removeItem("pending_cart");
+      localStorage.removeItem("pending_store");
+    }
+  }, []);
 
   return (
     <section className="min-h-screen flex flex-col">
@@ -231,14 +262,14 @@ export default function Order() {
               </li>
 
               {cart.length === 0 ? (
-                <li className="p-10 text-center opacity-40 font-bold">
+                <li className="p-2 text-center opacity-40 font-bold">
                   Your cart is empty
                 </li>
               ) : (
                 cart.map((item) => (
                   <li
                     key={item.id}
-                    className="list-row flex items-center px-4 py-2 border-b border-gray-50 last:border-0"
+                    className="list-row flex items-center px-4 py-2"
                   >
                     <div className="avatar avatar-placeholder">
                       <div className="bg-red-100 font-bold text-neutral-content w-10 rounded-full">
@@ -289,7 +320,7 @@ export default function Order() {
               )}
 
               {/* Totals Section */}
-              <li className="flex mx-5 mt-6 justify-between border-t pt-4">
+              <li className="flex mx-5 mt-6 justify-between border-t border-gray-300 pt-4">
                 <p className="text-lg">Sub Total</p>
                 <p className="font-semibold text-lg my-auto w-fit">
                   ${subTotal.toFixed(2)}
@@ -304,8 +335,9 @@ export default function Order() {
 
               <div className="flex justify-center mt-4">
                 <button
+                  onClick={handleCheckout} // Wired to the new logic
                   disabled={cart.length === 0}
-                  className="btn btn-primary rounded-full w-70"
+                  className="btn btn-primary my-4 rounded-full w-70 mx-auto"
                 >
                   Order
                 </button>
