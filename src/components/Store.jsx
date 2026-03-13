@@ -142,6 +142,7 @@ export default function Store() {
                     </button>
                     <NavLink
                       to="/order"
+                      state={{ selectedStore: store }}
                       className="btn h-9 border-0 rounded-3xl border-1 border-gray-400"
                     >
                       Order Here

@@ -3,20 +3,21 @@ const menuList = [
     id: 1,
     name: "Pizza",
     img: "/images/pizza.jpg",
-    about:
-      "Lorem ipsum dolor sit, amet consectetur adipisicing elit. orem ipsum dolor sit, amet consectetur adipisicing elit.",
+    about: "Lorem ipsum dolor sit, amet consectetur adipisicing elit.",
     price: 17,
     tags: ["Cafe", "Green"],
+    availableAt: [1, 3], // Available in Springfield and Lagos
   },
   {
     id: 2,
-    name: "Pizza",
-    img: "/images/pizza.jpg",
-    about:
-      "Lorem ipsum dolor sit, amet consectetur adipisicing elit. orem ipsum dolor sit, amet consectetur adipisicing elit.",
-    price: 17,
-    tags: ["Cafe", "Green"],
+    name: "Espresso Latte",
+    img: "/images/latte.jpg",
+    about: "Rich espresso with smooth steamed milk.",
+    price: 12,
+    tags: ["Cafe", "Hot"],
+    availableAt: [1, 2, 3], // Available everywhere
   },
+
   {
     id: 3,
     name: "Pizza",
@@ -25,6 +26,7 @@ const menuList = [
       "Lorem ipsum dolor sit, amet consectetur adipisicing elit. orem ipsum dolor sit, amet consectetur adipisicing elit.",
     price: 17,
     tags: ["Cafe", "Green"],
+    availableAt: [2, 3], // Available everywhere
   },
   {
     id: 4,
@@ -34,6 +36,7 @@ const menuList = [
       "Lorem ipsum dolor sit, amet consectetur adipisicing elit. orem ipsum dolor sit, amet consectetur adipisicing elit.",
     price: 17,
     tags: ["Cafe", "Green"],
+    availableAt: [1, 2], // Available everywhere
   },
   {
     id: 5,
@@ -43,6 +46,7 @@ const menuList = [
       "Lorem ipsum dolor sit, amet consectetur adipisicing elit. orem ipsum dolor sit, amet consectetur adipisicing elit.",
     price: 17,
     tags: ["Cafe", "Green"],
+    availableAt: [1, 2], // Available everywhere
   },
   {
     id: 6,
@@ -52,6 +56,7 @@ const menuList = [
       "Lorem ipsum dolor sit, amet consectetur adipisicing elit. orem ipsum dolor sit, amet consectetur adipisicing elit.",
     price: 17,
     tags: ["Cafe", "Green"],
+    availableAt: [2, 3], // Available everywhere
   },
 ];
 

@@ -3,21 +3,69 @@ import { useState, useEffect } from "react";
 import { menuList } from "./ListItems";
 
 export default function Order() {
-const location = useLocation();
-const store = location.state?.selectedStore;
-const [activeItem, setActiveItem] = useState(null);
-const [quantity, setQuantity] = useState(1);
-const [searchTerm, setSearchTerm] = useState("");
-// Removed redundant declaration of filteredMenu
+  const location = useLocation();
+  const store = location.state?.selectedStore;
+  const [activeItem, setActiveItem] = useState(null);
+  const [quantity, setQuantity] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  // Removed redundant declaration of filteredMenu
+  // 1. New Cart State
+  const [cart, setCart] = useState([]);
 
-const openModal = (item) => {
-  setQuantity(1); // Reset to 1 whenever a new modal opens
-  setActiveItem(item);
-  document.getElementById("product_modal").showModal();
-};
+  // 2. Add to Cart (from Modal)
+  const addToCart = () => {
+    setCart((prevCart) => {
+      // Check if the item already exists in the cart
+      const existingItem = prevCart.find((item) => item.id === activeItem.id);
 
-const increaseQty = () => setQuantity((prev) => prev + 1);
-const decreaseQty = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+      if (existingItem) {
+        // If it exists, just update the quantity
+        return prevCart.map((item) =>
+          item.id === activeItem.id
+            ? { ...item, quantity: item.quantity + quantity }
+            : item
+        );
+      }
+      // If it's new, add the whole object + the selected quantity
+      return [...prevCart, { ...activeItem, quantity: quantity }];
+    });
+
+    // Close the modal after adding
+    document.getElementById("product_modal").close();
+  };
+
+  // 3. Remove Item entirely
+  const removeFromCart = (productId) => {
+    setCart(cart.filter((item) => item.id !== productId));
+  };
+
+  // 4. Update quantity directly in the Sidebar
+  const updateCartQuantity = (productId, amount) => {
+    setCart(
+      cart.map((item) => {
+        if (item.id === productId) {
+          const newQty = item.quantity + amount;
+          return { ...item, quantity: newQty > 0 ? newQty : 1 };
+        }
+        return item;
+      })
+    );
+  };
+
+  // 5. Calculate Totals
+  const subTotal = cart.reduce(
+    (acc, item) => acc + item.price * item.quantity,
+    0
+  );
+
+  const openModal = (item) => {
+    setQuantity(1); // Reset to 1 whenever a new modal opens
+    setActiveItem(item);
+    document.getElementById("product_modal").showModal();
+  };
+
+  const increaseQty = () => setQuantity((prev) => prev + 1);
+  const decreaseQty = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
 
   const [filteredMenu, setFilteredMenu] = useState([]);
 
@@ -36,15 +84,17 @@ const decreaseQty = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
 
   // Handle category filtering (e.g., Cafe, Green)
   const handleCategoryFilter = (tag) => {
-      if (tag === "All") {
-        setFilteredMenu(menuList.filter((item) => item.availableAt.includes(store.id)));
-      } else {
-        const filtered = menuList
-          .filter((item) => item.availableAt.includes(store.id))
-          .filter((item) => item.tags.includes(tag));
-        setFilteredMenu(filtered);
-      }
-    };
+    if (tag === "All") {
+      setFilteredMenu(
+        menuList.filter((item) => item.availableAt.includes(store.id))
+      );
+    } else {
+      const filtered = menuList
+        .filter((item) => item.availableAt.includes(store.id))
+        .filter((item) => item.tags.includes(tag));
+      setFilteredMenu(filtered);
+    }
+  };
 
   return (
     <section className="min-h-screen flex flex-col">
@@ -175,88 +225,91 @@ const decreaseQty = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
             </div>
           </div>
           <div className="lg:w-100 mx-auto relative">
-            <ul className="list bg-base-100 rounded-3xl shadow-md w-85 sticky top-29 mx-auto">
+            <ul className="list bg-base-100 rounded-3xl shadow-md w-85 sticky top-29 mx-auto pb-4">
               <li className="p-4 pb-2 text-lg font-extrabold opacity-60 tracking-wide">
-                Order Summary{" "}
+                Order Summary ({cart.length})
               </li>
 
-              <li className="list-row flex items-center">
-                <div className="avatar avatar-placeholder">
-                  <div className="bg-red-100 font-bold text-neutral-content w-10 rounded-full">
-                    <span className="text-md text-error">2x</span>
-                  </div>
-                </div>
-                <div className="w-60">
-                  <div className="font-bold">Ellie Beilish</div>
-                  <div className="text-xs uppercase font-semibold opacity-60">
-                    Bears of a fever
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 font-bold">
-                  <button className="btn btn-circle h-8 w-8 btn-ghost bg-lime-200">
-                    <i className="bx bx-minus"></i>
-                  </button>
-                  <button className="btn btn-circle h-8 w-8 btn-ghost bg-lime-200">
-                    <i className="bx bx-plus"></i>
-                  </button>
-                </div>
-                <button className="btn btn-square btn-ghost">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    style={{ fill: "rgba(0, 0, 0, 1);transform: ;msFilter:;" }}
+              {cart.length === 0 ? (
+                <li className="p-10 text-center opacity-40 font-bold">
+                  Your cart is empty
+                </li>
+              ) : (
+                cart.map((item) => (
+                  <li
+                    key={item.id}
+                    className="list-row flex items-center px-4 py-2 border-b border-gray-50 last:border-0"
                   >
-                    <path d="M6 7H5v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7H6zm10.618-3L15 2H9L7.382 4H3v2h18V4z"></path>
-                  </svg>
-                </button>
-              </li>
+                    <div className="avatar avatar-placeholder">
+                      <div className="bg-red-100 font-bold text-neutral-content w-10 rounded-full">
+                        <span className="text-md text-error">
+                          {item.quantity}x
+                        </span>
+                      </div>
+                    </div>
 
-              <li className="list-row flex items-center">
-                <div className="avatar avatar-placeholder">
-                  <div className="bg-red-100 font-bold text-neutral-content w-10 rounded-full">
-                    <span className="text-md text-error">2x</span>
-                  </div>
-                </div>
-                <div className="w-60">
-                  <div className="font-bold">Ellie Beilish</div>
-                  <div className="text-xs uppercase font-semibold opacity-60">
-                    Bears of a fever
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 font-bold">
-                  <button className="btn btn-circle h-8 w-8 btn-ghost bg-lime-200">
-                    <i className="bx bx-minus"></i>
-                  </button>
-                  <button className="btn btn-circle h-8 w-8 btn-ghost bg-lime-200">
-                    <i className="bx bx-plus"></i>
-                  </button>
-                </div>
-                <button className="btn btn-square btn-ghost">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    style={{ fill: "rgba(0, 0, 0, 1);transform: ;msFilter:;" }}
-                  >
-                    <path d="M6 7H5v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7H6zm10.618-3L15 2H9L7.382 4H3v2h18V4z"></path>
-                  </svg>
-                </button>
-              </li>
+                    <div className="w-60 px-2">
+                      <div className="font-bold truncate">{item.name}</div>
+                      <div className="text-xs uppercase font-semibold opacity-60 truncate">
+                        {item.tags[0] || "Beverage"}
+                      </div>
+                    </div>
 
-              <li className="flex mx-5 my-4 justify-between">
+                    <div className="flex items-center gap-1 font-bold">
+                      <button
+                        onClick={() => updateCartQuantity(item.id, -1)}
+                        className="btn btn-circle h-7 w-7 btn-ghost bg-lime-200"
+                      >
+                        <i className="bx bx-minus"></i>
+                      </button>
+                      <button
+                        onClick={() => updateCartQuantity(item.id, 1)}
+                        className="btn btn-circle h-7 w-7 btn-ghost bg-lime-200"
+                      >
+                        <i className="bx bx-plus"></i>
+                      </button>
+                    </div>
+
+                    <button
+                      onClick={() => removeFromCart(item.id)}
+                      className="btn btn-square btn-ghost text-error"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path d="M6 7H5v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7H6zm10.618-3L15 2H9L7.382 4H3v2h18V4z"></path>
+                      </svg>
+                    </button>
+                  </li>
+                ))
+              )}
+
+              {/* Totals Section */}
+              <li className="flex mx-5 mt-6 justify-between border-t pt-4">
                 <p className="text-lg">Sub Total</p>
-                <p className="font-semibold text-lg my-auto w-fit">$400</p>
+                <p className="font-semibold text-lg my-auto w-fit">
+                  ${subTotal.toFixed(2)}
+                </p>
               </li>
               <li className="flex mx-5 text-lg font-bold justify-between">
                 <p>Total</p>
-                <p className="font-bold text-lg my-auto w-fit">$400</p>
+                <p className="font-bold text-lg my-auto w-fit">
+                  ${subTotal.toFixed(2)}
+                </p>
               </li>
-              <button className="btn my-4 rounded-full w-70 mx-auto">
-                Order
-              </button>
+
+              <div className="flex justify-center mt-4">
+                <button
+                  disabled={cart.length === 0}
+                  className="btn btn-primary rounded-full w-70"
+                >
+                  Order
+                </button>
+              </div>
             </ul>
           </div>
         </div>
@@ -307,9 +360,11 @@ const decreaseQty = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
               </div>
 
               <div className="card-actions w-full">
-                <button className="btn btn-primary w-full rounded-xl text-lg flex justify-between px-8">
+                <button
+                  onClick={addToCart} // Wired to the function above
+                  className="btn btn-primary w-full rounded-xl text-lg flex justify-between px-8"
+                >
                   <span>Add to Cart</span>
-                  {/* Real-time price calculation */}
                   <span className="opacity-70">
                     ${(activeItem?.price * quantity).toFixed(2)}
                   </span>

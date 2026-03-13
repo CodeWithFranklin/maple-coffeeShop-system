@@ -34,10 +34,10 @@ export default function Header() {
                 <a>Services</a>
                 <ul className="p-2">
                   <li>
-                    <a>Submenu 1</a>
+                    <a>Book a Space</a>
                   </li>
                   <li>
-                    <a>Submenu 2</a>
+                    <NavLink to="/store">Our Store</NavLink>
                   </li>
                 </ul>
               </li>
