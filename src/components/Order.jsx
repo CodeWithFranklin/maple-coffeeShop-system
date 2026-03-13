@@ -1,33 +1,51 @@
 import { useLocation, Navigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { menuList } from "./ListItems";
 
 export default function Order() {
-  const location = useLocation();
-  const store = location.state?.selectedStore;
+const location = useLocation();
+const store = location.state?.selectedStore;
+const [activeItem, setActiveItem] = useState(null);
+const [quantity, setQuantity] = useState(1);
+const [searchTerm, setSearchTerm] = useState("");
+// Removed redundant declaration of filteredMenu
 
-  // Redirect if someone tries to access /order without picking a store
-  if (!store) return <Navigate to="/store" replace />;
+const openModal = (item) => {
+  setQuantity(1); // Reset to 1 whenever a new modal opens
+  setActiveItem(item);
+  document.getElementById("product_modal").showModal();
+};
 
-  // LOGIC: Filter menu items that are available at THIS store's ID
-  const storeSpecificMenu = menuList.filter((item) =>
-    item.availableAt.includes(store.id)
-  );
+const increaseQty = () => setQuantity((prev) => prev + 1);
+const decreaseQty = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
 
-  const [filteredMenu, setFilteredMenu] = useState(storeSpecificMenu);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredMenu, setFilteredMenu] = useState([]);
+
+  useEffect(() => {
+    if (store) {
+      const storeSpecificMenu = menuList.filter((item) =>
+        item.availableAt.includes(store.id)
+      );
+      setFilteredMenu(storeSpecificMenu);
+    }
+  }, [store]);
+
+  if (!store) {
+    return <Navigate to="/store" replace />;
+  }
 
   // Handle category filtering (e.g., Cafe, Green)
   const handleCategoryFilter = (tag) => {
-    if (tag === "All") {
-      setFilteredMenu(storeSpecificMenu);
-    } else {
-      const filtered = storeSpecificMenu.filter((item) =>
-        item.tags.includes(tag)
-      );
-      setFilteredMenu(filtered);
-    }
-  };
+      if (tag === "All") {
+        setFilteredMenu(menuList.filter((item) => item.availableAt.includes(store.id)));
+      } else {
+        const filtered = menuList
+          .filter((item) => item.availableAt.includes(store.id))
+          .filter((item) => item.tags.includes(tag));
+        setFilteredMenu(filtered);
+      }
+    };
+
   return (
     <section className="min-h-screen flex flex-col">
       <div className="mx-18 mt-13">
@@ -126,11 +144,7 @@ export default function Order() {
                           {/* Action Buttons */}
                           <div className="flex gap-2 items-center mt-2 w-fit">
                             <button
-                              onClick={() =>
-                                document
-                                  .getElementById("my_modal_3")
-                                  .showModal()
-                              }
+                              onClick={() => openModal(menu)} // Pass the specific menu item here
                               className="font-bold border-0 badge py-4 rounded-xl bg-lime-300 hover:bg-lime-400 transition-colors hover:cursor-pointer text-sm"
                             >
                               Place order
@@ -248,17 +262,67 @@ export default function Order() {
         </div>
       </div>
       {/* You can open the modal using document.getElementById('ID').showModal() method */}
-      <dialog id="my_modal_3" className="modal">
-        <div className="modal-box">
-          <form method="dialog">
-            {/* if there is a button in form, it will close the modal */}
-            <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
-              ✕
-            </button>
-          </form>
-          <h3 className="font-bold text-lg">Hello!</h3>
-          <p className="py-4">Press ESC key or click on ✕ button to close</p>
+      {/* PRODUCT MODAL */}
+      <dialog id="product_modal" className="modal modal-bottom sm:modal-middle">
+        <div className="modal-box p-0 overflow-hidden bg-transparent shadow-none w-fit">
+          {/* THE CARD COMPONENT */}
+          <div className="card bg-base-100 w-96 shadow-2xl border border-gray-100">
+            <figure className="px-5 pt-5 relative">
+              {/* Close Button inside the card for better UI */}
+              <form method="dialog">
+                <button className="btn btn-sm btn-circle btn-ghost absolute right-7 top-7 bg-white/80 hover:bg-white">
+                  ✕
+                </button>
+              </form>
+              <img
+                src={activeItem?.img}
+                alt={activeItem?.name}
+                className="rounded-2xl h-64 w-full object-cover"
+              />
+            </figure>
+
+            <div className="card-body items-center text-center">
+              <h2 className="card-title text-3xl font-black">
+                {activeItem?.name}
+              </h2>
+              <p className="text-gray-500 mb-4">{activeItem?.about}</p>
+
+              {/* QUANTITY REGULATOR */}
+              <div className="flex items-center gap-6 bg-gray-100 p-2 rounded-2xl mb-6">
+                <button
+                  onClick={decreaseQty}
+                  className="btn btn-circle btn-sm bg-white border-none shadow-sm hover:bg-gray-200"
+                >
+                  <i className="bx bx-minus text-lg"></i>
+                </button>
+
+                <span className="text-2xl font-bold w-8">{quantity}</span>
+
+                <button
+                  onClick={increaseQty}
+                  className="btn btn-circle btn-sm bg-lime-300 border-none shadow-sm hover:bg-lime-400"
+                >
+                  <i className="bx bx-plus text-lg"></i>
+                </button>
+              </div>
+
+              <div className="card-actions w-full">
+                <button className="btn btn-primary w-full rounded-xl text-lg flex justify-between px-8">
+                  <span>Add to Cart</span>
+                  {/* Real-time price calculation */}
+                  <span className="opacity-70">
+                    ${(activeItem?.price * quantity).toFixed(2)}
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Backdrop: clicking outside closes the modal */}
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
       </dialog>
     </section>
   );
