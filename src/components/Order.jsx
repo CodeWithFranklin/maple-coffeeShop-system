@@ -4,58 +4,71 @@ import { menuList } from "./ListItems";
 
 export default function Order() {
   const navigate = useNavigate();
-  const user = null; // Replace this with your actual auth state (e.g., from a Context or Firebase)
-
-  const handleCheckout = () => {
-    if (!user) {
-      // 1. Save the current cart to localStorage
-      localStorage.setItem("pending_cart", JSON.stringify(cart));
-      localStorage.setItem("pending_store", JSON.stringify(store));
-
-      // 2. Redirect to signup
-      navigate("/signup");
-    } else {
-      // Proceed to payment/checkout logic
-      console.log("Processing order...", cart);
-    }
-  };
   const location = useLocation();
   const store = location.state?.selectedStore;
+  const user = null; 
+
   const [activeItem, setActiveItem] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  // Removed redundant declaration of filteredMenu
-  // 1. New Cart State
-  const [cart, setCart] = useState([]);
+  const [filteredMenu, setFilteredMenu] = useState([]);
 
-  // 2. Add to Cart (from Modal)
+
+  const [cart, setCart] = useState(() => {
+    if (!store?.id) return [];
+    const saved = localStorage.getItem(`cart_store_${store.id}`);
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    const storeSpecificMenu = store
+      ? menuList.filter((item) => item.availableAt.includes(store.id))
+      : [];
+    setFilteredMenu(storeSpecificMenu);
+  }, [store]);
+
+  
+  useEffect(() => {
+    if (store?.id) {
+      localStorage.setItem(`cart_store_${store.id}`, JSON.stringify(cart));
+      localStorage.setItem("pending_store", JSON.stringify(store));
+    }
+  }, [cart, store]);
+
+  if (!store) {
+    return <Navigate to="/store" replace />;
+  }
+
+ 
+
+  const handleCheckout = () => {
+    if (!user) {
+      localStorage.setItem("last_active_store_id", store.id);
+      navigate("/signup");
+    } else {
+      console.log("Processing order...", cart);
+    }
+  };
+
   const addToCart = () => {
     setCart((prevCart) => {
-      // Check if the item already exists in the cart
       const existingItem = prevCart.find((item) => item.id === activeItem.id);
-
       if (existingItem) {
-        // If it exists, just update the quantity
         return prevCart.map((item) =>
           item.id === activeItem.id
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
-      // If it's new, add the whole object + the selected quantity
       return [...prevCart, { ...activeItem, quantity: quantity }];
     });
-
-    // Close the modal after adding
     document.getElementById("product_modal").close();
   };
 
-  // 3. Remove Item entirely
   const removeFromCart = (productId) => {
     setCart(cart.filter((item) => item.id !== productId));
   };
 
-  // 4. Update quantity directly in the Sidebar
   const updateCartQuantity = (productId, amount) => {
     setCart(
       cart.map((item) => {
@@ -68,37 +81,6 @@ export default function Order() {
     );
   };
 
-  // 5. Calculate Totals
-  const subTotal = cart.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0
-  );
-
-  const openModal = (item) => {
-    setQuantity(1); // Reset to 1 whenever a new modal opens
-    setActiveItem(item);
-    document.getElementById("product_modal").showModal();
-  };
-
-  const increaseQty = () => setQuantity((prev) => prev + 1);
-  const decreaseQty = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
-
-  const [filteredMenu, setFilteredMenu] = useState([]);
-
-  useEffect(() => {
-    if (store) {
-      const storeSpecificMenu = menuList.filter((item) =>
-        item.availableAt.includes(store.id)
-      );
-      setFilteredMenu(storeSpecificMenu);
-    }
-  }, [store]);
-
-  if (!store) {
-    return <Navigate to="/store" replace />;
-  }
-
-  // Handle category filtering (e.g., Cafe, Green)
   const handleCategoryFilter = (tag) => {
     if (tag === "All") {
       setFilteredMenu(
@@ -111,22 +93,22 @@ export default function Order() {
       setFilteredMenu(filtered);
     }
   };
-  useEffect(() => {
-    const savedCart = localStorage.getItem("pending_cart");
-    const savedStore = localStorage.getItem("pending_store");
 
-    if (savedCart && savedStore) {
-      // 1. Restore the cart and store data
-      setCart(JSON.parse(savedCart));
-      // Note: If your app requires the 'store' state to be in location.state,
-      // you might need to handle the redirect back carefully.
+  const openModal = (item) => {
+    setQuantity(1);
+    setActiveItem(item);
+    document.getElementById("product_modal").showModal();
+  };
 
-      // 2. Clear the storage so it doesn't double-load next time
-      localStorage.removeItem("pending_cart");
-      localStorage.removeItem("pending_store");
-    }
-  }, []);
+  const increaseQty = () => setQuantity((prev) => prev + 1);
+  const decreaseQty = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
 
+  const subTotal = cart.reduce(
+    (acc, item) => acc + item.price * item.quantity,
+    0
+  );
+
+  
   return (
     <section className="min-h-screen flex flex-col">
       <div className="mx-18 mt-13">
@@ -225,7 +207,7 @@ export default function Order() {
                           {/* Action Buttons */}
                           <div className="flex gap-2 items-center mt-2 w-fit">
                             <button
-                              onClick={() => openModal(menu)} // Pass the specific menu item here
+                              onClick={() => openModal(menu)}
                               className="font-bold border-0 badge py-4 rounded-xl bg-lime-300 hover:bg-lime-400 transition-colors hover:cursor-pointer text-sm"
                             >
                               Place order
@@ -335,7 +317,7 @@ export default function Order() {
 
               <div className="flex justify-center mt-4">
                 <button
-                  onClick={handleCheckout} // Wired to the new logic
+                  onClick={handleCheckout}
                   disabled={cart.length === 0}
                   className="btn btn-primary my-4 rounded-full w-70 mx-auto"
                 >
@@ -346,14 +328,12 @@ export default function Order() {
           </div>
         </div>
       </div>
-      {/* You can open the modal using document.getElementById('ID').showModal() method */}
+
       {/* PRODUCT MODAL */}
       <dialog id="product_modal" className="modal modal-bottom sm:modal-middle">
         <div className="modal-box p-0 overflow-hidden bg-transparent shadow-none w-fit">
-          {/* THE CARD COMPONENT */}
           <div className="card bg-base-100 w-96 shadow-2xl border border-gray-100">
             <figure className="px-5 pt-5 relative">
-              {/* Close Button inside the card for better UI */}
               <form method="dialog">
                 <button className="btn btn-sm btn-circle btn-ghost absolute right-7 top-7 bg-white/80 hover:bg-white">
                   ✕
@@ -393,7 +373,7 @@ export default function Order() {
 
               <div className="card-actions w-full">
                 <button
-                  onClick={addToCart} // Wired to the function above
+                  onClick={addToCart}
                   className="btn btn-primary w-full rounded-xl text-lg flex justify-between px-8"
                 >
                   <span>Add to Cart</span>
@@ -405,8 +385,6 @@ export default function Order() {
             </div>
           </div>
         </div>
-
-        {/* Backdrop: clicking outside closes the modal */}
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
         </form>

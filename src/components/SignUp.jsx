@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useFormik } from "formik";
-import { useNavigate, Link } from "react-router-dom"; // 1. Import useNavigate
+import { useNavigate, Link } from "react-router-dom";
 import { auth } from "../firebase.js";
 import {
   createUserWithEmailAndPassword,
@@ -12,10 +12,24 @@ import { signUpSchema } from "../functions/validationSchema.js";
 
 export default function SignUp() {
   const googleProvider = new GoogleAuthProvider();
-  const navigate = useNavigate(); // 2. Initialize the hook
+  const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+const handlePostAuthRedirect = () => {
+  const storeId = localStorage.getItem("last_active_store_id");
+  const savedStore = localStorage.getItem("pending_store");
+
+  // Look for the specific cart belonging to that store
+  const savedCart = localStorage.getItem(`cart_store_${storeId}`);
+
+  if (savedCart && savedStore) {
+    navigate("/order", { state: { selectedStore: JSON.parse(savedStore) } });
+  } else {
+    navigate("/");
+  }
+};
 
   const formik = useFormik({
     initialValues: {
@@ -27,22 +41,20 @@ export default function SignUp() {
     validationSchema: signUpSchema,
     onSubmit: async (values, { setSubmitting, setStatus }) => {
       try {
-        // Create the Auth User
         const userCredential = await createUserWithEmailAndPassword(
           auth,
           values.email,
           values.password
         );
 
-        // Update profile for Cloud Function
         await updateProfile(userCredential.user, {
           displayName: values.name,
         });
 
         console.log("Signup Success!");
 
-        // 3. Send user to homepage
-        navigate("/");
+     
+        handlePostAuthRedirect();
       } catch (error) {
         const message =
           error.code === "auth/email-already-in-use"
@@ -59,8 +71,8 @@ export default function SignUp() {
     e.preventDefault();
     try {
       await signInWithPopup(auth, googleProvider);
-      // 4. Redirect after Google Login too
-      navigate("/");
+
+      handlePostAuthRedirect();
     } catch (error) {
       console.error("Google Auth Error:", error.message);
     }
