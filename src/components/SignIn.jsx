@@ -7,12 +7,28 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
 } from "firebase/auth";
-import { signInSchema } from "../functions/validationSchema.js"; // Using your signInSchema
+import { signInSchema } from "../functions/validationSchema.js";
 
 export default function Login() {
   const googleProvider = new GoogleAuthProvider();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+
+  // RECOVERY LOGIC HELPER
+  const handleAuthRedirect = () => {
+    const pendingStoreId = localStorage.getItem("last_active_store_id");
+    const pendingStoreData = localStorage.getItem("pending_store");
+
+    if (pendingStoreId && pendingStoreData) {
+      localStorage.removeItem("last_active_store_id");
+      
+      navigate("/order", { 
+        state: { selectedStore: JSON.parse(pendingStoreData) } 
+      });
+    } else {
+      navigate("/");
+    }
+  };
 
   const formik = useFormik({
     initialValues: {
@@ -24,7 +40,7 @@ export default function Login() {
       try {
         await signInWithEmailAndPassword(auth, values.email, values.password);
         console.log("Login Success!");
-        navigate("/");
+        handleAuthRedirect(); 
       } catch (error) {
         const message =
           error.code === "auth/invalid-credential"
@@ -41,7 +57,7 @@ export default function Login() {
     e.preventDefault();
     try {
       await signInWithPopup(auth, googleProvider);
-      navigate("/");
+      handleAuthRedirect(); 
     } catch (error) {
       console.error("Google Auth Error:", error.message);
     }

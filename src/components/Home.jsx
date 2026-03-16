@@ -1,3 +1,7 @@
+import React, { useEffect, useState } from "react";
+import { auth } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { usePrevNextButtons } from "./hooks/usePrevNextButtons";
@@ -26,7 +30,22 @@ export default function Home() {
 
   //check this out latter and fix it
   const images = ["/images/coffee.jpg", "/images/pizza.jpg"];
+  const [user, setUser] = useState(null);
+const [loading, setLoading] = useState(true);
+const navigate = useNavigate();
 
+useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    setUser(currentUser); // This captures both Logged In (User) and Logged Out (null)
+    setLoading(false);
+  });
+  return () => unsubscribe();
+}, []);
+     <div className="min-h-screen flex items-center justify-center bg-purple-50">
+       <span className="loading loading-spinner loading-lg text-purple-600"></span>
+     </div>
+   );
+ }
   return (
     <section>
       <div className="min-h-[570px] pt-7 sm:pt-10">

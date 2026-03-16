@@ -17,6 +17,19 @@ export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+const handlePostAuthRedirect = () => {
+  const storeId = localStorage.getItem("last_active_store_id");
+  const savedStore = localStorage.getItem("pending_store");
+
+  // Look for the specific cart belonging to that store
+  const savedCart = localStorage.getItem(`cart_store_${storeId}`);
+
+  if (savedCart && savedStore) {
+    navigate("/order", { state: { selectedStore: JSON.parse(savedStore) } });
+  } else {
+    navigate("/");
+  }
+};
   const formik = useFormik({
     initialValues: {
       name: "",
@@ -41,8 +54,7 @@ export default function SignUp() {
 
         console.log("Signup Success!");
 
-        // 3. Send user to homepage
-        navigate("/");
+handlePostAuthRedirect();
       } catch (error) {
         const message =
           error.code === "auth/email-already-in-use"
