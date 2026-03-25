@@ -1,6 +1,31 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { auth } from "../firebase.js";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 
 export default function Header() {
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+
+  // Listen for Auth changes to toggle UI
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      // Clean up bridge keys for a perfect system reset
+      localStorage.removeItem("last_active_store_id");
+      navigate("/");
+    } catch (error) {
+      console.error("Sign out error:", error.message);
+    }
+  };
+
   return (
     <header className="flex justify-center pt-3 mb-20">
       <nav className="navbar max-w-screen-xl w-[95%] lg:w-[90%] mx-auto px-4 sm:px-6 lg:px-8 bg-white/30 backdrop-blur-lg rounded-3xl py-3 pe-5 fixed z-10">
@@ -28,16 +53,16 @@ export default function Header() {
               className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
             >
               <li>
-                <a>Home</a>
+                <NavLink to="/">Home</NavLink>
               </li>
               <li>
                 <a>Services</a>
                 <ul className="p-2">
                   <li>
-                    <a>Book a Space</a>
+                    <a>Submenu 1</a>
                   </li>
                   <li>
-                    <NavLink to="/store">Our Store</NavLink>
+                    <a>Submenu 2</a>
                   </li>
                 </ul>
               </li>
@@ -54,8 +79,6 @@ export default function Header() {
                 Home
               </NavLink>
             </li>
-
-            {/* THE FIXED DROPDOWN */}
             <li className="font-bold btn-ghost rounded-lg list-none">
               <div className="dropdown dropdown-hover group h-[34px] flex items-center">
                 <div
@@ -79,15 +102,8 @@ export default function Header() {
                     />
                   </svg>
                 </div>
-
-                {/* THE GHOST WRAPPER */}
                 <div className="dropdown-content z-[1] pt-4 w-full top-[25px] right-2 bg-transparent">
-                  {/* THE ACTUAL VISIBLE CONTENT */}
-                  <ul
-                    className="menu p-2 shadow bg-base-100 rounded-box min-w-45 mx-0 
-               border-l-0 before:hidden border-none"
-                  >
-                    {/* Added 'border-l-0' and 'before:hidden' to kill the gray line */}
+                  <ul className="menu p-2 shadow bg-base-100 rounded-box min-w-45 mx-0 border-none before:hidden">
                     <li>
                       <a>Book a space</a>
                     </li>
@@ -98,7 +114,6 @@ export default function Header() {
                 </div>
               </div>
             </li>
-
             <li>
               <a className="font-bold">Contact</a>
             </li>
@@ -106,35 +121,77 @@ export default function Header() {
         </div>
 
         <div className="navbar-center flex">
-          <a className="text-3xl font-extrabold flex items-center">
+          <NavLink to="/" className="text-3xl font-extrabold flex items-center">
             Maple{" "}
             <img
               src="/images/bx-coffee-togo.svg"
               className="w-6 lg:mt-[7px]"
               alt="logo"
             />
-          </a>
+          </NavLink>
         </div>
 
-        <div className="navbar-end avatar-group">
-          <a
-            href=""
-            className="avatar aspect-square border border-black w-11 hidden lg:flex justify-center items-center me-2"
-          >
+        <div className="navbar-end flex items-center gap-2">
+          {/* Search and Cart Icons */}
+          <button className="avatar aspect-square rounded-full border border-black w-11 hidden lg:flex justify-center items-center">
             <i className="bx bx-search"></i>
-          </a>
+          </button>
           <NavLink
-            to="/cart"
-            className="avatar aspect-square border border-black w-11 hidden lg:flex justify-center items-center me-2"
+            to="/order"
+            className="avatar aspect-square rounded-full border border-black w-11 hidden lg:flex justify-center items-center"
           >
             <i className="bx bx-cart"></i>
           </NavLink>
-          <NavLink
-            to="/signUp"
-            className="avatar aspect-square border border-black w-11 flex justify-center items-center"
-          >
-            <i className="bx bx-user"></i>
-          </NavLink>
+          {/* AUTH SECTION: Conditional Rendering */}
+          {!user ? (
+            <div className="flex gap-2 ms-2">
+              <NavLink
+                to="/signin"
+                className="btn btn-ghost btn-sm rounded-xl font-bold"
+              >
+                Login
+              </NavLink>
+              <NavLink
+                to="/signup"
+                className="btn btn-primary btn-sm rounded-xl font-bold px-5"
+              >
+                Sign Up
+              </NavLink>
+            </div>
+          ) : (
+            <div className="dropdown dropdown-end">
+              <div
+                tabIndex={0}
+                role="button"
+                className="avatar aspect-square rounded-full border border-black w-11 flex justify-center items-center cursor-pointer"
+              >
+                <i className="bx bx-user text-xl"></i>
+              </div>
+              <ul
+                tabIndex={0}
+                className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow mt-4"
+              >
+                <li className="menu-title px-4 py-2 opacity-50 text-xs uppercase font-bold text-black">
+                  {user.email}
+                </li>
+                <li>
+                  <a>Profile Settings</a>
+                </li>
+                <li>
+                  <a>My Orders</a>
+                </li>
+                <hr className="my-1 opacity-10" />
+                <li>
+                  <button
+                    onClick={handleSignOut}
+                    className="text-error font-bold hover:bg-error/10"
+                  >
+                    <i className="bx bx-log-out"></i> Sign Out
+                  </button>
+                </li>
+              </ul>
+            </div>
+          )}
         </div>
       </nav>
     </header>
