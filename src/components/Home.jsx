@@ -39,9 +39,6 @@ export default function Home() {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-      } else {
-        // If not logged in, boot them to Login
-        navigate("/signIn");
       }
       setLoading(false);
     });
