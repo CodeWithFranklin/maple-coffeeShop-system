@@ -14,6 +14,18 @@ export default function Login() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
 
+  const handlePostAuthRedirect = () => {
+    const storeId = localStorage.getItem("last_active_store_id");
+    const savedStore = localStorage.getItem("pending_store");
+    const savedCart = localStorage.getItem(`cart_store_${storeId}`);
+
+    if (savedCart && savedStore) {
+      navigate("/order", { state: { selectedStore: JSON.parse(savedStore) } });
+    } else {
+      navigate("/");
+    }
+  };
+
   const formik = useFormik({
     initialValues: {
       email: "",
@@ -23,8 +35,8 @@ export default function Login() {
     onSubmit: async (values, { setSubmitting, setStatus }) => {
       try {
         await signInWithEmailAndPassword(auth, values.email, values.password);
+        handlePostAuthRedirect();
         console.log("Login Success!");
-        navigate("/");
       } catch (error) {
         const message =
           error.code === "auth/invalid-credential"
@@ -41,7 +53,7 @@ export default function Login() {
     e.preventDefault();
     try {
       await signInWithPopup(auth, googleProvider);
-      navigate("/");
+      handlePostAuthRedirect();
     } catch (error) {
       console.error("Google Auth Error:", error.message);
     }

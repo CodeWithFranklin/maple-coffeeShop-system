@@ -20,7 +20,16 @@ export default function Header() {
       await signOut(auth);
       // Clean up bridge keys for a perfect system reset
       localStorage.removeItem("last_active_store_id");
+      localStorage.removeItem("pending_store");
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith("cart_store_")) {
+          localStorage.removeItem(key);
+        }
+      });
+
       navigate("/");
+      // reload to hard-reset the JS state if using listitems.js variables
+      window.location.reload();
     } catch (error) {
       console.error("Sign out error:", error.message);
     }
@@ -164,7 +173,7 @@ export default function Header() {
               <div
                 tabIndex={0}
                 role="button"
-                className="avatar aspect-square border border-black w-11 flex justify-center items-center cursor-pointer"
+                className="avatar aspect-square rounded-full border border-black w-11 flex justify-center items-center cursor-pointer"
               >
                 <i className="bx bx-user text-xl"></i>
               </div>

@@ -1,18 +1,19 @@
+import { auth } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
 import { useLocation, Navigate, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { menuList } from "./ListItems";
 
 export default function Order() {
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
   const store = location.state?.selectedStore;
-  const user = null; 
 
   const [activeItem, setActiveItem] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredMenu, setFilteredMenu] = useState([]);
-
 
   const [cart, setCart] = useState(() => {
     if (!store?.id) return [];
@@ -21,13 +22,19 @@ export default function Order() {
   });
 
   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
     const storeSpecificMenu = store
       ? menuList.filter((item) => item.availableAt.includes(store.id))
       : [];
     setFilteredMenu(storeSpecificMenu);
   }, [store]);
 
-  
   useEffect(() => {
     if (store?.id) {
       localStorage.setItem(`cart_store_${store.id}`, JSON.stringify(cart));
@@ -39,14 +46,15 @@ export default function Order() {
     return <Navigate to="/store" replace />;
   }
 
- 
-
   const handleCheckout = () => {
     if (!user) {
+      // Save current context for the redirect after login
       localStorage.setItem("last_active_store_id", store.id);
-      navigate("/signup");
+      localStorage.setItem("pending_store", JSON.stringify(store));
+      navigate("/signup"); // Or /signIn
     } else {
       console.log("Processing order...", cart);
+      // Here i would normally send 'cart' to a database
     }
   };
 
@@ -108,7 +116,6 @@ export default function Order() {
     0
   );
 
-  
   return (
     <section className="min-h-screen flex flex-col">
       <div className="mx-18 mt-13">
