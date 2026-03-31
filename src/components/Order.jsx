@@ -39,10 +39,10 @@ export default function Order() {
 
       setLoading(true);
       try {
-        const q = query(
-          collection(db, "products"),
-          where("availableAt", "array-contains", Number(store.id))
-        );
+       const q = query(
+         collection(db, "products"),
+         where("availableAt", "array-contains", store.id)
+       );
 
         const querySnapshot = await getDocs(q);
         const items = querySnapshot.docs.map((doc) => ({
