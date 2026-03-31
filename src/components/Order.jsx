@@ -1,11 +1,15 @@
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { useLocation, Navigate, useNavigate } from "react-router-dom";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { useState, useEffect } from "react";
-import { menuList } from "./ListItems";
 
 export default function Order() {
+  const [loading, setLoading] = useState(true);
+  const [menu, setMenu] = useState([]); // This holds the "Master List" from DB for this store
+  const [filteredMenu, setFilteredMenu] = useState([]); // This holds what is actually displayed (after search/filter)
   const [user, setUser] = useState(null);
+
   const navigate = useNavigate();
   const location = useLocation();
   const store = location.state?.selectedStore;
@@ -13,7 +17,6 @@ export default function Order() {
   const [activeItem, setActiveItem] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredMenu, setFilteredMenu] = useState([]);
 
   const [cart, setCart] = useState(() => {
     if (!store?.id) return [];
@@ -21,6 +24,7 @@ export default function Order() {
     return saved ? JSON.parse(saved) : [];
   });
 
+  // 1. Auth Listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -28,13 +32,37 @@ export default function Order() {
     return () => unsubscribe();
   }, []);
 
+  // 2. Fetch Store Menu from Firestore
   useEffect(() => {
-    const storeSpecificMenu = store
-      ? menuList.filter((item) => item.availableAt.includes(store.id))
-      : [];
-    setFilteredMenu(storeSpecificMenu);
+    const fetchStoreMenu = async () => {
+      if (!store?.id) return;
+
+      setLoading(true);
+      try {
+        const q = query(
+          collection(db, "products"),
+          where("availableAt", "array-contains", Number(store.id))
+        );
+
+        const querySnapshot = await getDocs(q);
+        const items = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setMenu(items);
+        setFilteredMenu(items); // Initialize filtered menu with full store menu
+      } catch (error) {
+        console.error("Error fetching menu:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStoreMenu();
   }, [store]);
 
+  // 3. LocalStorage Sync
   useEffect(() => {
     if (store?.id) {
       localStorage.setItem(`cart_store_${store.id}`, JSON.stringify(cart));
@@ -42,25 +70,39 @@ export default function Order() {
     }
   }, [cart, store]);
 
+  // 4. Handle Search (Real-time filtering)
+  useEffect(() => {
+    const results = menu.filter((item) =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredMenu(results);
+  }, [searchTerm, menu]);
+
   if (!store) {
     return <Navigate to="/store" replace />;
   }
 
-  const handleCheckout = () => {
-    if (!user) {
-      // Save current context for the redirect after login
-      localStorage.setItem("last_active_store_id", store.id);
-      localStorage.setItem("pending_store", JSON.stringify(store));
-      navigate("/signup"); // Or /signIn
+  // --- Handlers ---
+
+  const handleCategoryFilter = (tag) => {
+    if (tag === "All") {
+      setFilteredMenu(menu);
     } else {
-      console.log("Processing order...", cart);
-      // Here i would normally send 'cart' to a database
+      const filtered = menu.filter((item) => item.tags.includes(tag));
+      setFilteredMenu(filtered);
     }
   };
 
+  // --- Modal Quantity Helpers ---
+  // These stay OUTSIDE addToCart so the Plus/Minus buttons can reach them
+  const increaseQty = () => setQuantity((prev) => prev + 1);
+  const decreaseQty = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+
+  // --- Cart Actions ---
   const addToCart = () => {
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.id === activeItem.id);
+
       if (existingItem) {
         return prevCart.map((item) =>
           item.id === activeItem.id
@@ -70,6 +112,7 @@ export default function Order() {
       }
       return [...prevCart, { ...activeItem, quantity: quantity }];
     });
+
     document.getElementById("product_modal").close();
   };
 
@@ -89,16 +132,13 @@ export default function Order() {
     );
   };
 
-  const handleCategoryFilter = (tag) => {
-    if (tag === "All") {
-      setFilteredMenu(
-        menuList.filter((item) => item.availableAt.includes(store.id))
-      );
+  const handleCheckout = () => {
+    if (!user) {
+      localStorage.setItem("last_active_store_id", store.id);
+      localStorage.setItem("pending_store", JSON.stringify(store));
+      navigate("/signup");
     } else {
-      const filtered = menuList
-        .filter((item) => item.availableAt.includes(store.id))
-        .filter((item) => item.tags.includes(tag));
-      setFilteredMenu(filtered);
+      console.log("Processing order...", cart);
     }
   };
 
@@ -108,13 +148,18 @@ export default function Order() {
     document.getElementById("product_modal").showModal();
   };
 
-  const increaseQty = () => setQuantity((prev) => prev + 1);
-  const decreaseQty = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
-
   const subTotal = cart.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0
   );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <span className="loading loading-spinner loading-lg text-primary"></span>
+      </div>
+    );
+  }
 
   return (
     <section className="min-h-screen flex flex-col">
