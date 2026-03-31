@@ -1,30 +1,37 @@
+import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { useState } from "react";
+import { db } from "../firebase";
+import { collection, getDocs } from "firebase/firestore";
 import useEmblaCarousel from "embla-carousel-react";
 import { usePrevNextButtons } from "./hooks/usePrevNextButtons";
 import { NextButton, PrevButton } from "./embela/EmblaCarouselArrowButtons";
-import { locations, locatedStores } from "./ListItems";
+
+
 export default function Store() {
-  const [selected, setSelected] = useState("Select Location"); // Track selected location
-  const [searchTerm, setSearchTerm] = useState(""); // Track search 
+  const [dbLocations, setDbLocations] = useState([]); // Will hold "cities"
+  const [dbStores, setDbStores] = useState([]); // Will hold "stores"
+  const [loading, setLoading] = useState(true); // Essential for UX
+
+  const [selected, setSelected] = useState("Select Location");
+  const [searchTerm, setSearchTerm] = useState("");
   const [previewStore, setPreviewStore] = useState(null);
 
   const handleSelect = (label) => {
     setSelected(label);
     setSearchTerm(""); // Clear search after selection
     document.activeElement.blur();
-    // DaisyUI dropdowns stay open because of focus.
-    // This line "blurs" the current element to force the menu to close.
   };
-  const filteredStores = locatedStores.filter((store) => {
-    if (selected === "Select Location") return true; // Show all initially
+  // Change 'locatedStores' to 'dbStores'
+  const filteredStores = dbStores.filter((store) => {
+    if (selected === "Select Location") return true;
     return store.address.toLowerCase().includes(selected.toLowerCase());
   });
 
-  // LOGIC: Filter locations inside the dropdown for the search bar
-  const searchedLocations = locations.filter((loc) =>
+  // Change 'locations' to 'dbLocations'
+  const searchedLocations = dbLocations.filter((loc) =>
     loc.label.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
   const {
     prevBtnDisabled,
@@ -34,6 +41,43 @@ export default function Store() {
   } = usePrevNextButtons(emblaApi);
 
   const slides = [1, 2, 3, 4, 5];
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      setLoading(true);
+      try {
+        // 1. Fetch Cities/Locations
+        const citiesSnapshot = await getDocs(collection(db, "cities"));
+        const citiesData = citiesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setDbLocations(citiesData);
+
+        // 2. Fetch All Stores
+        const storesSnapshot = await getDocs(collection(db, "stores"));
+        const storesData = storesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setDbStores(storesData);
+      } catch (error) {
+        console.error("Error fetching store data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInitialData();
+  }, []);
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <span className="loading loading-spinner loading-lg text-lime-400"></span>
+        <p className="ml-4 font-bold">Finding stores near you...</p>
+      </div>
+    );
+  }
   return (
     <section className="min-h-screen flex flex-col">
       <div className="mx-18 mt-13">
