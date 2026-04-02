@@ -6,7 +6,6 @@ import useEmblaCarousel from "embla-carousel-react";
 import { usePrevNextButtons } from "./hooks/usePrevNextButtons";
 import { NextButton, PrevButton } from "./embela/EmblaCarouselArrowButtons";
 
-
 export default function Store() {
   const [dbLocations, setDbLocations] = useState([]); // Will hold "cities"
   const [dbStores, setDbStores] = useState([]); // Will hold "stores"
@@ -198,66 +197,83 @@ export default function Store() {
           </div>
           <div className="lg:w-100 mx-auto">
             {/* THE STICKY WRAPPER: This stays still on the page */}
-            <div className="card bg-base-100 w-80 shadow-sm sticky top-10 self-start translate-y-20 translate-x-10 h-fit">
-              {/* THE VIEWPORT: The Embla Ref goes on the figure (the window) */}
-              <figure
-                className="relative overflow-hidden rounded-t-2xl h-60"
-                ref={emblaRef}
-              >
-                {/* THE CONTAINER: This is the long strip of images */}
-                <div className="flex w-full h-full">
-                  {slides.map((id) => (
-                    <div key={id} className="flex-[0_0_100%] min-w-0 h-full">
-                      <img
-                        src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"
-                        className="w-full h-full object-cover"
-                        alt={`Slide ${id}`}
+            {previewStore ? (
+              <div className="card bg-base-100 w-80 shadow-sm sticky rounded-t-2xl rounded-b-none top-10 self-start translate-y-20 translate-x-10 h-fit">
+                {/* THE VIEWPORT: The Embla Ref goes on the figure (the window) */}
+                <figure
+                  className="relative overflow-hidden rounded-t-2xl h-60"
+                  ref={emblaRef}
+                >
+                  {/* THE CONTAINER: This is the long strip of images */}
+                  <div className="flex w-full h-full">
+                    {slides.map((id) => (
+                      <div key={id} className="flex-[0_0_100%] min-w-0 h-full">
+                        <img
+                          src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"
+                          className="w-full h-full object-cover"
+                          alt={`Slide ${id}`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* THE BUTTONS: Positioned absolute over the image */}
+                  <div className="absolute inset-0 flex items-center justify-between px-2 pointer-events-none">
+                    <div className="pointer-events-auto">
+                      <PrevButton
+                        onClick={onPrevButtonClick}
+                        disabled={prevBtnDisabled}
+                        className="touch-manipulation btn aspect-square w-10 px-0 flex justify-center items-center rounded-full cursor-pointer shadow opacity-70"
                       />
                     </div>
-                  ))}
-                </div>
-
-                {/* THE BUTTONS: Positioned absolute over the image */}
-                <div className="absolute inset-0 flex items-center justify-between px-2 pointer-events-none">
-                  <div className="pointer-events-auto">
-                    <PrevButton
-                      onClick={onPrevButtonClick}
-                      disabled={prevBtnDisabled}
-                      className="touch-manipulation btn aspect-square w-10 px-0 flex justify-center items-center rounded-full cursor-pointer shadow opacity-70"
-                    />
+                    <div className="pointer-events-auto">
+                      <NextButton
+                        onClick={onNextButtonClick}
+                        disabled={nextBtnDisabled}
+                        className="touch-manipulation btn aspect-square w-10 px-0 flex justify-center items-center rounded-full cursor-pointer shadow opacity-70"
+                      />
+                    </div>
                   </div>
-                  <div className="pointer-events-auto">
-                    <NextButton
-                      onClick={onNextButtonClick}
-                      disabled={nextBtnDisabled}
-                      className="touch-manipulation btn aspect-square w-10 px-0 flex justify-center items-center rounded-full cursor-pointer shadow opacity-70"
-                    />
+                </figure>
+
+                {/* THE STATIC CONTENT: This never moves */}
+                <div className="card-body">
+                  {/* DYNAMIC CONTENT: Using data from the clicked store */}
+                  <h2 className="card-title">{previewStore?.name}</h2>
+                  <p className="text-sm text-gray-500">
+                    {previewStore?.address}
+                  </p>
+                  <p>
+                    Experience the finest maple blends at our{" "}
+                    {previewStore?.name} location. Great for study sessions or
+                    quick coffee runs.
+                  </p>
+
+                  <div className="card-actions justify-end mt-4">
+                    {/* Option to clear preview */}
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => setPreviewStore(null)}
+                    >
+                      Close Preview
+                    </button>
+                    <NavLink
+                      to="/order"
+                      state={{ selectedStore: previewStore }}
+                      className="btn btn-primary"
+                    >
+                      Order Here
+                    </NavLink>
                   </div>
-                </div>
-              </figure>
-
-              {/* THE STATIC CONTENT: This never moves */}
-              <div className="card-body">
-                {/* DYNAMIC CONTENT: Using data from the clicked store */}
-                <h2 className="card-title">{previewStore?.name}</h2>
-                <p className="text-sm text-gray-500">{previewStore?.address}</p>
-                <p>
-                  Experience the finest maple blends at our {previewStore?.name}{" "}
-                  location. Great for study sessions or quick coffee runs.
-                </p>
-
-                <div className="card-actions justify-end mt-4">
-                  {/* Option to clear preview */}
-                  <button
-                    className="btn btn-ghost btn-xs"
-                    onClick={() => setPreviewStore(null)}
-                  >
-                    Close Preview
-                  </button>
-                  <button className="btn btn-primary">Buy Now</button>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="sticky top-10 self-start translate-y-20 translate-x-10 min-h-25">
+                <p className="text-gray-400 text-4xl relative font-extrabold text-center mt-20">
+                  Select a store to preview details
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
