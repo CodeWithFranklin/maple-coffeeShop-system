@@ -158,7 +158,7 @@ export default function Store() {
               </ul>
             </div>
             <div>
-              <h4 className="font-bold mb-3">Stores in {selected}</h4>
+              <h4 className="font-bold mb-3"> {selected === "Select Location" ? "All Stores" : `Stores in ${selected}`}</h4>
               {filteredStores.map((store) => (
                 <div
                   key={store.id}
