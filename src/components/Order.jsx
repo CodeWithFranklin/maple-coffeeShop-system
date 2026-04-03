@@ -1,7 +1,15 @@
 import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { useLocation, Navigate, useNavigate } from "react-router-dom";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  setDoc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
 import { useState, useEffect } from "react";
 
 export default function Order() {
@@ -39,10 +47,10 @@ export default function Order() {
 
       setLoading(true);
       try {
-       const q = query(
-         collection(db, "products"),
-         where("availableAt", "array-contains", store.id)
-       );
+        const q = query(
+          collection(db, "products"),
+          where("availableAt", "array-contains", store.id)
+        );
 
         const querySnapshot = await getDocs(q);
         const items = querySnapshot.docs.map((doc) => ({
@@ -70,7 +78,54 @@ export default function Order() {
     }
   }, [cart, store]);
 
-  // 4. Handle Search (Real-time filtering)
+  // 4 Cloud Firestore Sync
+  useEffect(() => {
+    const syncToCloud = async () => {
+      if (!user || !store?.id || cart.length === 0) return;
+
+      try {
+        const cartRef = doc(db, "users", user.uid, "carts", store.id);
+        await setDoc(
+          cartRef,
+          {
+            items: cart,
+            lastUpdated: new Date().toISOString(),
+            storeName: store.name,
+          },
+          { merge: true }
+        );
+      } catch (error) {
+        // If this fails, check if Firestore Rules are deployed!
+        console.error("Cloud sync failed:", error);
+      }
+    };
+
+    const timeoutId = setTimeout(syncToCloud, 1000); // Debounce to save writes
+    return () => clearTimeout(timeoutId);
+  }, [cart, user, store]);
+
+  // 5 load the cart from the cloud when the user logs in
+  useEffect(() => {
+    const fetchCloudCart = async () => {
+      if (user && store?.id) {
+        try {
+          const cartRef = doc(db, "users", user.uid, "carts", store.id);
+          const snap = await getDoc(cartRef);
+
+          if (snap.exists()) {
+            const cloudItems = snap.data().items;
+            // Only overwrite if local cart is empty to avoid overwriting newer local changes
+            setCart((prev) => (prev.length === 0 ? cloudItems : prev));
+          }
+        } catch (e) {
+          console.error("Error fetching cloud cart:", e);
+        }
+      }
+    };
+    fetchCloudCart();
+  }, [user, store?.id]);
+
+  // 6 Handle Search (Real-time filtering)
   useEffect(() => {
     const results = menu.filter((item) =>
       item.name.toLowerCase().includes(searchTerm.toLowerCase())
