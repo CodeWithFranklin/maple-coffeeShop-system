@@ -1,5 +1,5 @@
 import { db } from "../firebase";
-import { doc, writeBatch } from "firebase/firestore";
+import { serverTimestamp, doc, writeBatch } from "firebase/firestore";
 import { locations, locatedStores, menuList } from "./ListItems";
 
 // Helper to turn "Pepperoni Pizza" into "pepperoni-pizza"
@@ -66,5 +66,37 @@ export const runMigration = async () => {
   } catch (error) {
     console.error("Migration Failed:", error);
     alert("Migration Error: Check console.");
+  }
+};
+
+export const migrateHomepage_menu = async () => {
+  const batch = writeBatch(db);
+
+  try {
+    // Picking the items from your menuList to feature on the homepage
+    const featuredSelection = menuList.slice(0, 6);
+
+    featuredSelection.forEach((item, index) => {
+      const productSlug = createSlug(item.name);
+      // Unique ID for the homepage entry
+      const homeRef = doc(db, "homepage_menus", `home-${productSlug}`);
+
+      batch.set(homeRef, {
+        productId: productSlug,
+        name: item.name,
+        price: item.price,
+        img: item.img,
+        // FIELD MAPPING
+        description: item.about, // 'about' renamed to 'description'
+        categories: item.tags, // 'tags' renamed to 'categories'
+        order: index + 1,
+        addedAt: serverTimestamp(), // Real Firestore timestamp
+      });
+    });
+
+    await batch.commit();
+    alert("Homepage collection created with updated fields!");
+  } catch (error) {
+    console.error("Migration error:", error);
   }
 };

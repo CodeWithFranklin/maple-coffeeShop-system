@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { auth } from "../firebase";
+import { db } from "../firebase";
+import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
@@ -7,15 +9,46 @@ import Autoplay from "embla-carousel-autoplay";
 import { usePrevNextButtons } from "./hooks/usePrevNextButtons";
 import { useVerticalCarousel } from "./hooks/useVerticalCarousel";
 import { NextButton, PrevButton } from "./embela/EmblaCarouselArrowButtons";
-import { menuList, feedBack } from "./ListItems.js";
+import { feedBack } from "./ListItems.js";
+import { migrateHomepage_menu } from "./MigrateData.jsx";
 
 export default function Home() {
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+  const [featuredItems, setFeaturedItems] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [horizontalaRef, horizontalApi] = useEmblaCarousel({ loop: true });
   const [verticalRef, verticalApi] = useEmblaCarousel(
     { axis: "y", loop: true },
     [Autoplay({ delay: 5000 })]
   );
 
+  useEffect(() => {
+    const fetchHomeItems = async () => {
+      try {
+        // We fetch from the 'homepage' collection, limited to say, 7 items
+        const homeQuery = query(
+          collection(db, "homepage_menus"),
+          orderBy("order", "asc"),
+          limit(7)
+        );
+
+        const snapshot = await getDocs(homeQuery);
+        const items = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setFeaturedItems(items);
+      } catch (error) {
+        console.error("Error fetching homepage items:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHomeItems();
+  }, []);
   // Pass emblaApi to the vertical carousel hook
   const { selectedIndex, scrollSnaps, scrollTo } =
     useVerticalCarousel(verticalApi);
@@ -30,9 +63,6 @@ export default function Home() {
 
   //check this out latter and fix it
   const images = ["/images/coffee.jpg", "/images/pizza.jpg"];
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     // This is the "Gold Standard" for Firebase Homepages
@@ -78,7 +108,7 @@ export default function Home() {
                 </p>
                 <p className="">save up to 20% off your first order.</p>
               </div>
-
+              <button className="btn btn-primary" onClick={() => migrateHomepage_menu()}>Migrate Data</button>
               <div className="badge badge-soft border-0 py-[23px] pe-0 font-semibold px-5 mt-6 bg-lime-300 rounded-3xl">
                 <a href="">
                   Our Services?
@@ -294,7 +324,7 @@ export default function Home() {
             <div className="flex flex-col items-center w-full lg:px-0 mt-5 py-5">
               {/* Container for the cards */}
               <div className="flex flex-wrap justify-center gap-6">
-                {menuList.map((menu, index) => (
+                {featuredItems.map((menu, index) => (
                   <div
                     key={index}
                     className="flex flex-col max-w-95 sm:p-6 p-5 rounded-3xl bg-blue-200 overflow-hidden shadow-sm"
@@ -314,12 +344,12 @@ export default function Home() {
 
                         {/* Tags */}
                         <div className="flex gap-2 flex-wrap min-h-[24px]">
-                          {menu.tags.map((tag, tIndex) => (
+                          {menu.categories.map((categories, cIndex) => (
                             <span
-                              key={tIndex}
+                              key={cIndex}
                               className="badge font-semibold text-[11px] px-2 py-1 rounded-full bg-white/50 border-0"
                             >
-                              {tag}
+                              {categories}
                             </span>
                           ))}
                         </div>
@@ -327,14 +357,21 @@ export default function Home() {
                         {/* Description */}
                         <p
                           className="font-light text-sm line-clamp-2"
-                          title={menu.about}
+                          title={menu.description}
                         >
-                          {menu.about}
+                          {menu.description}
                         </p>
 
                         {/* Action Buttons */}
                         <div className="flex gap-2 items-center mt-2 w-fit">
-                          <button className="font-bold border-0 badge py-4 rounded-xl bg-lime-300 hover:bg-lime-400 transition-colors hover:cursor-pointer text-sm">
+                          <button
+                            onClick={() =>
+                              navigate("/store", {
+                                state: { autoSearch: menu.name },
+                              })
+                            } // <--- Add this
+                            className="font-bold border-0 badge py-4 rounded-xl bg-lime-300 hover:bg-lime-400 transition-colors hover:cursor-pointer text-sm"
+                          >
                             Place order
                           </button>
                           <button
