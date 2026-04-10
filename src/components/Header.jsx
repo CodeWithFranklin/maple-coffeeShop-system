@@ -1,19 +1,12 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
 import { auth } from "../firebase.js";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { signOut } from "firebase/auth";
+import { useAuth } from "../hooks/useAuth";
 
 export default function Header() {
-  const [user, setUser] = useState(null);
+  // Use the global state from your new Context hook
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
-
-  // Listen for Auth changes to toggle UI
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe();
-  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -152,8 +145,12 @@ export default function Header() {
             <i className="bx bx-cart"></i>
           </NavLink>
 
-          {/* AUTH SECTION: Conditional Rendering */}
-          {!user ? (
+          {/* AUTH SECTION: Improved with loading state to prevent flickering */}
+          {loading ? (
+            <div className="flex items-center justify-center w-11 h-11">
+              <span className="loading loading-spinner loading-sm opacity-30"></span>
+            </div>
+          ) : !user ? (
             <div className="flex gap-2 ms-2">
               <NavLink
                 to="/signin"

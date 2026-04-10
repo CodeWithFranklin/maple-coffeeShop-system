@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./context/AuthProvider";
 import SignUp from "./components/SignUp";
 import SignIn from "./components/SignIn";
 import Home from "./components/Home";
@@ -13,18 +14,20 @@ function App() {
   return (
     <div className="bg-purple-50 selection:bg-purple-300 min-h-screen">
       <ScrollToTop />
-      <Routes>
-        <Route element={<Main />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/order" element={<Order />} />
-        </Route>
+      <AuthProvider>
+        <Routes>
+          <Route element={<Main />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/order" element={<Order />} />
+          </Route>
 
-        <Route element={<SimpleLayout />}>
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/store" element={<Store />} />
-        </Route>
-      </Routes>
+          <Route element={<SimpleLayout />}>
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/store" element={<Store />} />
+          </Route>
+        </Routes>
+      </AuthProvider>
     </div>
   );
 }
