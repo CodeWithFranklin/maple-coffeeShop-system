@@ -12,7 +12,7 @@ function App() {
  
   return (
     <div className="bg-purple-50 selection:bg-purple-300 min-h-screen">
-      <ScrollToTop /> {/* <--- It lives here! */}
+      <ScrollToTop />
       <Routes>
         <Route element={<Main />}>
           <Route path="/" element={<Home />} />

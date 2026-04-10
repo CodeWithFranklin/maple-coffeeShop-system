@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { db } from "../firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import useEmblaCarousel from "embla-carousel-react";
 import { usePrevNextButtons } from "./hooks/usePrevNextButtons";
 import { NextButton, PrevButton } from "./embela/EmblaCarouselArrowButtons";
 
 export default function Store() {
+  const location = useLocation(); // Catch state from Home
   const [dbLocations, setDbLocations] = useState([]); // Will hold "cities"
   const [dbStores, setDbStores] = useState([]); // Will hold "stores"
   const [loading, setLoading] = useState(true); // Essential for UX
@@ -15,6 +16,29 @@ export default function Store() {
   const [searchTerm, setSearchTerm] = useState("");
   const [previewStore, setPreviewStore] = useState(null);
 
+  const relaySearch = location.state?.autoSearch || "";
+  // This state will hold the store IDs where the product is sold
+  const [validStoreIds, setValidStoreIds] = useState([]);
+
+  
+  useEffect(() => {
+    if (relaySearch) {
+      const fetchProductAvailability = async () => {
+        // Find the product in the 'products' collection by its name
+        const productsRef = collection(db, "products");
+        const q = query(productsRef, where("name", "==", relaySearch));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const productData = querySnapshot.docs[0].data();
+          // availableAt is an array of store slugs/IDs
+          setValidStoreIds(productData.availableAt || []);
+        }
+      };
+      fetchProductAvailability();
+    }
+  }, [relaySearch]);
+
   const handleSelect = (label) => {
     setSelected(label);
     setSearchTerm(""); // Clear search after selection
@@ -22,8 +46,16 @@ export default function Store() {
   };
   // Change 'locatedStores' to 'dbStores'
   const filteredStores = dbStores.filter((store) => {
-    if (selected === "Select Location") return true;
-    return store.address.toLowerCase().includes(selected.toLowerCase());
+    // 1. Filter by location dropdown
+    const matchesLocation =
+      selected === "Select Location" ||
+      store.address.toLowerCase().includes(selected.toLowerCase());
+
+    // 2. Filter by Product Availability
+    // If we have a relaySearch, only show stores that are in the validStoreIds array
+    const matchesProduct = !relaySearch || validStoreIds.includes(store.id);
+
+    return matchesLocation && matchesProduct;
   });
 
   // Change 'locations' to 'dbLocations'
@@ -158,7 +190,12 @@ export default function Store() {
               </ul>
             </div>
             <div>
-              <h4 className="font-bold mb-3"> {selected === "Select Location" ? "All Stores" : `Stores in ${selected}`}</h4>
+              <h4 className="font-bold mb-3">
+                {" "}
+                {selected === "Select Location"
+                  ? "All Stores"
+                  : `Stores in ${selected}`}
+              </h4>
               {filteredStores.map((store) => (
                 <div
                   key={store.id}
@@ -185,7 +222,10 @@ export default function Store() {
                     </button>
                     <NavLink
                       to="/order"
-                      state={{ selectedStore: store }}
+                      state={{
+                        selectedStore: store,
+                        autoSearch: relaySearch, // Pass the name (e.g., "Pizza") here
+                      }}
                       className="btn h-9 border-0 rounded-3xl border-1 border-gray-400"
                     >
                       Order Here
@@ -259,8 +299,11 @@ export default function Store() {
                     </button>
                     <NavLink
                       to="/order"
-                      state={{ selectedStore: previewStore }}
-                      className="btn btn-primary"
+                      state={{
+                        selectedStore: { selectedStore: previewStore },
+                        autoSearch: relaySearch, // Pass the item name to the Order page
+                      }}
+                      className="btn h-9 border-0 rounded-3xl border-1 border-gray-400"
                     >
                       Order Here
                     </NavLink>

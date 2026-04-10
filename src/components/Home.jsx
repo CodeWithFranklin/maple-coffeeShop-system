@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { auth } from "../firebase";
 import { db } from "../firebase";
 import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
@@ -77,15 +77,6 @@ export default function Home() {
     return () => unsubscribe();
   }, [navigate]);
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      navigate("/signIn");
-    } catch (error) {
-      console.error("Logout Error:", error.message);
-    }
-  };
-
   if (loading)
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -108,7 +99,12 @@ export default function Home() {
                 </p>
                 <p className="">save up to 20% off your first order.</p>
               </div>
-              <button className="btn btn-primary" onClick={() => migrateHomepage_menu()}>Migrate Data</button>
+              <button
+                className="btn btn-primary"
+                onClick={() => migrateHomepage_menu()}
+              >
+                Migrate Data
+              </button>
               <div className="badge badge-soft border-0 py-[23px] pe-0 font-semibold px-5 mt-6 bg-lime-300 rounded-3xl">
                 <a href="">
                   Our Services?
@@ -326,7 +322,7 @@ export default function Home() {
               <div className="flex flex-wrap justify-center gap-6">
                 {featuredItems.map((menu, index) => (
                   <div
-                    key={index}
+                    key={menu.id || index}
                     className="flex flex-col max-w-95 sm:p-6 p-5 rounded-3xl bg-blue-200 overflow-hidden shadow-sm"
                   >
                     {/* Title */}
@@ -342,19 +338,19 @@ export default function Home() {
                           {menu.price}$
                         </p>
 
-                        {/* Tags */}
+                        {/* Categories (Migrated from tags) */}
                         <div className="flex gap-2 flex-wrap min-h-[24px]">
-                          {menu.categories.map((categories, cIndex) => (
+                          {menu.categories?.map((cat, cIndex) => (
                             <span
                               key={cIndex}
                               className="badge font-semibold text-[11px] px-2 py-1 rounded-full bg-white/50 border-0"
                             >
-                              {categories}
+                              {cat}
                             </span>
                           ))}
                         </div>
 
-                        {/* Description */}
+                        {/* Description (Migrated from about) */}
                         <p
                           className="font-light text-sm line-clamp-2"
                           title={menu.description}
@@ -369,13 +365,13 @@ export default function Home() {
                               navigate("/store", {
                                 state: { autoSearch: menu.name },
                               })
-                            } // <--- Add this
+                            }
                             className="font-bold border-0 badge py-4 rounded-xl bg-lime-300 hover:bg-lime-400 transition-colors hover:cursor-pointer text-sm"
                           >
                             Place order
                           </button>
                           <button
-                            className="px-2 py-2 flex items-center rounded-full bg-white/40 hover:bg-white/60  hover:cursor-pointer tooltip tooltip-top"
+                            className="px-2 py-2 flex items-center rounded-full bg-white/40 hover:bg-white/60 hover:cursor-pointer tooltip tooltip-top"
                             data-tip="view menu"
                           >
                             <i className="bx bxs-food-menu text-lg"></i>
