@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { auth, db } from "../firebase";
-import { onAuthStateChanged } from "firebase/auth";
+import { db } from "../firebase";
+import { useAuth } from "../hooks/useAuth";
 import { useLocation, Navigate, useNavigate } from "react-router-dom";
 import { collection, getDocs, query, where } from "firebase/firestore";
 
@@ -16,7 +16,7 @@ export default function Order() {
   const [loading, setLoading] = useState(true);
   const [menu, setMenu] = useState([]);
   const [filteredMenu, setFilteredMenu] = useState([]);
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
   const [activeItem, setActiveItem] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [searchTerm, setSearchTerm] = useState(initialSearch);
@@ -102,14 +102,6 @@ export default function Order() {
   }, [cart]);
 
   // 5. EFFECTS (Logic Triggers)
-
-  // Auth Listener
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe();
-  }, []);
 
   // Fetch Firestore Menu
   useEffect(() => {
