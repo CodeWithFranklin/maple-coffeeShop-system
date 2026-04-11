@@ -25,6 +25,8 @@ export default function Order() {
   const categories = useMemo(() => {
     return ["All", ...new Set(menu.flatMap((item) => item.tags || []))];
   }, [menu]);
+  const autoSearchValue = location.state?.autoSearch;
+  const currentPath = location.pathname;
 
   const [cart, setCart] = useState(() => {
     if (!store?.id) return [];
@@ -159,36 +161,34 @@ export default function Order() {
   }, [searchTerm, menu, selectedCategory]);
 
   // Smart Relay (Modal Auto-Open)
-  useEffect(() => {
-    if (
-      !loading &&
-      menu.length > 0 &&
-      location.state?.autoSearch &&
-      modalRef.current
-    ) {
-      const searchTermFromState = location.state.autoSearch;
-      const relayedItem = menu.find(
-        (item) => item.name.toLowerCase() === searchTermFromState.toLowerCase()
-      );
+useEffect(() => {
+  // Change: Use the stable primitive 'autoSearchValue'
+  if (!loading && menu.length > 0 && autoSearchValue && modalRef.current) {
+    const relayedItem = menu.find(
+      (item) => item.name.toLowerCase() === autoSearchValue.toLowerCase()
+    );
 
-      if (relayedItem) {
-        setSearchTerm(searchTermFromState);
-        openModal(relayedItem);
-      }
-
-      navigate(location.pathname, {
-        replace: true,
-        state: { ...location.state, autoSearch: undefined },
-      });
+    if (relayedItem) {
+      setSearchTerm(autoSearchValue);
+      openModal(relayedItem);
     }
-  }, [
-    loading,
-    menu,
-    location.state?.autoSearch,
-    navigate,
-    location.pathname,
-    openModal,
-  ]);
+
+    // Change: Use the stable 'currentPath'
+    navigate(currentPath, {
+      replace: true,
+      state: { ...location.state, autoSearch: undefined },
+    });
+  }
+  // Change: Dependency array now uses stable primitives
+}, [
+  loading,
+  menu,
+  autoSearchValue,
+  currentPath,
+  navigate,
+  openModal,
+  location.state,
+]);
 
   // 6. RENDER GUARDS
   if (!store) return <Navigate to="/store" replace />;
