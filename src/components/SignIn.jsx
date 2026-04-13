@@ -7,8 +7,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
 } from "firebase/auth";
-import { signInSchema } from "../functions/validationSchema.js"; // Using your signInSchema
-
+import { signInSchema } from "../functions/validationSchema.js"; 
 export default function Login() {
   const googleProvider = new GoogleAuthProvider();
   const navigate = useNavigate();

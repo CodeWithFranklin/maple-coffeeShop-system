@@ -10,7 +10,7 @@ export default function Store() {
   const location = useLocation(); // Catch state from Home
   const [dbLocations, setDbLocations] = useState([]); // Will hold "cities"
   const [dbStores, setDbStores] = useState([]); // Will hold "stores"
-  const [loading, setLoading] = useState(true); // Essential for UX
+  const [loading, setLoading] = useState(true);
 
   const [selected, setSelected] = useState("Select Location");
   const [searchTerm, setSearchTerm] = useState("");
@@ -52,7 +52,6 @@ export default function Store() {
       store.address.toLowerCase().includes(selected.toLowerCase());
 
     // 2. Filter by Product Availability
-    // If we have a relaySearch, only show stores that are in the validStoreIds array
     const matchesProduct = !relaySearch || validStoreIds.includes(store.id);
 
     return matchesLocation && matchesProduct;

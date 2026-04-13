@@ -13,10 +13,10 @@ export default function Order() {
   const initialSearch = location.state?.autoSearch || "";
 
   // 2. INITIALIZE STATE & REFS
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [menu, setMenu] = useState([]);
   const [filteredMenu, setFilteredMenu] = useState([]);
-  const { user } = useAuth();
   const [activeItem, setActiveItem] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [searchTerm, setSearchTerm] = useState(initialSearch);
@@ -161,34 +161,34 @@ export default function Order() {
   }, [searchTerm, menu, selectedCategory]);
 
   // Smart Relay (Modal Auto-Open)
-useEffect(() => {
-  // Change: Use the stable primitive 'autoSearchValue'
-  if (!loading && menu.length > 0 && autoSearchValue && modalRef.current) {
-    const relayedItem = menu.find(
-      (item) => item.name.toLowerCase() === autoSearchValue.toLowerCase()
-    );
+  useEffect(() => {
+    // Change: Use the stable primitive 'autoSearchValue'
+    if (!loading && menu.length > 0 && autoSearchValue && modalRef.current) {
+      const relayedItem = menu.find(
+        (item) => item.name.toLowerCase() === autoSearchValue.toLowerCase()
+      );
 
-    if (relayedItem) {
-      setSearchTerm(autoSearchValue);
-      openModal(relayedItem);
+      if (relayedItem) {
+        setSearchTerm(autoSearchValue);
+        openModal(relayedItem);
+      }
+
+      // Change: Use the stable 'currentPath'
+      navigate(currentPath, {
+        replace: true,
+        state: { ...location.state, autoSearch: undefined },
+      });
     }
-
-    // Change: Use the stable 'currentPath'
-    navigate(currentPath, {
-      replace: true,
-      state: { ...location.state, autoSearch: undefined },
-    });
-  }
-  // Change: Dependency array now uses stable primitives
-}, [
-  loading,
-  menu,
-  autoSearchValue,
-  currentPath,
-  navigate,
-  openModal,
-  location.state,
-]);
+    // Change: Dependency array now uses stable primitives
+  }, [
+    loading,
+    menu,
+    autoSearchValue,
+    currentPath,
+    navigate,
+    openModal,
+    location.state,
+  ]);
 
   // 6. RENDER GUARDS
   if (!store) return <Navigate to="/store" replace />;

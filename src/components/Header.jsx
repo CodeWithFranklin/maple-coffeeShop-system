@@ -4,14 +4,12 @@ import { signOut } from "firebase/auth";
 import { useAuth } from "../hooks/useAuth";
 
 export default function Header() {
-  // Use the global state from your new Context hook
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
     try {
       await signOut(auth);
-      // Clean up bridge keys for a perfect system reset
       localStorage.removeItem("last_active_store_id");
       localStorage.removeItem("pending_store");
       Object.keys(localStorage).forEach((key) => {
@@ -21,7 +19,6 @@ export default function Header() {
       });
 
       navigate("/");
-      // reload to hard-reset the JS state if using listitems.js variables
       window.location.reload();
     } catch (error) {
       console.error("Sign out error:", error.message);

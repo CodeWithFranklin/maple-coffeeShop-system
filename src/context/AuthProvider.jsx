@@ -5,13 +5,13 @@ import { AuthContext } from "./AuthContext";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [userInfoLoading, setUserInfoLoading] = useState(true);
 
   useEffect(() => {
     // Listen for Firebase Auth changes
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      setLoading(false);
+      setUserInfoLoading(false);
     });
 
     // Cleanup subscription on unmount
@@ -19,7 +19,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, userInfoLoading }}>
       {children}
     </AuthContext.Provider>
   );

@@ -36,7 +36,7 @@ export const runMigration = async () => {
       batch.set(storeRef, {
         ...store,
         id: storeSlug,
-        citySlug: citySlug, // Professional "Foreign Key"
+        citySlug: citySlug,
       });
     });
 

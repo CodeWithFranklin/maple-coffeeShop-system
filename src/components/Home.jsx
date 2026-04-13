@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { auth } from "../firebase";
 import { db } from "../firebase";
 import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
@@ -13,7 +11,6 @@ import { feedBack } from "./ListItems.js";
 import { migrateHomepage_menu } from "./MigrateData.jsx";
 
 export default function Home() {
-  const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const [featuredItems, setFeaturedItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +23,6 @@ export default function Home() {
   useEffect(() => {
     const fetchHomeItems = async () => {
       try {
-        // We fetch from the 'homepage' collection, limited to say, 7 items
         const homeQuery = query(
           collection(db, "homepage_menus"),
           orderBy("order", "asc"),
@@ -49,11 +45,9 @@ export default function Home() {
 
     fetchHomeItems();
   }, []);
-  // Pass emblaApi to the vertical carousel hook
   const { selectedIndex, scrollSnaps, scrollTo } =
     useVerticalCarousel(verticalApi);
 
-  // Pass emblaApi to the prev/next hook for controls
   const {
     prevBtnDisabled,
     nextBtnDisabled,
@@ -63,19 +57,6 @@ export default function Home() {
 
   //check this out latter and fix it
   const images = ["/images/coffee.jpg", "/images/pizza.jpg"];
-
-  useEffect(() => {
-    // This is the "Gold Standard" for Firebase Homepages
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-      }
-      setLoading(false);
-    });
-
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
-  }, [navigate]);
 
   if (loading)
     return (
