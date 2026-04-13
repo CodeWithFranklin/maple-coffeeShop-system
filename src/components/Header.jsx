@@ -19,7 +19,6 @@ export default function Header() {
       });
 
       navigate("/");
-      window.location.reload();
     } catch (error) {
       console.error("Sign out error:", error.message);
     }
