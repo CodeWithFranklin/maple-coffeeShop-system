@@ -4,7 +4,7 @@ import { signOut } from "firebase/auth";
 import { useAuth } from "../hooks/useAuth";
 
 export default function Header() {
-  const { user, loading } = useAuth();
+  const { user, userInfoLoading } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -143,7 +143,7 @@ export default function Header() {
           </NavLink>
 
           {/* AUTH SECTION: Improved with loading state to prevent flickering */}
-          {loading ? (
+          {userInfoLoading ? (
             <div className="flex items-center justify-center w-11 h-11">
               <span className="loading loading-spinner loading-sm opacity-30"></span>
             </div>
