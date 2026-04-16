@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { db } from "../firebase";
 import { useAuth } from "../hooks/useAuth";
-import { useLocation, Navigate, useNavigate } from "react-router-dom";
+import { useLocation, Navigate, NavLink, useNavigate } from "react-router-dom";
 import { collection, getDocs, query, where } from "firebase/firestore";
 
 export default function Order() {
@@ -362,13 +362,14 @@ export default function Order() {
                 <p className="font-bold text-lg">${subTotal.toFixed(2)}</p>
               </li>
               <div className="flex justify-center mt-4">
-                <button
+                <NavLink
                   onClick={handleCheckout}
                   disabled={cart.length === 0}
+                  to={"/checkout"}
                   className="btn btn-primary my-4 rounded-full w-70 mx-auto"
                 >
                   Order
-                </button>
+                </NavLink>
               </div>
             </ul>
           </div>
