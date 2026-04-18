@@ -6,6 +6,7 @@ import Home from "./components/Home";
 import Main from "./components/Main";
 import Order from "./components/Order";
 import Store from "./components/Store";
+import Checkout from "./components/Checkout";
 import SimpleLayout from "./components/SimpleLayout";
 import ScrollToTop from "./components/ScrollToTop";
 
@@ -25,6 +26,7 @@ function App() {
             <Route path="/signup" element={<SignUp />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/store" element={<Store />} />
+            <Route path="/checkout" element={<Checkout />} />
           </Route>
         </Routes>
       </AuthProvider>

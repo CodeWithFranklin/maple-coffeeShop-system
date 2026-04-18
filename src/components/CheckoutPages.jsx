@@ -1,96 +1,152 @@
-import TimeInput from "../functions/TimePicker";
+import { useState } from "react";
+import TimePicker from "../functions/TimePicker";
 import { PaymentMethod } from "./PaymentOptions";
-export const PickupDetails = () => (
-  <section>
-    <div className="space-y-3 animate-in fade-in slide-in-from-left-4 duration-300 mb-10">
-      <div className="flex justify-between">
-        <p className="font-bold text-lg">Contact Information</p>
-        <p className=" rounded-3xl group underline text-error cursor-pointer font-semibold">
-          Edit Info
-          <i className="ms-1 bx bxs-pencil bx-xs group-hover:-translate-x-1 transition-transform"></i>
-        </p>
-      </div>
-      <div className="p-4 flex flex-col gap-y-3 border-2 border-dashed rounded-2xl border-green-200 bg-green-50">
-        <div>
-          <p>
-            <span className="font-semibold">Full Name:</span>{" "}
-            <span className="">John Doe</span>
-          </p>{" "}
-        </div>
-        <div>
-          <p>
-            <span className="font-semibold">Email Address:</span>{" "}
-            <span className="">Doe34@gmail.com</span>
-          </p>{" "}
-        </div>{" "}
-        <div>
-          <p>
-            <span className="font-semibold">Phone Number:</span>{" "}
-            <span className="">08165438276</span>
-          </p>{" "}
-        </div>{" "}
-      </div>
-    </div>
 
-    <div className="space-y-3 animate-in fade-in slide-in-from-left-4 duration-300">
-      <p className="font-bold text-lg">Pick-up Information</p>
-      <div className="flex items-center justify-between border-1 border-gray-400 min-h-22 w-full rounded-full px-5 py-3 mb-5">
-        <div className="min-w-40 max-w-75 flex h-fit gap-x-1">
-          <div className="avatar avatar-placeholder">
-            <div className="bg-neutral text-neutral-content w-10 h-10 rounded-full">
-              <span>SY</span>
+export const PickupDetails = () => {
+  // Logic: Default to ASAP (null time)
+  const [isScheduled, setIsScheduled] = useState(false);
+
+  return (
+    <>
+     
+
+      {/* 2. Pickup Info & Time Logic */}
+      <div className="space-y-4 animate-in fade-in slide-in-from-left-4 duration-500 bg-white rounded-4xl p-7 relative shadow-sm">
+        <div className="flex justify-between items-start">
+          <div>
+            <p className="font-bold text-lg">Pick-up Information</p>
+            <p className="text-xs text-gray-400">
+              Maple Haven • Rivers State, Port Harcourt
+            </p>
+          </div>
+
+          {/* ASAP / Schedule Toggle */}
+          <div className="flex bg-gray-100 p-1 rounded-2xl">
+            <button
+              onClick={() => setIsScheduled(false)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                !isScheduled
+                  ? "bg-white shadow-sm text-green-700"
+                  : "text-gray-500"
+              }`}
+            >
+              ASAP
+            </button>
+            <button
+              onClick={() => setIsScheduled(true)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                isScheduled
+                  ? "bg-white shadow-sm text-green-700"
+                  : "text-gray-500"
+              }`}
+            >
+              Schedule
+            </button>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between border-t border-dashed border-gray-100 pt-4 mt-2">
+          <div className="flex items-center gap-x-3">
+            <i className="bx bx-time-five text-xl text-green-600"></i>
+            {isScheduled ? (
+              <TimePicker
+                label=""
+                onChange={(val) => console.log("Scheduled for:", val)}
+              />
+            ) : (
+              <p className="font-semibold text-sm text-gray-700">
+                Ready in 5 - 10 minutes
+              </p>
+            )}
+          </div>
+
+          {isScheduled && (
+            <div className="flex items-center gap-x-2 text-[10px] font-bold text-orange-500 bg-orange-50 px-3 py-1 rounded-full">
+              <i className="bx bx-info-circle"></i>
+              WE OPEN 9AM - 6PM
             </div>
-          </div>
-          <div className="text-sm">
-            <p className="font-bold">Maple Haven</p>
-            <p>Rivers State, Port Harcourt</p>
-          </div>
-        </div>
-        <div className="flex gap-x-2">
-          <button className="btn h-9 border-0 rounded-3xl border-1 border-gray-400">
-            Change Location
-          </button>
+          )}
         </div>
       </div>
-    </div>
-    <div>
-      <p className="font-bold">Pick-Up Time</p>
-      <div
-        role="alert"
-        className="alert alert-vertical sm:alert-horizontal w-fit h-fit shadow-none border-0 mb-2 gap-x-2"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          className="stroke-warning h-5 w-5 shrink-0"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-          ></path>
-        </svg>
-        <p className="mb-1 font-semibold">we are open from 9am to 6pm</p>
-      </div>
-      <TimeInput
-        label="Select Pickup Time"
-        onChange={(val) => console.log("Selected Time:", val)}
-      />{" "}
-    </div>
 
-    <PaymentMethod onSelect={(method) => console.log("Payment via:", method)} />
-  </section>
-);
-
+      {/* 3. Payment Method */}
+      <PaymentMethod
+        onSelect={(method) => console.log("Selected Method:", method)}
+      />
+    </>
+  );
+};
 export const DeliveryDetails = () => (
-  <div className="space-y-4 animate-in fade-in slide-in-from-left-4 duration-300">
-    <p className="font-bold text-lg">Delivery Address</p>
-    <input
-      type="text"
-      placeholder="Enter your specific home or office address"
-      className="input input-bordered w-full rounded-2xl border-gray-300 focus:border-green-600"
+  <>
+    {/* Delivery Information Card */}
+    <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300 bg-white rounded-4xl p-7 shadow-sm">
+      <div className="flex items-center gap-x-2 mb-2">
+        <i className="bx bxs-map text-green-600 text-xl"></i>
+        <p className="font-bold text-lg">Delivery Address</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Full Address - Span 2 columns */}
+        <div className="form-control w-full md:col-span-2">
+          <label className="label">
+            <span className="label-text font-bold text-gray-500">
+              Street Address
+            </span>
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. 123 Maple Street, GRA Phase 2"
+            className="input input-bordered w-full rounded-2xl border-gray-200 focus:border-green-600 bg-gray-50"
+          />
+        </div>
+
+        {/* Landmark */}
+        <div className="form-control w-full">
+          <label className="label">
+            <span className="label-text font-bold text-gray-500">
+              Closest Landmark
+            </span>
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. Opposite Next Cash & Carry"
+            className="input input-bordered w-full rounded-2xl border-gray-200 focus:border-green-600 bg-gray-50"
+          />
+        </div>
+
+        {/* City/State - Keeping it simple or as a select */}
+        <div className="form-control w-full">
+          <label className="label">
+            <span className="label-text font-bold text-gray-500">
+              City / State
+            </span>
+          </label>
+          <input
+            type="text"
+            disabled
+            value="Port Harcourt, Rivers"
+            className="input input-bordered w-full rounded-2xl border-gray-200 bg-gray-100 font-semibold cursor-not-allowed"
+          />
+        </div>
+
+        {/* Delivery Note */}
+        <div className="form-control w-full md:col-span-2">
+          <label className="label">
+            <span className="label-text font-bold text-gray-500">
+              Rider Note (Optional)
+            </span>
+          </label>
+          <textarea
+            className="textarea textarea-bordered h-24 rounded-2xl border-gray-200 focus:border-green-600 bg-gray-50"
+            placeholder="e.g. Call me when you get to the gate, or leave it with the security."
+          ></textarea>
+        </div>
+      </div>
+    </div>
+
+    {/* Payment Section */}
+    <PaymentMethod
+      onSelect={(method) => console.log("Delivery Payment:", method)}
     />
-  </div>
+  </>
 );

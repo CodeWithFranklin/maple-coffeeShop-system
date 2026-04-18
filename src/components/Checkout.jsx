@@ -15,16 +15,12 @@ export default function Checkout() {
         {/* Left Column: Checkout Logic */}
         <div className="lg:col-span-8 space-y-8">
           <div>
-            <h2 className="text-3xl font-bold flex items-center gap-x-1">
-              <button
-                className="btn btn-soft shadow-none w-8 h-8 rounded-full group"
-                c
-              >
+            <h2 className="text-2xl font-bold flex items-center gap-x-1">
+              <button className="btn btn-soft shadow-none w-8 h-8 rounded-full group">
                 <i className="bx bx-chevron-left bx-sm group-hover:-translate-x-1 transition-transform"></i>
               </button>
               Checkout
             </h2>
-            <h3 className="font-semibold text-xl mt-5">1. Select Checkout Method</h3>
 
             {/* Selection Container */}
             <div className="flex flex-col md:flex-row gap-6 mt-6">
@@ -91,7 +87,48 @@ export default function Checkout() {
 
             {/* 3. Dynamic "Details" Section */}
             <div className="min-h-[200px] pt-10 ms-5">
-              {detailsMap[orderType]}
+              <div className="space-y-6">
+                {/* 1. Contact Info Card */}
+                <div className="space-y-3 animate-in fade-in slide-in-from-left-4 duration-300 mb-10">
+                  <div className="flex justify-between">
+                    <p className="font-bold text-lg">Contact Information</p>
+                    <p className="rounded-3xl group underline text-error cursor-pointer font-semibold">
+                      Edit Info
+                      <i className="ms-1 bx bxs-pencil bx-xs group-hover:-translate-x-1 transition-transform"></i>
+                    </p>
+                  </div>
+                  <div className="flex items-center px-7 gap-x-6 bg-white h-20 rounded-4xl shadow-sm">
+                    <div className="avatar avatar-placeholder bg-black w-11 aspect-square rounded-full flex items-center justify-center shrink-0 text-white font-bold text-xs">
+                      JD
+                    </div>
+                    <div className="text-sm">
+                      <p>
+                        <span className="font-semibold text-gray-500">
+                          Full Name:
+                        </span>{" "}
+                        John Doe
+                      </p>
+                    </div>
+                    <div className="text-sm">
+                      <p>
+                        <span className="font-semibold text-gray-500">
+                          Email:
+                        </span>{" "}
+                        Doe34@gmail.com
+                      </p>
+                    </div>
+                    <div className="text-sm">
+                      <p>
+                        <span className="font-semibold text-gray-500">
+                          Phone:
+                        </span>{" "}
+                        08165438276
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                {detailsMap[orderType]}
+              </div>
             </div>
           </div>
         </div>
