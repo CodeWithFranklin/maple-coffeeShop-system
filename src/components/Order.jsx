@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { db } from "../firebase";
 import { useAuth } from "../hooks/useAuth";
 import { useLocation, Navigate, NavLink, useNavigate } from "react-router-dom";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, getDocs, query, where, setDoc, doc } from "firebase/firestore";
 
 export default function Order() {
   const navigate = useNavigate();
@@ -87,6 +87,33 @@ export default function Order() {
       })
     );
   };
+  // Inside Order.js
+  useEffect(() => {
+    const syncCartToDB = async () => {
+      if (!user?.uid || !store?.id || cart.length === 0) return;
+
+      try {
+        const cartRef = doc(db, "users", user.uid, "carts", store.id);
+        await setDoc(
+          cartRef,
+          {
+            items: cart,
+            lastUpdated: new Date().toISOString(),
+            // Storing the calculated total here saves a 'reduce' operation later
+            cartTotal: cart.reduce(
+              (acc, item) => acc + item.price * item.quantity,
+              0
+            ),
+          },
+          { merge: true }
+        );
+      } catch (err) {
+        console.error("DB Sync Error:", err);
+      }
+    };
+
+    syncCartToDB();
+  }, [cart, user, store?.id]);
 
   const handleCheckout = () => {
     if (!user) {
@@ -94,7 +121,13 @@ export default function Order() {
       localStorage.setItem("pending_store", JSON.stringify(store));
       navigate("/signup");
     } else {
-      console.log("Processing order...", cart);
+      navigate("/checkout", {
+        state: {
+          total: subTotal,
+          cartItems: cart,
+          selectedStore: store,
+        },
+      });
     }
   };
 

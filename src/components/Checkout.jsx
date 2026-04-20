@@ -1,12 +1,35 @@
 import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth"; // Assuming this gives us the current user
 import { PickupDetails, DeliveryDetails } from "./CheckoutPages";
 
 export default function Checkout() {
+  const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // 1. Grab passed data
+  const store = location.state?.store;
   const [orderType, setOrderType] = useState("pickup");
 
-  const detailsMap = {
-    pickup: <PickupDetails />,
-    delivery: <DeliveryDetails />,
+  // 1. Toggle State
+  const [isEditing, setIsEditing] = useState(false);
+
+  // 2. Data State
+  const [contact, setContact] = useState({
+    fullName: user?.displayName || "John Doe",
+    email: user?.email || "Doe34@gmail.com",
+    phone: user?.phoneNumber || "08165438276",
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setContact((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // 2. Go back to the specific store menu
+  const handleBackToStore = () => {
+    navigate("/order", { state: { selectedStore: store } });
   };
 
   return (
@@ -16,7 +39,10 @@ export default function Checkout() {
         <div className="lg:col-span-8 space-y-8">
           <div>
             <h2 className="text-2xl font-bold flex items-center gap-x-1">
-              <button className="btn btn-soft shadow-none w-8 h-8 rounded-full group">
+              <button
+                onClick={handleBackToStore}
+                className="btn btn-soft shadow-none w-8 h-8 rounded-full group"
+              >
                 <i className="bx bx-chevron-left bx-sm group-hover:-translate-x-1 transition-transform"></i>
               </button>
               Checkout
@@ -92,8 +118,11 @@ export default function Checkout() {
                 <div className="space-y-3 animate-in fade-in slide-in-from-left-4 duration-300 mb-10">
                   <div className="flex justify-between">
                     <p className="font-bold text-lg">Contact Information</p>
-                    <p className="rounded-3xl group underline text-error cursor-pointer font-semibold">
-                      Edit Info
+                    <p
+                      onClick={() => setIsEditing(!isEditing)}
+                      className="rounded-3xl group underline text-error cursor-pointer font-semibold"
+                    >
+                      {isEditing ? "Save Info" : "Edit Info"}{" "}
                       <i className="ms-1 bx bxs-pencil bx-xs group-hover:-translate-x-1 transition-transform"></i>
                     </p>
                   </div>
@@ -106,7 +135,16 @@ export default function Checkout() {
                         <span className="font-semibold text-gray-500">
                           Full Name:
                         </span>{" "}
-                        John Doe
+                        {isEditing ? (
+                          <input
+                            name="fullName"
+                            value={contact.fullName}
+                            onChange={handleChange}
+                            className="border-b border-gray-300 focus:border-green-600 outline-none font-bold w-full"
+                          />
+                        ) : (
+                          <p className="font-bold">{contact.fullName}</p>
+                        )}
                       </p>
                     </div>
                     <div className="text-sm">
@@ -114,7 +152,16 @@ export default function Checkout() {
                         <span className="font-semibold text-gray-500">
                           Email:
                         </span>{" "}
-                        Doe34@gmail.com
+                        {isEditing ? (
+                          <input
+                            name="email"
+                            value={contact.email}
+                            onChange={handleChange}
+                            className="border-b border-gray-300 focus:border-green-600 outline-none font-bold w-full"
+                          />
+                        ) : (
+                          <p className="font-bold">{contact.email}</p>
+                        )}{" "}
                       </p>
                     </div>
                     <div className="text-sm">
@@ -122,12 +169,25 @@ export default function Checkout() {
                         <span className="font-semibold text-gray-500">
                           Phone:
                         </span>{" "}
-                        08165438276
+                        {isEditing ? (
+                          <input
+                            name="phone"
+                            value={contact.phone}
+                            onChange={handleChange}
+                            className="border-b border-gray-300 focus:border-green-600 outline-none font-bold w-full"
+                          />
+                        ) : (
+                          <p className="font-bold">{contact.phone}</p>
+                        )}{" "}
                       </p>
                     </div>
                   </div>
                 </div>
-                {detailsMap[orderType]}
+                {orderType === "pickup" ? (
+                  <PickupDetails user={user} store={store} />
+                ) : (
+                  <DeliveryDetails user={user} />
+                )}
               </div>
             </div>
           </div>

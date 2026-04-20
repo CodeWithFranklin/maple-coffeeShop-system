@@ -3,14 +3,10 @@ import TimePicker from "../functions/TimePicker";
 import { PaymentMethod } from "./PaymentOptions";
 
 export const PickupDetails = () => {
-  // Logic: Default to ASAP (null time)
   const [isScheduled, setIsScheduled] = useState(false);
 
   return (
     <>
-     
-
-      {/* 2. Pickup Info & Time Logic */}
       <div className="space-y-4 animate-in fade-in slide-in-from-left-4 duration-500 bg-white rounded-4xl p-7 relative shadow-sm">
         <div className="flex justify-between items-start">
           <div>
@@ -113,8 +109,6 @@ export const DeliveryDetails = () => (
             className="input input-bordered w-full rounded-2xl border-gray-200 focus:border-green-600 bg-gray-50"
           />
         </div>
-
-        {/* City/State - Keeping it simple or as a select */}
         <div className="form-control w-full">
           <label className="label">
             <span className="label-text font-bold text-gray-500">
