@@ -17,6 +17,12 @@ export const signUpSchema = yup.object().shape({
       "Email must be a valid format (e.g., name@example.com)"
     )
     .required("Required"),
+  phone: yup
+    .string()
+    .matches(/^[0-9]{11}$/, "Phone number must be exactly 11 digits")
+    .required("Required"),
+  country: yup.string().required("Please select your country"),
+  state: yup.string().required("Please select your state"),
   password: yup
     .string()
     .min(8)
