@@ -1,18 +1,17 @@
 import { useState, useEffect, useContext } from "react";
+import { getFunctions, httpsCallable } from "firebase/functions";
 import { AuthContext } from "../context/AuthContext.jsx";
 import { useNavigate, Link } from "react-router-dom";
-import { auth, googleProvider } from "../firebase.js";
-import {
-  createUserWithEmailAndPassword,
-  signInWithPopup,
-  signInWithRedirect,
-  updateProfile,
-} from "firebase/auth";
+import { auth } from "../firebase.js";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { handleGoogleAuth } from "../functions/authHelpers.js";
+
 import { useFormik } from "formik";
 import { signUpSchema } from "../functions/validationSchema.js";
 import locations from "../data/locations.json";
 
 export default function SignUp() {
+  const functions = getFunctions();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
@@ -49,9 +48,6 @@ export default function SignUp() {
     },
     validationSchema: signUpSchema,
     onSubmit: async (values, { setSubmitting, setStatus }) => {
-      if (!formik.isValid) {
-        return;
-      }
       try {
         const userCredential = await createUserWithEmailAndPassword(
           auth,
@@ -63,13 +59,22 @@ export default function SignUp() {
           displayName: values.name,
         });
 
-        console.log("Signup Success!");
+        const completeProfile = httpsCallable(
+          functions,
+          "completeUserProfile"
+        );
+        await completeProfile({
+          phone: values.phone,
+          country: values.country,
+          state: values.state,
+        });
+
         handlePostAuthRedirect();
       } catch (error) {
         const message =
           error.code === "auth/email-already-in-use"
             ? "This email is already in use."
-            : error.message;
+            : "Something went wrong. Please try again.";
         setStatus(message);
       } finally {
         setSubmitting(false);
@@ -77,25 +82,15 @@ export default function SignUp() {
     },
   });
 
-const handleGoogleAuth = async (e) => {
-  e.preventDefault();
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-  if (isMobile) {
+  const onGoogleClick = (e) => {
+    e.preventDefault();
     try {
-      await signInWithRedirect(auth, googleProvider);
+      handleGoogleAuth();
     } catch (error) {
-      console.error("Redirect failed:", error);
+      formik.setStatus("Could not connect to Google.");
+      console.log(error);
     }
-  } else {
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (error) {
-      console.error("Popup failed:", error);
-    }
-  }
-};
-
+  };
   return (
     <section className="min-h-full flex justify-center">
       <div className="flex flex-row w-full max-w-7xl p-8">
@@ -408,7 +403,7 @@ const handleGoogleAuth = async (e) => {
               <button
                 type="button"
                 className="btn btn-outline"
-                onClick={handleGoogleAuth}
+                onClick={onGoogleClick}
               >
                 <img
                   src="images/google-icon.svg"

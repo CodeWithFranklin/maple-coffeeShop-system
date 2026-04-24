@@ -2,14 +2,10 @@ import React, { useState } from "react";
 import { useFormik } from "formik";
 import { useNavigate, Link } from "react-router-dom";
 import { auth } from "../firebase.js";
-import {
-  signInWithEmailAndPassword,
-  signInWithPopup,
-  GoogleAuthProvider,
-} from "firebase/auth";
-import { signInSchema } from "../functions/validationSchema.js"; 
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { handleGoogleAuth } from "../functions/authHelpers.js";
+import { signInSchema } from "../functions/validationSchema.js";
 export default function Login() {
-  const googleProvider = new GoogleAuthProvider();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -48,13 +44,13 @@ export default function Login() {
     },
   });
 
-  const handleGoogleAuth = async (e) => {
+  const onGoogleClick = (e) => {
     e.preventDefault();
     try {
-      await signInWithPopup(auth, googleProvider);
-      handlePostAuthRedirect();
+      handleGoogleAuth();
     } catch (error) {
-      console.error("Google Auth Error:", error.message);
+      formik.setStatus("Could not connect to Google.");
+      console.log(error);
     }
   };
 
@@ -94,12 +90,12 @@ export default function Login() {
               className="flex w-full max-w-md flex-col"
               onSubmit={formik.handleSubmit}
             >
-              {/* EMAIL INPUT */}
+              {/* EMAIL */}
               <label
-                className={`input validator mb-3 w-full ${
-                  formik.touched.email && formik.errors.email
-                    ? "border-red-500"
-                    : ""
+                className={`input mb-3 w-full ${
+                  formik.errors.email &&
+                  (formik.values.email || formik.touched.email) &&
+                  "border-red-500"
                 }`}
               >
                 <i className="bx bx-envelope opacity-50"></i>
@@ -109,18 +105,19 @@ export default function Login() {
                   {...formik.getFieldProps("email")}
                 />
               </label>
-              {formik.touched.email && formik.errors.email && (
-                <div className="text-red-500 text-xs mb-2">
-                  {formik.errors.email}
-                </div>
-              )}
+              {formik.errors.email &&
+                (formik.values.email || formik.touched.email) && (
+                  <div className="text-red-500 text-[13px] leading-tight text-xs mb-2">
+                    {formik.errors.email}
+                  </div>
+                )}
 
-              {/* PASSWORD INPUT */}
+              {/* PASSWORD */}
               <label
-                className={`input validator mb-3 w-full relative ${
-                  formik.touched.password && formik.errors.password
-                    ? "border-red-500"
-                    : ""
+                className={`input mb-3 w-full relative ${
+                  formik.errors.password &&
+                  (formik.values.password || formik.touched.password) &&
+                  "border-red-500"
                 }`}
               >
                 <i className="bx bx-lock-alt opacity-50"></i>
@@ -141,22 +138,19 @@ export default function Login() {
                   ></i>
                 </button>
               </label>
-              {formik.touched.password && formik.errors.password && (
-                <div className="text-red-500 text-xs mb-2">
-                  {formik.errors.password}
-                </div>
-              )}
-
-              {formik.status && (
-                <div className="text-red-600 font-bold mb-3">
-                  {formik.status}
-                </div>
-              )}
+              {formik.errors.password &&
+                (formik.values.password || formik.touched.password) && (
+                  <div className="text-red-500 text-[13px] leading-tight text-xs mb-2">
+                    {formik.errors.password}
+                  </div>
+                )}
 
               <button
                 type="submit"
                 className="btn btn-primary mt-4"
-                disabled={formik.isSubmitting}
+                disabled={
+                  !formik.isValid || !formik.dirty || formik.isSubmitting
+                }
               >
                 {formik.isSubmitting ? "Checking..." : "Log In"}
               </button>
@@ -166,7 +160,7 @@ export default function Login() {
               <button
                 type="button"
                 className="btn btn-outline"
-                onClick={handleGoogleAuth}
+                onClick={onGoogleClick}
               >
                 <img src="images/google-icon.svg" alt="" className="w-4" />
                 Continue with Google
