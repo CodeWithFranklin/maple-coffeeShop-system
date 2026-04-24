@@ -1,19 +1,18 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { auth } from "../firebase.js";
+import { auth, googleProvider } from "../firebase.js";
 import {
   createUserWithEmailAndPassword,
   signInWithPopup,
-  GoogleAuthProvider,
   updateProfile,
 } from "firebase/auth";
 import { useFormik } from "formik";
 import { signUpSchema } from "../functions/validationSchema.js";
+import locations from "../data/locations.json";
 
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const googleProvider = new GoogleAuthProvider();
   const navigate = useNavigate();
 
   const handlePostAuthRedirect = () => {
@@ -40,6 +39,9 @@ export default function SignUp() {
     },
     validationSchema: signUpSchema,
     onSubmit: async (values, { setSubmitting, setStatus }) => {
+      if (!formik.isValid) {
+        return;
+      }
       try {
         const userCredential = await createUserWithEmailAndPassword(
           auth,
@@ -64,98 +66,6 @@ export default function SignUp() {
       }
     },
   });
-  const nigerianStates = [
-    "Abia",
-    "Adamawa",
-    "Akwa Ibom",
-    "Anambra",
-    "Bauchi",
-    "Bayelsa",
-    "Benue",
-    "Borno",
-    "Cross River",
-    "Delta",
-    "Ebonyi",
-    "Edo",
-    "Ekiti",
-    "Enugu",
-    "FCT",
-    "Gombe",
-    "Imo",
-    "Jigawa",
-    "Kaduna",
-    "Kano",
-    "Katsina",
-    "Kebbi",
-    "Kogi",
-    "Kwara",
-    "Lagos",
-    "Nasarawa",
-    "Niger",
-    "Ogun",
-    "Ondo",
-    "Osun",
-    "Oyo",
-    "Plateau",
-    "Rivers",
-    "Sokoto",
-    "Taraba",
-    "Yobe",
-    "Zamfara",
-  ];
-
-  const usStates = [
-    "Alabama",
-    "Alaska",
-    "Arizona",
-    "Arkansas",
-    "California",
-    "Colorado",
-    "Connecticut",
-    "Delaware",
-    "Florida",
-    "Georgia",
-    "Hawaii",
-    "Idaho",
-    "Illinois",
-    "Indiana",
-    "Iowa",
-    "Kansas",
-    "Kentucky",
-    "Louisiana",
-    "Maine",
-    "Maryland",
-    "Massachusetts",
-    "Michigan",
-    "Minnesota",
-    "Mississippi",
-    "Missouri",
-    "Montana",
-    "Nebraska",
-    "Nevada",
-    "New Hampshire",
-    "New Jersey",
-    "New Mexico",
-    "New York",
-    "North Carolina",
-    "North Dakota",
-    "Ohio",
-    "Oklahoma",
-    "Oregon",
-    "Pennsylvania",
-    "Rhode Island",
-    "South Carolina",
-    "South Dakota",
-    "Tennessee",
-    "Texas",
-    "Utah",
-    "Vermont",
-    "Virginia",
-    "Washington",
-    "West Virginia",
-    "Wisconsin",
-    "Wyoming",
-  ];
 
   const handleGoogleAuth = async (e) => {
     e.preventDefault();
@@ -179,7 +89,7 @@ export default function SignUp() {
           />
         </div>
         <div className="flex-6">
-          <div className="flex flex-col mx-auto w-100 rounded-3xl bg-white p-7 mt-9">
+          <div className="flex flex-col mx-auto w-110 rounded-3xl bg-white p-7 mt-9">
             <div className="text-center mb-5">
               <p className="text-2xl font-bold">Create your account</p>
               <p className="text-gray-600 mb-2">
@@ -205,7 +115,9 @@ export default function SignUp() {
               <label
                 pattern="[A-Za-z][A-Za-z0-9\-]*"
                 className={`input mb-3 w-full ${
-                  formik.touched.name && formik.errors.name && "border-red-500"
+                  formik.errors.name &&
+                  (formik.values.name || formik.touched.name) &&
+                  "border-red-500"
                 }`}
               >
                 <i className="bx bx-user opacity-50"></i>
@@ -215,17 +127,18 @@ export default function SignUp() {
                   {...formik.getFieldProps("name")}
                 />
               </label>
-              {formik.touched.name && formik.errors.name && (
-                <div className="text-red-500 text-[13px] leading-tight text-xs mb-2">
-                  {formik.errors.name}
-                </div>
-              )}
+              {formik.errors.name &&
+                (formik.values.name || formik.touched.name) && (
+                  <div className="text-red-500 text-[13px] leading-tight text-xs mb-2">
+                    {formik.errors.name}
+                  </div>
+                )}
 
               {/* EMAIL INPUT */}
               <label
                 className={`input mb-3 w-full ${
-                  formik.touched.email &&
                   formik.errors.email &&
+                  (formik.values.email || formik.touched.email) &&
                   "border-red-500"
                 }`}
               >
@@ -236,17 +149,18 @@ export default function SignUp() {
                   {...formik.getFieldProps("email")}
                 />
               </label>
-              {formik.touched.email && formik.errors.email && (
-                <div className="text-red-500 text-[13px] leading-tight text-xs mb-2">
-                  {formik.errors.email}
-                </div>
-              )}
+              {formik.errors.email &&
+                (formik.values.email || formik.touched.email) && (
+                  <div className="text-red-500 text-[13px] leading-tight text-xs mb-2">
+                    {formik.errors.email}
+                  </div>
+                )}
 
               {/* PHONE NUMBER INPUT */}
               <label
                 className={`input mb-3 w-full ${
-                  formik.touched.phone &&
                   formik.errors.phone &&
+                  (formik.values.phone || formik.touched.phone) &&
                   "border-red-500"
                 }`}
               >
@@ -257,153 +171,136 @@ export default function SignUp() {
                   {...formik.getFieldProps("phone")}
                 />
               </label>
-              {formik.touched.phone && formik.errors.phone && (
-                <div className="text-red-500 text-[13px] leading-tight text-xs mb-2">
-                  {formik.errors.phone}
-                </div>
-              )}
+              {formik.errors.phone &&
+                (formik.values.phone || formik.touched.phone) && (
+                  <div className="text-red-500 text-[13px] leading-tight text-xs mb-2">
+                    {formik.errors.phone}
+                  </div>
+                )}
               <div className="flex flex-row gap-3 w-full mb-3">
-                {/* COUNTRY SELECTOR */}
-                <div className="dropdown dropdown-top flex-1">
-                  <div
-                    tabIndex={0}
-                    role="button"
-                    onBlur={() => formik.setFieldTouched("country", true)}
-                    className={`input flex items-center justify-between w-full border ${
-                      formik.touched.country &&
-                      formik.errors.country &&
-                      "border-red-500"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 overflow-hidden">
-                      <i className="bx bx-world opacity-50"></i>
-                      <span
-                        className={`truncate ${
-                          formik.values.country ? "text-black" : "text-gray-400"
-                        }`}
-                      >
-                        {formik.values.country || "Country"}
-                      </span>
-                    </div>
-                    <i className="bx bx-chevron-down transition-transform duration-300 text-xl opacity-50 [.dropdown:focus-within_&]:rotate-180"></i>
-                  </div>
-
-                  <ul
-                    tabIndex={0}
-                    className="dropdown-content menu bg-base-100 rounded-box z-[10] mb-2 w-full p-2 shadow-2xl border border-gray-100"
-                  >
-                    <li>
-                      <button
-                        type="button"
-                        className="py-3"
-                        onClick={() => {
-                          formik.setFieldValue("country", "Nigeria");
-                          formik.setFieldValue("state", "");
-                          document.activeElement.blur();
-                        }}
-                      >
-                        Nigeria
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        type="button"
-                        className="py-3"
-                        onClick={() => {
-                          formik.setFieldValue("country", "USA");
-                          formik.setFieldValue("state", "");
-                          document.activeElement.blur();
-                        }}
-                      >
-                        USA
-                      </button>
-                    </li>
-                  </ul>
-                </div>
-
-                {/* STATE SELECTOR */}
-                <div
-                  className={`dropdown dropdown-top flex-1 ${
-                    !formik.values.country ? "opacity-50" : ""
-                  }`}
-                >
-                  <div
-                    tabIndex={formik.values.country ? 0 : -1}
-                    role="button"
-                    onBlur={() => formik.setFieldTouched("state", true)}
-                    className={`input flex items-center justify-between w-full border ${
-                      !formik.values.country
-                        ? "cursor-not-allowed bg-gray-50 border-gray-300"
-                        : "cursor-pointer"
-                    } ${
-                      formik.touched.state &&
-                      formik.errors.state &&
-                      "border-red-500"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 overflow-hidden">
-                      <i className="bx bx-map opacity-50"></i>
-                      <span
-                        className={`truncate ${
-                          formik.values.state ? "text-black" : "text-gray-400"
-                        }`}
-                      >
-                        {formik.values.state || "State"}
-                      </span>
-                    </div>
-
-                    <i
-                      className={`bx bx-chevron-down transition-transform duration-300 text-xl opacity-50 ${
-                        formik.values.country
-                          ? "[.dropdown:focus-within_&]:rotate-180"
-                          : "rotate-0"
+                {/* COUNTRY SELECTOR CONTAINER */}
+                <div className="flex-1 flex flex-col gap-1">
+                  <div className="dropdown dropdown-top w-full">
+                    <div
+                      tabIndex={0}
+                      role="button"
+                      className={`input flex items-center justify-between w-full border ${
+                        formik.submitCount > 0 &&
+                        !formik.values.country &&
+                        "border-red-500"
                       }`}
-                    ></i>
-                  </div>
+                    >
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <i className="bx bx-world opacity-50"></i>
+                        <span
+                          className={`truncate ${
+                            !formik.values.country
+                              ? "text-gray-400"
+                              : "text-black"
+                          }`}
+                        >
+                          {formik.values.country || "Select a country"}
+                        </span>
+                      </div>
+                      <i className="bx bx-chevron-down transition-transform duration-300 text-xl opacity-50 [.dropdown:focus-within_&]:rotate-180"></i>
+                    </div>
 
-                  {formik.values.country && (
                     <ul
                       tabIndex={0}
-                      className="dropdown-content menu bg-base-100 rounded-box z-[9] mb-2 w-full p-2 shadow-2xl max-h-60 overflow-y-auto block no-scrollbar border border-gray-100"
+                      className="dropdown-content menu bg-base-100 rounded-box z-[10] mb-2 w-full p-2 shadow-2xl border border-gray-100"
                     >
-                      {(formik.values.country === "Nigeria"
-                        ? nigerianStates
-                        : usStates
-                      ).map((s) => (
-                        <li key={s}>
+                      {Object.keys(locations).map((c) => (
+                        <li key={c}>
                           <button
                             type="button"
-                            className="py-2 text-sm"
+                            className="py-3"
+                            onMouseDown={(e) => e.preventDefault()}
                             onClick={() => {
-                              formik.setFieldValue("state", s);
+                              formik.setFieldValue("country", c);
+                              formik.setFieldValue("state", ""); 
                               document.activeElement.blur();
                             }}
                           >
-                            {s}
+                            {c}
                           </button>
                         </li>
                       ))}
                     </ul>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex flex-row gap-3 w-full mb-3 px-1">
-                {/* Country Error Space */}
-                <div className="flex-1">
-                  {formik.touched.country && formik.errors.country && (
-                    <p className="text-red-500 text-[13px] leading-tight">
+                  </div>
+                  {formik.submitCount > 0 && !formik.values.country && (
+                    <p className="text-red-500 text-[12px] px-1">
                       {formik.errors.country}
                     </p>
                   )}
                 </div>
 
-                {/* State Error Space */}
-                <div className="flex-1">
-                  {formik.values.country &&
-                    formik.touched.state &&
-                    formik.errors.state && (
-                      <p className="text-red-500 text-[13px] leading-tight ">
+                {/* STATE SELECTOR CONTAINER */}
+                <div className="flex-1 flex flex-col gap-1">
+                  <div
+                    className={`dropdown dropdown-top w-full ${
+                      !formik.values.country && "opacity-50"
+                    }`}
+                  >
+                    <div
+                      tabIndex={formik.values.country ? 0 : -1}
+                      className={`input flex items-center justify-between w-full border ${
+                        !formik.values.country
+                          ? "bg-gray-100 cursor-not-allowed"
+                          : "cursor-pointer"
+                      } ${
+                        formik.submitCount > 0 &&
+                        formik.values.country &&
+                        !formik.values.state &&
+                        "border-red-500"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <i className="bx bx-map opacity-50"></i>
+                        <span
+                          className={`truncate ${
+                            !formik.values.state
+                              ? "text-gray-400"
+                              : "text-black"
+                          }`}
+                        >
+                          {formik.values.state || "Select a state"}
+                        </span>
+                      </div>
+                      <i
+                        className={`bx bx-chevron-down transition-transform duration-300 text-xl opacity-50 ${
+                          formik.values.country &&
+                          "[.dropdown:focus-within_&]:rotate-180"
+                        }`}
+                      ></i>
+                    </div>
+
+                    {formik.values.country && (
+                      <ul
+                        tabIndex={0}
+                        className="dropdown-content menu bg-base-100 rounded-box z-[9] mb-2 w-full p-2 shadow-2xl max-h-60 overflow-y-auto block border border-gray-100"
+                      >
+                        {(locations[formik.values.country] || []).map((s) => (
+                          <li key={s}>
+                            <button
+                              type="button"
+                              className="py-2 text-sm"
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={() => {
+                                formik.setFieldValue("state", s);
+                                document.activeElement.blur();
+                              }}
+                            >
+                              {s}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  {formik.submitCount > 0 &&
+                    formik.values.country &&
+                    !formik.values.state && (
+                      <p className="text-red-500 text-[12px] px-1">
                         {formik.errors.state}
                       </p>
                     )}
@@ -413,8 +310,8 @@ export default function SignUp() {
               {/* PASSWORD INPUT */}
               <label
                 className={`input mb-3 w-full relative ${
-                  formik.touched.password &&
                   formik.errors.password &&
+                  (formik.values.password || formik.touched.password) &&
                   "border-red-500"
                 }`}
               >
@@ -436,17 +333,19 @@ export default function SignUp() {
                   ></i>
                 </button>
               </label>
-              {formik.touched.password && formik.errors.password && (
-                <div className="text-red-500 text-[13px] leading-tight text-xs mb-2">
-                  {formik.errors.password}
-                </div>
-              )}
+              {formik.errors.password &&
+                (formik.values.password || formik.touched.password) && (
+                  <div className="text-red-500 text-[13px] leading-tight text-xs mb-2">
+                    {formik.errors.password}
+                  </div>
+                )}
 
               {/* CONFIRM PASSWORD INPUT */}
               <label
                 className={`input mb-3 w-full relative ${
-                  formik.touched.confirmPassword &&
                   formik.errors.confirmPassword &&
+                  (formik.values.confirmPassword ||
+                    formik.touched.confirmPassword) &&
                   "border-red-500"
                 }`}
               >
@@ -468,8 +367,9 @@ export default function SignUp() {
                   ></i>
                 </button>
               </label>
-              {formik.touched.confirmPassword &&
-                formik.errors.confirmPassword && (
+              {formik.errors.confirmPassword &&
+                (formik.values.confirmPassword ||
+                  formik.touched.confirmPassword) && (
                   <div className="text-red-500 text-[13px] leading-tight text-xs mb-2">
                     {formik.errors.confirmPassword}
                   </div>
@@ -513,9 +413,9 @@ export default function SignUp() {
                 href=""
                 className="text-primary underline text-md font-semibold"
               >
-                Privacy Policy
+                Privacy Policy.
               </a>
-              .
+              
             </p>
           </div>
         </div>
