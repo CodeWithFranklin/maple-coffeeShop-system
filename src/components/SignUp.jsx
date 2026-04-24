@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect, useContext } from "react";
+import { AuthContext } from "../context/AuthContext.jsx";
 import { useNavigate, Link } from "react-router-dom";
 import { auth, googleProvider } from "../firebase.js";
 import {
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   updateProfile,
 } from "firebase/auth";
 import { useFormik } from "formik";
@@ -14,6 +16,8 @@ export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
+
+  const { user, userInfoLoading } = useContext(AuthContext);
 
   const handlePostAuthRedirect = () => {
     const storeId = localStorage.getItem("last_active_store_id");
@@ -26,6 +30,12 @@ export default function SignUp() {
       navigate("/");
     }
   };
+
+  useEffect(() => {
+    if (user && !userInfoLoading) {
+      handlePostAuthRedirect();
+    }
+  }, [user, userInfoLoading]);
 
   const formik = useFormik({
     initialValues: {
@@ -67,16 +77,24 @@ export default function SignUp() {
     },
   });
 
-  const handleGoogleAuth = async (e) => {
-    e.preventDefault();
+const handleGoogleAuth = async (e) => {
+  e.preventDefault();
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+  if (isMobile) {
+    try {
+      await signInWithRedirect(auth, googleProvider);
+    } catch (error) {
+      console.error("Redirect failed:", error);
+    }
+  } else {
     try {
       await signInWithPopup(auth, googleProvider);
-
-      handlePostAuthRedirect();
     } catch (error) {
-      console.error("Google Auth Error:", error.message);
+      console.error("Popup failed:", error);
     }
-  };
+  }
+};
 
   return (
     <section className="min-h-full flex justify-center">
@@ -217,7 +235,7 @@ export default function SignUp() {
                             onMouseDown={(e) => e.preventDefault()}
                             onClick={() => {
                               formik.setFieldValue("country", c);
-                              formik.setFieldValue("state", ""); 
+                              formik.setFieldValue("state", "");
                               document.activeElement.blur();
                             }}
                           >
@@ -415,7 +433,6 @@ export default function SignUp() {
               >
                 Privacy Policy.
               </a>
-              
             </p>
           </div>
         </div>

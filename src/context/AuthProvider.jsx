@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { onAuthStateChanged } from "firebase/auth";
+import { getRedirectResult, onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebase";
 import { AuthContext } from "./AuthContext";
 
@@ -7,16 +7,27 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [userInfoLoading, setUserInfoLoading] = useState(true);
 
-  useEffect(() => {
-    // Listen for Firebase Auth changes
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+useEffect(() => {
+  let unsubscribe;
+  const initAuth = async () => {
+    try {
+      await getRedirectResult(auth);
+    } catch (error) {
+      console.error("Redirect Error:", error.message);
+    }
+
+    unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setUserInfoLoading(false);
     });
+  };
 
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
-  }, []);
+  initAuth();
+
+  return () => {
+    if (unsubscribe) unsubscribe();
+  };
+}, []);
 
   return (
     <AuthContext.Provider value={{ user, userInfoLoading }}>
