@@ -1,7 +1,7 @@
 import { signInWithPopup, signInWithRedirect } from "firebase/auth";
 import { auth, googleProvider } from "../firebase.js";
 
-export const handleGoogleAuth = () => {
+export const handleGoogleAuth = (onError) => {
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
   if (isMobile) {
@@ -9,13 +9,13 @@ export const handleGoogleAuth = () => {
     return;
   }
 
-  return signInWithPopup(auth, googleProvider)
+  signInWithPopup(auth, googleProvider)
     .then((result) => result.user)
     .catch((error) => {
       if (error.code === "auth/popup-blocked") {
         signInWithRedirect(auth, googleProvider);
       } else {
-        throw error;
+        onError(error.message);
       }
     });
 };

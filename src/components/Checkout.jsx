@@ -131,7 +131,7 @@ export default function Checkout() {
                       JD
                     </div>
                     <div className="text-sm">
-                      <p>
+                      <div>
                         <span className="font-semibold text-gray-500">
                           Full Name:
                         </span>{" "}
@@ -145,10 +145,10 @@ export default function Checkout() {
                         ) : (
                           <p className="font-bold">{contact.fullName}</p>
                         )}
-                      </p>
+                      </div>
                     </div>
                     <div className="text-sm">
-                      <p>
+                      <div>
                         <span className="font-semibold text-gray-500">
                           Email:
                         </span>{" "}
@@ -162,10 +162,10 @@ export default function Checkout() {
                         ) : (
                           <p className="font-bold">{contact.email}</p>
                         )}{" "}
-                      </p>
+                      </div>
                     </div>
                     <div className="text-sm">
-                      <p>
+                      <div>
                         <span className="font-semibold text-gray-500">
                           Phone:
                         </span>{" "}
@@ -179,7 +179,7 @@ export default function Checkout() {
                         ) : (
                           <p className="font-bold">{contact.phone}</p>
                         )}{" "}
-                      </p>
+                      </div>
                     </div>
                   </div>
                 </div>

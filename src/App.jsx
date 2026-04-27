@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+import { Toaster } from "sonner";
 import { AuthProvider } from "./context/AuthProvider";
 import SignUp from "./components/SignUp";
 import SignIn from "./components/SignIn";
@@ -14,6 +15,7 @@ function App() {
  
   return (
     <div className="bg-purple-50 selection:bg-purple-300 min-h-screen">
+      <Toaster position="top-center" richColors />
       <ScrollToTop />
       <AuthProvider>
         <Routes>

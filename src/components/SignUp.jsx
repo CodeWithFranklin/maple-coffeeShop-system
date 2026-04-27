@@ -5,10 +5,11 @@ import { useNavigate, Link } from "react-router-dom";
 import { auth } from "../firebase.js";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { handleGoogleAuth } from "../functions/authHelpers.js";
-
 import { useFormik } from "formik";
 import { signUpSchema } from "../functions/validationSchema.js";
 import locations from "../data/locations.json";
+import { toast } from "sonner";
+import { customAlert } from "../functions/customizeAlerts.js";
 
 export default function SignUp() {
   const functions = getFunctions();
@@ -47,7 +48,7 @@ export default function SignUp() {
       confirmPassword: "",
     },
     validationSchema: signUpSchema,
-    onSubmit: async (values, { setSubmitting, setStatus }) => {
+    onSubmit: async (values, { setSubmitting }) => {
       try {
         const userCredential = await createUserWithEmailAndPassword(
           auth,
@@ -59,23 +60,16 @@ export default function SignUp() {
           displayName: values.name,
         });
 
-        const completeProfile = httpsCallable(
-          functions,
-          "completeUserProfile"
-        );
+        const completeProfile = httpsCallable(functions, "completeUserProfile");
         await completeProfile({
           phone: values.phone,
           country: values.country,
           state: values.state,
         });
-
+        toast.success("Account created!");
         handlePostAuthRedirect();
       } catch (error) {
-        const message =
-          error.code === "auth/email-already-in-use"
-            ? "This email is already in use."
-            : "Something went wrong. Please try again.";
-        setStatus(message);
+        toast.error(customAlert(error.message));
       } finally {
         setSubmitting(false);
       }
@@ -84,13 +78,11 @@ export default function SignUp() {
 
   const onGoogleClick = (e) => {
     e.preventDefault();
-    try {
-      handleGoogleAuth();
-    } catch (error) {
-      formik.setStatus("Could not connect to Google.");
-      console.log(error);
-    }
+    handleGoogleAuth((errorMessage) => {
+      toast.error(customAlert(errorMessage));
+    });
   };
+
   return (
     <section className="min-h-full flex justify-center">
       <div className="flex flex-row w-full max-w-7xl p-8">
@@ -101,11 +93,11 @@ export default function SignUp() {
             className="h-115 fixed mt-8"
           />
         </div>
-        <div className="flex-6">
-          <div className="flex flex-col mx-auto w-110 rounded-3xl bg-white p-7 mt-9">
+        <div className="flex-6 relative">
+          <div className="flex flex-col mx-auto w-110 rounded-4xl bg-white p-7 mt-9">
             <div className="text-center mb-5">
-              <p className="text-2xl font-bold">Create your account</p>
-              <p className="text-gray-600 mb-2">
+              <p className="text-2xl font-bold">Create your Account</p>
+              <p className="text-gray-600 mb-2 mt-1">
                 Hey there! Join us today and start enjoying seamless ordering
                 and exclusive deals.
               </p>
@@ -125,71 +117,75 @@ export default function SignUp() {
               onSubmit={formik.handleSubmit}
             >
               {/* NAME INPUT */}
-              <label
-                pattern="[A-Za-z][A-Za-z0-9\-]*"
-                className={`input mb-3 w-full ${
-                  formik.errors.name &&
-                  (formik.values.name || formik.touched.name) &&
-                  "border-red-500"
-                }`}
-              >
-                <i className="bx bx-user opacity-50"></i>
-                <input
-                  type="text"
-                  placeholder="Username"
-                  {...formik.getFieldProps("name")}
-                />
-              </label>
-              {formik.errors.name &&
-                (formik.values.name || formik.touched.name) && (
-                  <div className="text-red-500 text-[13px] leading-tight text-xs mb-2">
-                    {formik.errors.name}
-                  </div>
-                )}
-
+              <div className="flex flex-col mb-3">
+                <label
+                  pattern="[A-Za-z][A-Za-z0-9\-]*"
+                  className={`input w-full ${
+                    formik.errors.name &&
+                    (formik.values.name || formik.touched.name) &&
+                    "border-red-500"
+                  }`}
+                >
+                  <i className="bx bx-user opacity-50"></i>
+                  <input
+                    type="text"
+                    placeholder="Username"
+                    {...formik.getFieldProps("name")}
+                  />
+                </label>
+                {formik.errors.name &&
+                  (formik.values.name || formik.touched.name) && (
+                    <div className="text-red-500 text-[13px] leading-tight text-xs mt-1">
+                      {formik.errors.name}
+                    </div>
+                  )}
+              </div>
               {/* EMAIL INPUT */}
-              <label
-                className={`input mb-3 w-full ${
-                  formik.errors.email &&
-                  (formik.values.email || formik.touched.email) &&
-                  "border-red-500"
-                }`}
-              >
-                <i className="bx bx-envelope opacity-50"></i>
-                <input
-                  type="email"
-                  placeholder="mail@site.com"
-                  {...formik.getFieldProps("email")}
-                />
-              </label>
-              {formik.errors.email &&
-                (formik.values.email || formik.touched.email) && (
-                  <div className="text-red-500 text-[13px] leading-tight text-xs mb-2">
-                    {formik.errors.email}
-                  </div>
-                )}
-
+              <div className="flex flex-col mb-3">
+                <label
+                  className={`input w-full ${
+                    formik.errors.email &&
+                    (formik.values.email || formik.touched.email) &&
+                    "border-red-500"
+                  }`}
+                >
+                  <i className="bx bx-envelope opacity-50"></i>
+                  <input
+                    type="email"
+                    placeholder="mail@site.com"
+                    {...formik.getFieldProps("email")}
+                  />
+                </label>
+                {formik.errors.email &&
+                  (formik.values.email || formik.touched.email) && (
+                    <div className="text-red-500 text-[13px] leading-tight text-xs mt-1">
+                      {formik.errors.email}
+                    </div>
+                  )}
+              </div>
               {/* PHONE NUMBER INPUT */}
-              <label
-                className={`input mb-3 w-full ${
-                  formik.errors.phone &&
-                  (formik.values.phone || formik.touched.phone) &&
-                  "border-red-500"
-                }`}
-              >
-                <i className="bx bx-phone opacity-50"></i>
-                <input
-                  type="tel"
-                  placeholder="08165438276"
-                  {...formik.getFieldProps("phone")}
-                />
-              </label>
-              {formik.errors.phone &&
-                (formik.values.phone || formik.touched.phone) && (
-                  <div className="text-red-500 text-[13px] leading-tight text-xs mb-2">
-                    {formik.errors.phone}
-                  </div>
-                )}
+              <div className="flex flex-col mb-3">
+                <label
+                  className={`input w-full ${
+                    formik.errors.phone &&
+                    (formik.values.phone || formik.touched.phone) &&
+                    "border-red-500"
+                  }`}
+                >
+                  <i className="bx bx-phone opacity-50"></i>
+                  <input
+                    type="tel"
+                    placeholder="08165438276"
+                    {...formik.getFieldProps("phone")}
+                  />
+                </label>
+                {formik.errors.phone &&
+                  (formik.values.phone || formik.touched.phone) && (
+                    <div className="text-red-500 text-[13px] leading-tight text-xs mt-1">
+                      {formik.errors.phone}
+                    </div>
+                  )}
+              </div>
               <div className="flex flex-row gap-3 w-full mb-3">
                 {/* COUNTRY SELECTOR CONTAINER */}
                 <div className="flex-1 flex flex-col gap-1">
@@ -319,74 +315,76 @@ export default function SignUp() {
                     )}
                 </div>
               </div>
-
               {/* PASSWORD INPUT */}
-              <label
-                className={`input mb-3 w-full relative ${
-                  formik.errors.password &&
-                  (formik.values.password || formik.touched.password) &&
-                  "border-red-500"
-                }`}
-              >
-                <i className="bx bx-lock-alt opacity-50"></i>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password"
-                  {...formik.getFieldProps("password")}
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2"
-                  onClick={() => setShowPassword(!showPassword)}
+              <div className="flex flex-col mb-3">
+                <label
+                  className={`input w-full relative ${
+                    formik.errors.password &&
+                    (formik.values.password || formik.touched.password) &&
+                    "border-red-500"
+                  }`}
                 >
-                  <i
-                    className={`bx ${
-                      showPassword ? "bx-show" : "bx-hide"
-                    } opacity-50 text-xl`}
-                  ></i>
-                </button>
-              </label>
-              {formik.errors.password &&
-                (formik.values.password || formik.touched.password) && (
-                  <div className="text-red-500 text-[13px] leading-tight text-xs mb-2">
-                    {formik.errors.password}
-                  </div>
-                )}
-
+                  <i className="bx bx-lock-alt opacity-50"></i>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    {...formik.getFieldProps("password")}
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    <i
+                      className={`bx ${
+                        showPassword ? "bx-show" : "bx-hide"
+                      } opacity-50 text-xl`}
+                    ></i>
+                  </button>
+                </label>
+                {formik.errors.password &&
+                  (formik.values.password || formik.touched.password) && (
+                    <div className="text-red-500 text-[13px] leading-tight text-xs mt-1">
+                      {formik.errors.password}
+                    </div>
+                  )}
+              </div>
               {/* CONFIRM PASSWORD INPUT */}
-              <label
-                className={`input mb-3 w-full relative ${
-                  formik.errors.confirmPassword &&
-                  (formik.values.confirmPassword ||
-                    formik.touched.confirmPassword) &&
-                  "border-red-500"
-                }`}
-              >
-                <i className="bx bx-lock-alt opacity-50"></i>
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm Password"
-                  {...formik.getFieldProps("confirmPassword")}
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              <div className="flex flex-col mb-3">
+                <label
+                  className={`input w-full relative ${
+                    formik.errors.confirmPassword &&
+                    (formik.values.confirmPassword ||
+                      formik.touched.confirmPassword) &&
+                    "border-red-500"
+                  }`}
                 >
-                  <i
-                    className={`bx ${
-                      showConfirmPassword ? "bx-show" : "bx-hide"
-                    } opacity-50 text-xl`}
-                  ></i>
-                </button>
-              </label>
-              {formik.errors.confirmPassword &&
-                (formik.values.confirmPassword ||
-                  formik.touched.confirmPassword) && (
-                  <div className="text-red-500 text-[13px] leading-tight text-xs mb-2">
-                    {formik.errors.confirmPassword}
-                  </div>
-                )}
+                  <i className="bx bx-lock-alt opacity-50"></i>
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Confirm Password"
+                    {...formik.getFieldProps("confirmPassword")}
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    <i
+                      className={`bx ${
+                        showConfirmPassword ? "bx-show" : "bx-hide"
+                      } opacity-50 text-xl`}
+                    ></i>
+                  </button>
+                </label>
+                {formik.errors.confirmPassword &&
+                  (formik.values.confirmPassword ||
+                    formik.touched.confirmPassword) && (
+                    <div className="text-red-500 text-[13px] leading-tight text-xs mt-1">
+                      {formik.errors.confirmPassword}
+                    </div>
+                  )}
+              </div>
 
               <button
                 type="submit"
@@ -397,9 +395,7 @@ export default function SignUp() {
               >
                 {formik.isSubmitting ? "Creating your account " : "Sign Up"}
               </button>
-
               <div className="divider text-gray-600">or</div>
-
               <button
                 type="button"
                 className="btn btn-outline"
