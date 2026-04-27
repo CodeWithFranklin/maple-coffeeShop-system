@@ -11,15 +11,16 @@ import locations from "../data/locations.json";
 import { toast } from "sonner";
 import { customAlert } from "../functions/customizeAlerts.js";
 
+const functions = getFunctions();
+
 export default function SignUp() {
-  const functions = getFunctions();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
 
   const { user, userInfoLoading } = useContext(AuthContext);
 
-  const handlePostAuthRedirect = () => {
+  const redirectToRelevantPage = () => {
     const storeId = localStorage.getItem("last_active_store_id");
     const savedStore = localStorage.getItem("pending_store");
     const savedCart = localStorage.getItem(`cart_store_${storeId}`);
@@ -30,10 +31,11 @@ export default function SignUp() {
       navigate("/");
     }
   };
-
+  
+  // Redirect already-authenticated users away from auth pages
   useEffect(() => {
     if (user && !userInfoLoading) {
-      handlePostAuthRedirect();
+      redirectToRelevantPage();
     }
   }, [user, userInfoLoading]);
 
@@ -67,7 +69,7 @@ export default function SignUp() {
           state: values.state,
         });
         toast.success("Account created!");
-        handlePostAuthRedirect();
+        redirectToRelevantPage();
       } catch (error) {
         toast.error(customAlert(error.message));
       } finally {

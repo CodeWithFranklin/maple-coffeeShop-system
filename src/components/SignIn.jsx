@@ -9,12 +9,12 @@ import { toast } from "sonner";
 import { customAlert } from "../functions/customizeAlerts.js";
 import { AuthContext } from "../context/AuthContext.jsx";
 
-export default function Login() {
+export default function Sign() {
   const { user, userInfoLoading } = useContext(AuthContext);
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
 
-  const handlePostAuthRedirect = () => {
+  const redirectToRelevantPage = () => {
     const storeId = localStorage.getItem("last_active_store_id");
     const savedStore = localStorage.getItem("pending_store");
     const savedCart = localStorage.getItem(`cart_store_${storeId}`);
@@ -31,9 +31,10 @@ export default function Login() {
     }
   };
 
+  // Redirect already-authenticated users away from auth pages
   useEffect(() => {
     if (user && !userInfoLoading) {
-      handlePostAuthRedirect();
+      redirectToRelevantPage();
     }
   }, [user, userInfoLoading]);
 
@@ -46,8 +47,8 @@ export default function Login() {
     onSubmit: async (values, { setSubmitting }) => {
       try {
         await signInWithEmailAndPassword(auth, values.email, values.password);
-        handlePostAuthRedirect();
-        toast.success("Account created!");
+        redirectToRelevantPage();
+        toast.success("Welcome Back!");
       } catch (error) {
         toast.error(customAlert(error.message));
       } finally {

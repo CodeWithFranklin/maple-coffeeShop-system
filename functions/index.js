@@ -61,14 +61,25 @@ exports.completeUserProfile = functions.https.onCall(async (data, context) => {
       "You must be logged in."
     );
   }
+  const phone = data.phone;
+  const country = data.country;
+  const state = data.state;
 
-  const { phone, country, state, name, email } = data;
   const { uid, token } = context.auth;
+  const email = token.email;
+  const name = token.name || "New User";
 
   if (!phone || !country || !state) {
     throw new functions.https.HttpsError(
       "invalid-argument",
-      "Phone, country, and state are required."
+      "Missing required fields (phone, country, or state)."
+    );
+  }
+
+  if (!/^[0-9]{11}$/.test(phone)) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "Phone number must be exactly 11 digits."
     );
   }
 
@@ -76,27 +87,28 @@ exports.completeUserProfile = functions.https.onCall(async (data, context) => {
     const userRef = db.collection("users").doc(uid);
     const snapshot = await userRef.get();
 
+    let finalData = { phone, country, state };
+
     if (!snapshot.exists) {
-      await userRef.set(
-        buildBaseUserDoc({
-          uid,
-          email: email || token.email,
-          name: name || token.name,
-          authMethod: "google",
-          providers: ["google.com"],
-        }),
-        { merge: true }
-      );
+      const baseDoc = buildBaseUserDoc({
+        uid,
+        email,
+        name,
+        authMethod: "google",
+        providers: ["google.com"],
+      });
+
+      finalData = { ...baseDoc, ...finalData };
     }
 
-    await userRef.set({ phone, country, state }, { merge: true });
+    await userRef.set(finalData, { merge: true });
 
     return { success: true };
   } catch (error) {
     console.error("Error in completeUserProfile:", error);
     throw new functions.https.HttpsError(
       "internal",
-      "Failed to update profile."
+      "Failed to sync profile data to the database."
     );
   }
 });
