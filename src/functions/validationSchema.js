@@ -11,7 +11,7 @@ const emailField = yup
     /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
     "Email must be a valid format (e.g., name@example.com)"
   )
-  .required("Email is required");
+  .required("Required");
 
 const passwordField = yup
   .string()
@@ -19,17 +19,17 @@ const passwordField = yup
     passwordRegex,
     "Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character"
   )
-  .required("Password is required");
+  .required("Required");
 
 const nameField = yup
   .string()
   .test("not-empty", "Name must not be empty", (value) => !!value?.trim())
   .matches(/^[a-zA-Z\s]+$/, "Name must only contain letters")
-  .required("Name is required");
+  .required("Required");
 
 const phoneField = yup
   .string()
-  .required("Phone number is required")
+  .required("Required")
   .test("phone", "Enter a valid phone number", function (value) {
     const { country } = this.parent;
     const countryCode =
@@ -55,7 +55,7 @@ export const signUpSchema = yup.object().shape({
 
 export const signInSchema = yup.object().shape({
   email: emailField,
-  password: yup.string().required("Password is required"),
+  password: yup.string().required("Required"),
 });
 
 export const resetPasswordSchema = yup.object().shape({
@@ -66,7 +66,7 @@ export const uploadSchema = yup.object().shape({
   title: yup
     .string()
     .test("not-empty", "Title must not be empty", (value) => !!value?.trim())
-    .required("Title is required"),
+    .required("Required"),
   instructions: yup
     .string()
     .test(
@@ -74,10 +74,10 @@ export const uploadSchema = yup.object().shape({
       "Instructions must not be empty",
       (value) => !!value?.trim()
     )
-    .required("Instructions are required"),
+    .required("Required"),
   photo: yup
     .mixed()
-    .required("Photo is required")
+    .required("Required")
     .test(
       "fileSize",
       "File must be under 2MB",
