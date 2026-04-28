@@ -1,23 +1,24 @@
 import { useState, useEffect, useContext } from "react";
-import { getFunctions, httpsCallable } from "firebase/functions";
-import { AuthContext } from "../context/AuthContext.jsx";
 import { useNavigate, Link } from "react-router-dom";
-import { auth } from "../firebase.js";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { handleGoogleAuth } from "../functions/authHelpers.js";
 import { useFormik } from "formik";
-import { signUpSchema } from "../functions/validationSchema.js";
-import locations from "../data/locations.json";
 import { toast } from "sonner";
+import { AsYouType } from "libphonenumber-js";
+import { auth } from "../firebase.js";
+import { getFunctions, httpsCallable } from "firebase/functions";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { AuthContext } from "../context/AuthContext.jsx";
+import { handleGoogleAuth } from "../functions/authHelpers.js";
+import { signUpSchema } from "../functions/validationSchema.js";
 import { customAlert } from "../functions/customizeAlerts.js";
+import locations from "../data/locations.json";
 
 const functions = getFunctions();
 
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const navigate = useNavigate();
 
+  const navigate = useNavigate();
   const { user, userInfoLoading } = useContext(AuthContext);
 
   const redirectToRelevantPage = () => {
@@ -31,7 +32,7 @@ export default function SignUp() {
       navigate("/");
     }
   };
-  
+
   // Redirect already-authenticated users away from auth pages
   useEffect(() => {
     if (user && !userInfoLoading) {
@@ -57,11 +58,9 @@ export default function SignUp() {
           values.email,
           values.password
         );
-
         await updateProfile(userCredential.user, {
           displayName: values.name,
         });
-
         const completeProfile = httpsCallable(functions, "completeUserProfile");
         await completeProfile({
           phone: values.phone,
@@ -95,7 +94,7 @@ export default function SignUp() {
             className="h-115 fixed mt-8"
           />
         </div>
-        <div className="flex-6 relative">
+        <div className="flex-6">
           <div className="flex flex-col mx-auto w-110 rounded-4xl bg-white p-7 mt-9">
             <div className="text-center mb-5">
               <p className="text-2xl font-bold">Create your Account</p>
@@ -121,7 +120,6 @@ export default function SignUp() {
               {/* NAME INPUT */}
               <div className="flex flex-col mb-3">
                 <label
-                  pattern="[A-Za-z][A-Za-z0-9\-]*"
                   className={`input w-full ${
                     formik.errors.name &&
                     (formik.values.name || formik.touched.name) &&
@@ -206,6 +204,7 @@ export default function SignUp() {
                             onClick={() => {
                               formik.setFieldValue("country", c);
                               formik.setFieldValue("state", "");
+                              formik.setFieldValue("phone", "");
                               document.activeElement.blur();
                             }}
                           >
@@ -294,6 +293,7 @@ export default function SignUp() {
                     )}
                 </div>
               </div>
+
               {/* PHONE NUMBER INPUT */}
               <div className="flex flex-col mb-3">
                 <label
@@ -301,17 +301,21 @@ export default function SignUp() {
                     formik.errors.phone &&
                     (formik.values.phone || formik.touched.phone) &&
                     "border-red-500"
+                  } ${
+                    !formik.values.country &&
+                    "bg-gray-100 cursor-not-allowed opacity-50"
                   }`}
                 >
                   <i className="bx bx-phone opacity-50"></i>
                   <input
                     type="tel"
+                    disabled={!formik.values.country}
                     placeholder={
                       formik.values.country === "Nigeria"
-                        ? "08012345678"
+                        ? "0801 234 5678"
                         : formik.values.country === "USA"
-                        ? "2025551234"
-                        : "Phone number"
+                        ? "(202) 555-0199"
+                        : "Select country first"
                     }
                     {...formik.getFieldProps("phone")}
                   />
@@ -420,11 +424,8 @@ export default function SignUp() {
             </form>
             <p className="text-sm text-center text-gray-600 mt-5">
               By continuing, you agree to our{" "}
-              <a
-                href=""
-                className="text-primary underline text-md font-semibold"
-              >
-                Terms of Use{" "}
+              <a href="#" onClick={(e) => e.preventDefault()}>
+                Terms of Use
               </a>
               and{" "}
               <a

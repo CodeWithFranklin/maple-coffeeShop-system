@@ -9,24 +9,19 @@ import { toast } from "sonner";
 import { customAlert } from "../functions/customizeAlerts.js";
 import { AuthContext } from "../context/AuthContext.jsx";
 
-export default function Sign() {
-  const { user, userInfoLoading } = useContext(AuthContext);
-  const navigate = useNavigate();
+export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
-
+  const navigate = useNavigate();
+  const { user, userInfoLoading } = useContext(AuthContext);
+  
   const redirectToRelevantPage = () => {
     const storeId = localStorage.getItem("last_active_store_id");
     const savedStore = localStorage.getItem("pending_store");
     const savedCart = localStorage.getItem(`cart_store_${storeId}`);
 
-    console.log("storeId:", storeId);
-    console.log("savedStore:", savedStore);
-    console.log("savedCart:", savedCart);
-
     if (savedCart && savedStore) {
       navigate("/order", { state: { selectedStore: JSON.parse(savedStore) } });
     } else {
-      console.log("Navigating to home");
       navigate("/");
     }
   };
@@ -47,8 +42,8 @@ export default function Sign() {
     onSubmit: async (values, { setSubmitting }) => {
       try {
         await signInWithEmailAndPassword(auth, values.email, values.password);
-        redirectToRelevantPage();
         toast.success("Welcome Back!");
+        redirectToRelevantPage();
       } catch (error) {
         toast.error(customAlert(error.message));
       } finally {
