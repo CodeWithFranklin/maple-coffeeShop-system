@@ -165,29 +165,6 @@ export default function SignUp() {
                     </div>
                   )}
               </div>
-              {/* PHONE NUMBER INPUT */}
-              <div className="flex flex-col mb-3">
-                <label
-                  className={`input w-full ${
-                    formik.errors.phone &&
-                    (formik.values.phone || formik.touched.phone) &&
-                    "border-red-500"
-                  }`}
-                >
-                  <i className="bx bx-phone opacity-50"></i>
-                  <input
-                    type="tel"
-                    placeholder="08165438276"
-                    {...formik.getFieldProps("phone")}
-                  />
-                </label>
-                {formik.errors.phone &&
-                  (formik.values.phone || formik.touched.phone) && (
-                    <div className="text-red-500 text-[13px] leading-tight text-xs mt-1">
-                      {formik.errors.phone}
-                    </div>
-                  )}
-              </div>
               <div className="flex flex-row gap-3 w-full mb-3">
                 {/* COUNTRY SELECTOR CONTAINER */}
                 <div className="flex-1 flex flex-col gap-1">
@@ -317,6 +294,36 @@ export default function SignUp() {
                     )}
                 </div>
               </div>
+              {/* PHONE NUMBER INPUT */}
+              <div className="flex flex-col mb-3">
+                <label
+                  className={`input w-full ${
+                    formik.errors.phone &&
+                    (formik.values.phone || formik.touched.phone) &&
+                    "border-red-500"
+                  }`}
+                >
+                  <i className="bx bx-phone opacity-50"></i>
+                  <input
+                    type="tel"
+                    placeholder={
+                      formik.values.country === "Nigeria"
+                        ? "08012345678"
+                        : formik.values.country === "USA"
+                        ? "2025551234"
+                        : "Phone number"
+                    }
+                    {...formik.getFieldProps("phone")}
+                  />
+                </label>
+                {formik.errors.phone &&
+                  (formik.values.phone || formik.touched.phone) && (
+                    <div className="text-red-500 text-[13px] leading-tight text-xs mt-1">
+                      {formik.errors.phone}
+                    </div>
+                  )}
+              </div>
+
               {/* PASSWORD INPUT */}
               <div className="flex flex-col mb-3">
                 <label

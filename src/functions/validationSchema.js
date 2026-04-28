@@ -1,90 +1,95 @@
 import * as yup from "yup";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
+
 const passwordRegex =
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}$/;
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*\-_.,?]).{8,}$/;
+
+const emailField = yup
+  .string()
+  .email("Please enter a valid email")
+  .matches(
+    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+    "Email must be a valid format (e.g., name@example.com)"
+  )
+  .required("Email is required");
+
+const passwordField = yup
+  .string()
+  .matches(
+    passwordRegex,
+    "Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character"
+  )
+  .required("Password is required");
+
+const nameField = yup
+  .string()
+  .test("not-empty", "Name must not be empty", (value) => !!value?.trim())
+  .matches(/^[a-zA-Z\s]+$/, "Name must only contain letters")
+  .required("Name is required");
+
+const phoneField = yup
+  .string()
+  .required("Phone number is required")
+  .test("phone", "Enter a valid phone number", function (value) {
+    const { country } = this.parent;
+    const countryCode =
+      country === "Nigeria" ? "NG" : country === "USA" ? "US" : null;
+    if (!value) return false;
+    const phone = parsePhoneNumberFromString(value, countryCode);
+    return phone ? phone.isValid() : false;
+  });
+
 
 export const signUpSchema = yup.object().shape({
-  name: yup
-    .string()
-    .test("stringLength", "name must not be empty", (value) => {
-      return value && value.trim().length > 0;
-    })
-    .matches(/^[a-zA-Z\s]+$/, "Name must only contain letters")
-    .required("Required"),
-  email: yup
-    .string()
-    .email("Please enter a valid email")
-    .matches(
-      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-      "Email must be a valid format (e.g., name@example.com)"
-    )
-    .required("Required"),
-  phone: yup
-    .string()
-    .matches(/^[0-9]{11}$/, "Phone number must be exactly 11 digits")
-    .required("Required"),
-  country: yup.string()
-    .required("Please select a country"),
-  state: yup.string()
-    .required("Please select a state"),
-  password: yup
-    .string()
-    .min(8)
-    .matches(passwordRegex, { message: "Please create a stronger password" })
-    .required("Required"),
+  name: nameField,
+  email: emailField,
+  phone: phoneField,
+  country: yup.string().required("Please select a country"),
+  state: yup.string().required("Please select a state"),
+  password: passwordField,
   confirmPassword: yup
     .string()
     .oneOf([yup.ref("password"), null], "Passwords must match")
-    .required("Required"),
+    .required("Please confirm your password"),
 });
 
 export const signInSchema = yup.object().shape({
-  email: yup
-    .string()
-    .email("Please enter a valid email")
-    .matches(
-      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-      "Email must be a valid format (e.g., name@example.com)"
-    )
-    .required("Required"),
-  password: yup.string().required("Required"),
+  email: emailField,
+  password: yup.string().required("Password is required"),
 });
 
 export const resetPasswordSchema = yup.object().shape({
-  email: yup
-    .string()
-    .email("Invalid email")
-    .matches(
-      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-      "Email must be a valid format (e.g., name@example.com)"
-    )
-    .required("Required"),
+  email: emailField,
 });
 
 export const uploadSchema = yup.object().shape({
   title: yup
     .string()
-    .test("stringLength", "title must not be empty", (value) => {
-      return value && value.trim().length > 0;
-    })
-    .required("Required"),
+    .test("not-empty", "Title must not be empty", (value) => !!value?.trim())
+    .required("Title is required"),
   instructions: yup
     .string()
-    .test("stringLength", "instructions must not be empty", (value) => {
-      return value && value.trim().length > 0;
-    })
-    .required("Required"),
+    .test(
+      "not-empty",
+      "Instructions must not be empty",
+      (value) => !!value?.trim()
+    )
+    .required("Instructions are required"),
   photo: yup
     .mixed()
-    .required("Required")
-    .test("fileSize", "File too large", (value) => {
-      return value && value.size <= 2000000;
-    })
-    .test("fileType", "Unsupported File Format", (value) => {
-      return (
-        value &&
+    .required("Photo is required")
+    .test(
+      "fileSize",
+      "File must be under 2MB",
+      (value) => !!value && value.size <= 2000000
+    )
+    .test(
+      "fileType",
+      "Only JPEG, PNG, and WebP are supported",
+      (value) =>
+        !!value &&
         ["image/jpeg", "image/png", "image/jpg", "image/webp"].includes(
           value.type
         )
-      );
-    }),
+    ),
 });
