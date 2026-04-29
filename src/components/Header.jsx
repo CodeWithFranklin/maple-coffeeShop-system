@@ -1,29 +1,35 @@
+import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { auth } from "../firebase.js";
 import { signOut } from "firebase/auth";
 import { useAuth } from "../hooks/useAuth";
+import { toast } from "sonner";
 
 export default function Header() {
+  const [signingOut, setSigningOut] = useState(false);
   const { user, userInfoLoading } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
+    if (!window.navigator.onLine) {
+      toast.error("Internet connection required to sign out.");
+      return;
+    }
+
+    setSigningOut(true);
     try {
       await signOut(auth);
-      localStorage.removeItem("last_active_store_id");
-      localStorage.removeItem("pending_store");
-      Object.keys(localStorage).forEach((key) => {
-        if (key.startsWith("cart_store_")) {
-          localStorage.removeItem(key);
-        }
-      });
+      localStorage.clear();
 
-      navigate("/");
+      navigate("/signIn", { replace: true });
+
+      toast.success("You have been signed out.");
     } catch (error) {
-      console.error("Sign out error:", error.message);
+      toast.error("sign-out failed.");
+    } finally {
+      setSigningOut(false);
     }
   };
-
   return (
     <header className="flex justify-center pt-3 mb-20">
       <nav className="navbar max-w-screen-xl w-[95%] lg:w-[90%] mx-auto px-4 sm:px-6 lg:px-8 bg-white/30 backdrop-blur-lg rounded-3xl py-3 pe-5 fixed z-10">
@@ -188,6 +194,7 @@ export default function Header() {
                   <button
                     onClick={handleSignOut}
                     className="text-error font-bold hover:bg-error/10"
+                    disabled={signingOut}
                   >
                     <i className="bx bx-log-out"></i> Sign Out
                   </button>

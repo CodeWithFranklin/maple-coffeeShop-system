@@ -21,15 +21,19 @@ export default function SignUp() {
   const navigate = useNavigate();
   const { user, userInfoLoading } = useContext(AuthContext);
 
-  const redirectToRelevantPage = () => {
+   const redirectToRelevantPage = () => {
     const storeId = localStorage.getItem("last_active_store_id");
     const savedStore = localStorage.getItem("pending_store");
     const savedCart = localStorage.getItem(`cart_store_${storeId}`);
 
     if (savedCart && savedStore) {
-      navigate("/order", { state: { selectedStore: JSON.parse(savedStore) } });
+      navigate(
+        "/order",
+        { state: { selectedStore: JSON.parse(savedStore) } },
+        { replace: true }
+      );
     } else {
-      navigate("/");
+      navigate("/", { replace: true });
     }
   };
 
