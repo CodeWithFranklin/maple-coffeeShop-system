@@ -21,7 +21,7 @@ export default function SignUp() {
   const navigate = useNavigate();
   const { user, userInfoLoading } = useContext(AuthContext);
 
-   const redirectToRelevantPage = () => {
+  const redirectToRelevantPage = () => {
     const storeId = localStorage.getItem("last_active_store_id");
     const savedStore = localStorage.getItem("pending_store");
     const savedCart = localStorage.getItem(`cart_store_${storeId}`);
@@ -67,6 +67,7 @@ export default function SignUp() {
         });
         const completeProfile = httpsCallable(functions, "completeUserProfile");
         await completeProfile({
+          name: values.name,
           phone: values.phone,
           country: values.country,
           state: values.state,
@@ -74,7 +75,7 @@ export default function SignUp() {
         toast.success("Account created!");
         redirectToRelevantPage();
       } catch (error) {
-        toast.error(customAlert(error.message));
+        toast.error(customAlert(error.message, error.code));
       } finally {
         setSubmitting(false);
       }

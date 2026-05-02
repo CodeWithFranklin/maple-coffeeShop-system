@@ -66,8 +66,8 @@ exports.completeUserProfile = functions.https.onCall(async (data, context) => {
   const state = data.state;
 
   const { uid, token } = context.auth;
+  const name = data.name || token.name || "New User";
   const email = token.email;
-  const name = token.name || "New User";
 
   if (!phone || !country || !state) {
     throw new functions.https.HttpsError(
@@ -76,18 +76,18 @@ exports.completeUserProfile = functions.https.onCall(async (data, context) => {
     );
   }
 
-  if (!/^[0-9]{11}$/.test(phone)) {
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "Phone number must be exactly 11 digits."
-    );
-  }
+if (!/^\+?[0-9\s\-()]{7,15}$/.test(phone)) {
+  throw new functions.https.HttpsError(
+    "invalid-argument",
+    "Invalid phone number."
+  );
+}
 
   try {
     const userRef = db.collection("users").doc(uid);
     const snapshot = await userRef.get();
 
-    let finalData = { phone, country, state };
+    let finalData = { name, phone, country, state };   
 
     if (!snapshot.exists) {
       const baseDoc = buildBaseUserDoc({

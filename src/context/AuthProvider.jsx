@@ -1,36 +1,52 @@
 import { useState, useEffect } from "react";
 import { getRedirectResult, onAuthStateChanged } from "firebase/auth";
-import { auth } from "../firebase";
+import { doc, onSnapshot } from "firebase/firestore";
+import { auth, db } from "../firebase";
 import { AuthContext } from "./AuthContext";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [userInfo, setUserInfo] = useState(null);
   const [userInfoLoading, setUserInfoLoading] = useState(true);
 
   useEffect(() => {
-    let unsubscribe;
-    const initAuth = async () => {
-      try {
-        await getRedirectResult(auth);
-      } catch (error) {
-        console.error("Redirect Error:", error.message);
-      }
+    let unsubscribeAuth;
+    let unsubscribeSnapshot;
 
-      unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-        setUser(currentUser);
-        setUserInfoLoading(false);
+    getRedirectResult(auth)
+      .catch((error) => console.error("Redirect Error:", error.message))
+      .finally(() => {
+        unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+          setUser(currentUser);
+          unsubscribeSnapshot?.();
+
+          if (currentUser) {
+            unsubscribeSnapshot = onSnapshot(
+              doc(db, "users", currentUser.uid),
+              (snap) => {
+                setUserInfo(snap.exists() ? snap.data() : null);
+                setUserInfoLoading(false);
+              },
+              (error) => {
+                console.error("Snapshot error:", error.message);
+                setUserInfoLoading(false);
+              }
+            );
+          } else {
+            setUserInfo(null);
+            setUserInfoLoading(false);
+          }
+        });
       });
-    };
-
-    initAuth();
 
     return () => {
-      if (unsubscribe) unsubscribe();
+      unsubscribeAuth?.();
+      unsubscribeSnapshot?.();
     };
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, userInfoLoading }}>
+    <AuthContext.Provider value={{ user, userInfo, userInfoLoading }}>
       {children}
     </AuthContext.Provider>
   );

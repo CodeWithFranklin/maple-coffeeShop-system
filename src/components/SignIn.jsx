@@ -13,7 +13,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { user, userInfoLoading } = useContext(AuthContext);
-  
+
   const redirectToRelevantPage = () => {
     const storeId = localStorage.getItem("last_active_store_id");
     const savedStore = localStorage.getItem("pending_store");
@@ -49,7 +49,7 @@ export default function Login() {
         toast.success("Welcome Back!");
         redirectToRelevantPage();
       } catch (error) {
-        toast.error(customAlert(error.message));
+        toast.error(customAlert(error.message, error.code));
       } finally {
         setSubmitting(false);
       }

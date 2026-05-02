@@ -1,4 +1,3 @@
-
 const firebaseErrors = {
   "auth/network-request-failed": "Please check your internet connection.",
   "auth/email-already-in-use": "This email is already in use.",
