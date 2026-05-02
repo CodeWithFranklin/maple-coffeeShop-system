@@ -176,48 +176,52 @@ export default function Header() {
               </div>
               <ul
                 tabIndex={0}
-                className="dropdown-content menu bg-base-100 rounded-box z-[1] w-85 p-2 pb-4 shadow mt-4"
+                className="dropdown-content menu bg-base-100 rounded-box z-[1] w-85 p-0 pb-5 shadow mt-4"
               >
-                <li className="menu-title flex flex-row items-center gap-x-2 text-black">
-                  {user.photoURL ? (
-                    <img
-                      className="aspect-square w-12 h-12 rounded-full border-2 border-gray-300 object-cover"
-                      src={user.photoURL}
-                      alt={user.displayName || "User"}
-                    />
-                  ) : (
-                    <div className="aspect-square w-12 h-12 rounded-full bg-neutral text-neutral-content border-2 border-gray-300 flex items-center justify-center">
-                      <span className="text-sm font-bold">
-                        {user.displayName
-                          ? user.displayName
-                              .split(" ")
-                              .slice(0, 2)
-                              .map((n) => n.charAt(0).toUpperCase())
-                              .join("")
-                          : user.email.charAt(0).toUpperCase()}
-                      </span>
+                <NavLink
+                  to="/profile"
+                  className="flex items-center gap-x-2  hover:bg-base-200/50 px-4 py-3 rounded-lg transition-colors"
+                >
+                  <div className="avatar placeholder">
+                    <div className="bg-black text-white rounded-full w-12 aspect-square border-0  text-center">
+                      {user.photoURL ? (
+                        <img
+                          src={user.photoURL}
+                          alt="Profile"
+                          className="rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="text-sm font-bold my-3">
+                          {user.displayName
+                            ? user.displayName
+                                .split(" ")
+                                .slice(0, 2)
+                                .map((n) => n.charAt(0).toUpperCase())
+                                .join("")
+                            : user.email.charAt(0).toUpperCase()}
+                        </div>
+                      )}
                     </div>
-                  )}
-                  <div>
-                    <p className="text-[17px] font-semibold">
+                  </div>
+
+                  <div className="text-left hover:underline">
+                    <p className="text-[17px] font-semibold capitalize text-black">
                       {user.displayName}
                     </p>
                     <p className="font-medium text-[13px] text-gray-500">
                       {user.email}
                     </p>
-                    <p className="font-medium">
+                    <p className="font-medium capitalize text-sm text-black">
                       {userInfo?.state &&
                         userInfo?.country &&
                         `${userInfo.state}, ${userInfo.country}`}
                     </p>
                   </div>
-                  <p className="ms-4 ms-auto me-3">
-                    <i className="bx bx-pencil bx-xs"></i>
-                  </p>
-                </li>
+                  <i className="bx bx-pencil bx-xs ms-auto"></i>
+                </NavLink>
                 <hr className="opacity-10" />
 
-                <ul className="flex flex-col gap-y-2 mt-2 font-semibold">
+                <ul className="flex flex-col gap-y-2 mt-2 font-semibold px-2">
                   <li>
                     <a>
                       <i className="bx bx-xs bx-package"></i>
