@@ -93,3 +93,10 @@ export const uploadSchema = yup.object().shape({
         )
     ),
 });
+export const profileSchema = yup.object().shape({
+  name: nameField,
+  email: emailField,
+  phone: phoneField,
+  country: yup.string().required("Please select a country"),
+  state: yup.string().required("Please select a state"),
+});

@@ -4,6 +4,7 @@ import { AuthProvider } from "./context/AuthProvider";
 import SignUp from "./components/SignUp";
 import SignIn from "./components/SignIn";
 import Home from "./components/Home";
+import Profile from "./components/ProfilePage";
 import Main from "./components/Main";
 import Order from "./components/Order";
 import Store from "./components/Store";
@@ -12,7 +13,6 @@ import SimpleLayout from "./components/SimpleLayout";
 import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
- 
   return (
     <div className="bg-purple-50 selection:bg-purple-300 min-h-screen">
       <Toaster position="top-center" richColors />
@@ -27,6 +27,7 @@ function App() {
           <Route element={<SimpleLayout />}>
             <Route path="/signup" element={<SignUp />} />
             <Route path="/signin" element={<SignIn />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/store" element={<Store />} />
             <Route path="/checkout" element={<Checkout />} />
           </Route>

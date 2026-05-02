@@ -20,11 +20,10 @@ export default function Login() {
     const savedCart = localStorage.getItem(`cart_store_${storeId}`);
 
     if (savedCart && savedStore) {
-      navigate(
-        "/order",
-        { state: { selectedStore: JSON.parse(savedStore) } },
-        { replace: true }
-      );
+      navigate("/order", {
+        state: { selectedStore: JSON.parse(savedStore) },
+        replace: true,
+      });
     } else {
       navigate("/", { replace: true });
     }

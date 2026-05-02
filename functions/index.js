@@ -7,12 +7,9 @@ const db = getFirestore();
 
 const normalizeProvider = (providerId) => {
   switch (providerId) {
-    case "google.com":
-      return "google";
-    case "password":
-      return "email and password";
-    default:
-      return providerId;
+    case "google.com": return "google";
+    case "password": return "email and password";
+    default: return providerId;
   }
 };
 
@@ -30,6 +27,26 @@ const buildBaseUserDoc = ({ uid, email, name, authMethod, providers }) => ({
   authMethod,
   allProviders: providers.map(normalizeProvider),
 });
+
+const validateProfileFields = ({ phone, country, state, name }, functions) => {
+  const isProfileUpdate = phone || country || state || name;
+
+  if (isProfileUpdate) {
+    if (!phone || !country || !state || !name) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "All profile fields are required."
+      );
+    }
+    if (!/^\+?[0-9\s\-()]{10,15}$/.test(phone)) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Invalid phone number."
+      );
+    }
+  }
+};
+
 
 exports.createUserDocument = functions.auth.user().onCreate(async (user) => {
   try {
@@ -54,40 +71,33 @@ exports.createUserDocument = functions.auth.user().onCreate(async (user) => {
   }
 });
 
-exports.completeUserProfile = functions.https.onCall(async (data, context) => {
+
+exports.syncUserProfile = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError(
       "unauthenticated",
       "You must be logged in."
     );
   }
-  const phone = data.phone;
-  const country = data.country;
-  const state = data.state;
 
+  const { phone, country, state, photoURL } = data;
   const { uid, token } = context.auth;
   const name = data.name || token.name || "New User";
   const email = token.email;
 
-  if (!phone || !country || !state) {
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "Missing required fields (phone, country, or state)."
-    );
-  }
-
-if (!/^\+?[0-9\s\-()]{7,15}$/.test(phone)) {
-  throw new functions.https.HttpsError(
-    "invalid-argument",
-    "Invalid phone number."
-  );
-}
+  validateProfileFields({ phone, country, state, name: data.name }, functions);
 
   try {
     const userRef = db.collection("users").doc(uid);
     const snapshot = await userRef.get();
 
-    let finalData = { name, phone, country, state };   
+    let finalData = {
+      ...(data.name && { name }),
+      ...(phone && { phone }),
+      ...(country && { country }),
+      ...(state && { state }),
+      ...(photoURL && { photoURL }),
+    };
 
     if (!snapshot.exists) {
       const baseDoc = buildBaseUserDoc({
@@ -97,18 +107,16 @@ if (!/^\+?[0-9\s\-()]{7,15}$/.test(phone)) {
         authMethod: "google",
         providers: ["google.com"],
       });
-
       finalData = { ...baseDoc, ...finalData };
     }
 
     await userRef.set(finalData, { merge: true });
-
     return { success: true };
   } catch (error) {
-    console.error("Error in completeUserProfile:", error);
+    console.error("Error in syncUserProfile:", error);
     throw new functions.https.HttpsError(
       "internal",
-      "Failed to sync profile data to the database."
+      "Failed to sync profile data."
     );
   }
 });

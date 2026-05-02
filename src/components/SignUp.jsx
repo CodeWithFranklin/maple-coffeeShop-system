@@ -27,11 +27,10 @@ export default function SignUp() {
     const savedCart = localStorage.getItem(`cart_store_${storeId}`);
 
     if (savedCart && savedStore) {
-      navigate(
-        "/order",
-        { state: { selectedStore: JSON.parse(savedStore) } },
-        { replace: true }
-      );
+      navigate("/order", {
+        state: { selectedStore: JSON.parse(savedStore) },
+        replace: true,
+      });
     } else {
       navigate("/", { replace: true });
     }
@@ -65,7 +64,7 @@ export default function SignUp() {
         await updateProfile(userCredential.user, {
           displayName: values.name,
         });
-        const completeProfile = httpsCallable(functions, "completeUserProfile");
+        const completeProfile = httpsCallable(functions, "syncUserProfile");
         await completeProfile({
           name: values.name,
           phone: values.phone,
