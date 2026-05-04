@@ -180,10 +180,10 @@ export default function Header() {
               >
                 <NavLink
                   to="/profile"
-                  className="flex items-center gap-x-2  hover:bg-base-200/50 px-4 py-3 rounded-lg transition-colors"
+                  className="flex items-center gap-x-2 group hover:bg-base-200/50  px-4 py-3 rounded-lg transition-colors"
                 >
                   <div className="avatar placeholder">
-                    <div className="bg-black text-white rounded-full w-12 aspect-square border-0  text-center">
+                    <div className="bg-black text-white rounded-full w-12 aspect-square text-center">
                       {user.photoURL ? (
                         <img
                           src={user.photoURL}
@@ -204,14 +204,14 @@ export default function Header() {
                     </div>
                   </div>
 
-                  <div className="text-left hover:underline">
-                    <p className="text-[17px] font-semibold capitalize text-black">
-                      {user.displayName}
+                  <div className="text-left cursor-pointer">
+                    <p className="text-[17px] font-semibold capitalize text-black group-hover:underline">
+                      {user?.displayName}
                     </p>
-                    <p className="font-medium text-[13px] text-gray-500">
-                      {user.email}
+                    <p className="font-medium text-[13px] text-gray-500 group-hover:underline">
+                      {user?.email}
                     </p>
-                    <p className="font-medium capitalize text-sm text-black">
+                    <p className="font-medium capitalize text-sm text-black group-hover:underline">
                       {userInfo?.state &&
                         userInfo?.country &&
                         `${userInfo.state}, ${userInfo.country}`}
