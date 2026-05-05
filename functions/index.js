@@ -18,10 +18,11 @@ const getAuthMethod = (providers) => {
   return "email and password";
 };
 
-const buildBaseUserDoc = ({ uid, email, name, authMethod, providers }) => ({
+const buildBaseUserDoc = ({ uid, email, name, photoURL, authMethod, providers }) => ({
   uid,
   email,
   name: name || "New User",
+  photoURL: photoURL || null,
   role: 0,
   createdAt: FieldValue.serverTimestamp(),
   authMethod,
@@ -61,6 +62,7 @@ exports.createUserDocument = functions.auth.user().onCreate(async (user) => {
           uid: user.uid,
           email: user.email,
           name: user.displayName,
+          photoURL: user.photoURL,
           authMethod,
           providers,
         }),
@@ -104,6 +106,7 @@ exports.syncUserProfile = functions.https.onCall(async (data, context) => {
         uid,
         email,
         name,
+        photoURL,
         authMethod: "google",
         providers: ["google.com"],
       });

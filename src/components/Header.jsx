@@ -179,7 +179,7 @@ export default function Header() {
                 className="dropdown-content menu bg-base-100 rounded-box z-[1] w-85 p-0 pb-5 shadow mt-4"
               >
                 <NavLink
-                  to="/profile"
+                  to="/account"
                   className="flex items-center gap-x-2 group hover:bg-base-200/50  px-4 py-3 rounded-lg transition-colors"
                 >
                   <div className="avatar placeholder">

@@ -100,3 +100,12 @@ export const profileSchema = yup.object().shape({
   country: yup.string().required("Please select a country"),
   state: yup.string().required("Please select a state"),
 });
+
+export const passwordChangeSchema = yup.object().shape({
+  currentPassword: yup.string().required("Current password is required"),
+  newPassword: passwordField,
+  confirmPassword: yup
+    .string()
+    .oneOf([yup.ref("newPassword"), null], "Passwords must match")
+    .required("Please confirm your new password"),
+});

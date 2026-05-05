@@ -4,7 +4,7 @@ import { AuthProvider } from "./context/AuthProvider";
 import SignUp from "./components/SignUp";
 import SignIn from "./components/SignIn";
 import Home from "./components/Home";
-import Profile from "./components/ProfilePage";
+import Account from "./components/updateAccountPage/Account";
 import Main from "./components/Main";
 import Order from "./components/Order";
 import Store from "./components/Store";
@@ -27,7 +27,7 @@ function App() {
           <Route element={<SimpleLayout />}>
             <Route path="/signup" element={<SignUp />} />
             <Route path="/signin" element={<SignIn />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route path="/account" element={<Account />} />
             <Route path="/store" element={<Store />} />
             <Route path="/checkout" element={<Checkout />} />
           </Route>
