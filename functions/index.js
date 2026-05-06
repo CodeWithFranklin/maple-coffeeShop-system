@@ -7,9 +7,12 @@ const db = getFirestore();
 
 const normalizeProvider = (providerId) => {
   switch (providerId) {
-    case "google.com": return "google";
-    case "password": return "email and password";
-    default: return providerId;
+    case "google.com":
+      return "google";
+    case "password":
+      return "email and password";
+    default:
+      return providerId;
   }
 };
 
@@ -18,7 +21,14 @@ const getAuthMethod = (providers) => {
   return "email and password";
 };
 
-const buildBaseUserDoc = ({ uid, email, name, photoURL, authMethod, providers }) => ({
+const buildBaseUserDoc = ({
+  uid,
+  email,
+  name,
+  photoURL,
+  authMethod,
+  providers,
+}) => ({
   uid,
   email,
   name: name || "New User",
@@ -28,26 +38,6 @@ const buildBaseUserDoc = ({ uid, email, name, photoURL, authMethod, providers })
   authMethod,
   allProviders: providers.map(normalizeProvider),
 });
-
-const validateProfileFields = ({ phone, country, state, name }, functions) => {
-  const isProfileUpdate = phone || country || state || name;
-
-  if (isProfileUpdate) {
-    if (!phone || !country || !state || !name) {
-      throw new functions.https.HttpsError(
-        "invalid-argument",
-        "All profile fields are required."
-      );
-    }
-    if (!/^\+?[0-9\s\-()]{10,15}$/.test(phone)) {
-      throw new functions.https.HttpsError(
-        "invalid-argument",
-        "Invalid phone number."
-      );
-    }
-  }
-};
-
 
 exports.createUserDocument = functions.auth.user().onCreate(async (user) => {
   try {
@@ -72,8 +62,6 @@ exports.createUserDocument = functions.auth.user().onCreate(async (user) => {
     console.error("Error in createUserDocument:", error);
   }
 });
-
-
 exports.syncUserProfile = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError(
@@ -82,23 +70,63 @@ exports.syncUserProfile = functions.https.onCall(async (data, context) => {
     );
   }
 
-  const { phone, country, state, photoURL } = data;
+  const {
+    phone,
+    country,
+    state,
+    photoURL,
+    contactEmail,
+    useAuthEmailAsContact,
+  } = data;
+
   const { uid, token } = context.auth;
+
   const name = data.name || token.name || "New User";
   const email = token.email;
 
-  validateProfileFields({ phone, country, state, name: data.name }, functions);
+  const provider = token.firebase?.sign_in_provider || "unknown";
+
+  const providers = token.firebase?.identities
+    ? Object.keys(token.firebase.identities)
+    : [provider];
+
+  if (phone && !/^\+?[0-9\s\-()]{10,15}$/.test(phone)) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "Invalid phone number."
+    );
+  }
+
+  let finalContactEmail;
+
+  if (useAuthEmailAsContact) {
+    finalContactEmail = email;
+  } else {
+    if (!contactEmail) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Contact email is required."
+      );
+    }
+    finalContactEmail = contactEmail;
+  }
 
   try {
     const userRef = db.collection("users").doc(uid);
     const snapshot = await userRef.get();
 
     let finalData = {
-      ...(data.name && { name }),
-      ...(phone && { phone }),
-      ...(country && { country }),
-      ...(state && { state }),
-      ...(photoURL && { photoURL }),
+      ...(data.name !== undefined && { name }),
+      ...(phone !== undefined && { phone }),
+      ...(country !== undefined && { country }),
+      ...(state !== undefined && { state }),
+      ...(photoURL !== undefined && { photoURL }),
+
+      contactEmail: finalContactEmail,
+
+      ...(typeof useAuthEmailAsContact === "boolean" && {
+        useAuthEmailAsContact,
+      }),
     };
 
     if (!snapshot.exists) {
@@ -107,16 +135,24 @@ exports.syncUserProfile = functions.https.onCall(async (data, context) => {
         email,
         name,
         photoURL,
-        authMethod: "google",
-        providers: ["google.com"],
+        authMethod: getAuthMethod(providers),
+        providers,
       });
-      finalData = { ...baseDoc, ...finalData };
+
+      finalData = {
+        ...baseDoc,
+        contactEmail: email,
+        useAuthEmailAsContact: true,
+        ...finalData,
+      };
     }
 
     await userRef.set(finalData, { merge: true });
+
     return { success: true };
   } catch (error) {
     console.error("Error in syncUserProfile:", error);
+
     throw new functions.https.HttpsError(
       "internal",
       "Failed to sync profile data."

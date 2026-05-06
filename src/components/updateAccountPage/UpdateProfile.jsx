@@ -3,7 +3,7 @@ import { useAuth } from "../../hooks/useAuth.jsx";
 import { useFormik } from "formik";
 import { toast } from "sonner";
 import { getFunctions, httpsCallable } from "firebase/functions";
-import { updateEmail, updateProfile } from "firebase/auth";
+import { updateProfile } from "firebase/auth";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { auth, storage } from "../../firebase.js";
 import { customAlert } from "../../functions/customizeAlerts.js";
@@ -60,36 +60,31 @@ export default function UpdateProfile() {
   };
 
   const runUpdates = async (values) => {
-    const updates = [];
-
     if (values.name !== user.displayName) {
-      updates.push(
-        updateProfile(auth.currentUser, { displayName: values.name })
-      );
+      await updateProfile(auth.currentUser, { displayName: values.name });
     }
-
-    if (values.email !== user.email) {
-      updates.push(updateEmail(auth.currentUser, values.email));
-    }
-
     const syncProfile = httpsCallable(functions, "syncUserProfile");
-    updates.push(
-      syncProfile({
-        phone: values.phone,
-        country: values.country,
-        state: values.state,
-        name: values.name,
-      })
-    );
 
-    await Promise.all(updates);
+    return await syncProfile({
+      phone: values.phone,
+      country: values.country,
+      state: values.state,
+      name: values.name,
+
+      contactEmail: values.useAuthEmailAsContact
+        ? user.email
+        : values.contactEmail,
+
+      useAuthEmailAsContact: values.useAuthEmailAsContact,
+    });
   };
 
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
       name: user?.displayName || "",
-      email: user?.email || "",
+      contactEmail: userInfo?.contactEmail || user?.email || "",
+      useAuthEmailAsContact: userInfo?.useAuthEmailAsContact ?? true,
       phone: userInfo?.phone || "",
       country: userInfo?.country || "",
       state: userInfo?.state || "",
@@ -204,32 +199,84 @@ export default function UpdateProfile() {
           </div>
 
           {/* Email */}
+          {/* Auth Email — readonly display */}
+          <div className="flex flex-col gap-1 md:col-span-2">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-bold text-black">
+                Login Email
+              </label>
+              {user?.providerData?.some(
+                (p) => p.providerId === "google.com"
+              ) && (
+                <span className="badge badge-ghost gap-1 text-[10px] opacity-60">
+                  <i className="bx bx-google"></i> Linked to Google
+                </span>
+              )}
+            </div>
+            <label className="input w-full bg-gray-50 border-none rounded-xl opacity-60 cursor-not-allowed">
+              <i className="bx bx-envelope opacity-50"></i>
+              <input type="email" value={user?.email || ""} disabled />
+            </label>
+            <p className="text-[11px] text-gray-400 px-1">
+              Used for login only — cannot be changed here.
+            </p>
+          </div>
+
+          {/* Use auth email checkbox */}
+          <div className="md:col-span-2 flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="useAuthEmail"
+              className="checkbox checkbox-sm"
+              checked={formik.values.useAuthEmailAsContact}
+              onChange={(e) => {
+                formik.setFieldValue("useAuthEmailAsContact", e.target.checked);
+                if (e.target.checked) {
+                  formik.setFieldValue("contactEmail", user.email);
+                }
+              }}
+            />
+            <label
+              htmlFor="useAuthEmail"
+              className="text-sm text-gray-600 cursor-pointer"
+            >
+              Use my login email for notifications
+            </label>
+          </div>
+
+          {/* Contact Email */}
           <div className="flex flex-col gap-1 md:col-span-2">
             <label className="text-sm font-bold text-black">
-              Email Address
+              Contact Email
             </label>
             <label
               className={`input w-full bg-gray-50 border-none rounded-xl ${
-                formik.errors.email &&
-                (formik.values.email || formik.touched.email) &&
-                "border border-red-500"
+                formik.values.useAuthEmailAsContact
+                  ? "opacity-60 cursor-not-allowed"
+                  : ""
+              } ${
+                formik.errors.contactEmail && formik.touched.contactEmail
+                  ? "border border-red-500"
+                  : ""
               }`}
             >
               <i className="bx bx-envelope opacity-50"></i>
               <input
                 type="email"
-                placeholder="Email"
-                {...formik.getFieldProps("email")}
+                disabled={formik.values.useAuthEmailAsContact}
+                placeholder="Contact email"
+                {...formik.getFieldProps("contactEmail")}
               />
             </label>
-            {formik.errors.email &&
-              (formik.values.email || formik.touched.email) && (
-                <p className="text-red-500 text-xs mt-1">
-                  {formik.errors.email}
-                </p>
-              )}
+            <p className="text-[11px] text-gray-400 px-1">
+              Used for order updates and notifications.
+            </p>
+            {formik.errors.contactEmail && formik.touched.contactEmail && (
+              <p className="text-red-500 text-xs mt-1">
+                {formik.errors.contactEmail}
+              </p>
+            )}
           </div>
-
           {/* Country */}
           <div className="flex flex-col gap-1">
             <label className="text-sm font-bold text-black">Country</label>

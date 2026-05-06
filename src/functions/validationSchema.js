@@ -39,7 +39,6 @@ const phoneField = yup
     return phone ? phone.isValid() : false;
   });
 
-
 export const signUpSchema = yup.object().shape({
   name: nameField,
   email: emailField,
@@ -95,12 +94,24 @@ export const uploadSchema = yup.object().shape({
 });
 export const profileSchema = yup.object().shape({
   name: nameField,
-  email: emailField,
+
+  useAuthEmailAsContact: yup.boolean(),
+
+  contactEmail: yup
+    .string()
+    .email("Please enter a valid email")
+    .when("useAuthEmailAsContact", {
+      is: false,
+      then: (schema) => schema.required("Contact email is required"),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+
   phone: phoneField,
+
   country: yup.string().required("Please select a country"),
+
   state: yup.string().required("Please select a state"),
 });
-
 export const passwordChangeSchema = yup.object().shape({
   currentPassword: yup.string().required("Current password is required"),
   newPassword: passwordField,
