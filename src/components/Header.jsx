@@ -66,7 +66,7 @@ export default function Header() {
                     <a>Book a Space</a>
                   </li>
                   <li>
-                    <NavLink to="/store">Our Store</NavLink>
+                    <NavLink to="/stores">Our Store</NavLink>
                   </li>
                 </ul>
               </li>
@@ -112,7 +112,7 @@ export default function Header() {
                       <a>Book a space</a>
                     </li>
                     <li>
-                      <NavLink to="/store">Our Store</NavLink>
+                      <NavLink to="/stores">Our Store</NavLink>
                     </li>
                   </ul>
                 </div>

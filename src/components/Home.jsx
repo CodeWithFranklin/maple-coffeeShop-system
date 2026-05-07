@@ -8,7 +8,7 @@ import { usePrevNextButtons } from "./hooks/usePrevNextButtons";
 import { useVerticalCarousel } from "./hooks/useVerticalCarousel";
 import { NextButton, PrevButton } from "./embela/EmblaCarouselArrowButtons";
 import { feedBack } from "./ListItems.js";
-import { migrateHomepage_menu } from "./MigrateData.jsx";
+import { seedFreshMapleDatabase } from "./MigrateData.jsx";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -82,7 +82,7 @@ export default function Home() {
               </div>
               <button
                 className="btn btn-primary"
-                onClick={() => migrateHomepage_menu()}
+                onClick={() => seedFreshMapleDatabase()}
               >
                 Migrate Data
               </button>

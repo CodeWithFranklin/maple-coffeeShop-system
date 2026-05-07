@@ -1,62 +1,51 @@
 const menuList = [
   {
-    id: 1,
-    name: "Pizza",
+    name: "Classic Pizza",
     img: "/images/pizza.jpg",
-    about: "Lorem ipsum dolor sit, amet consectetur adipisicing elit.",
+    about: "Freshly baked pizza with rich tomato sauce and melted cheese.",
     price: 17,
-    tags: ["Cafe", "Green"],
-    availableAt: [1, 3], // Available in Springfield and Lagos
+    tags: ["pizza", "food"],
+    availableAt: ["maple-haven", "coffee-corner"],
   },
   {
-    id: 2,
     name: "Espresso Latte",
     img: "/images/latte.jpg",
     about: "Rich espresso with smooth steamed milk.",
     price: 12,
-    tags: ["Cafe", "Hot"],
-    availableAt: [1, 2, 3], // Available everywhere
-  },
-
-  {
-    id: 3,
-    name: "Pizza",
-    img: "/images/pizza.jpg",
-    about:
-      "Lorem ipsum dolor sit, amet consectetur adipisicing elit. orem ipsum dolor sit, amet consectetur adipisicing elit.",
-    price: 17,
-    tags: ["Cafe", "Green"],
-    availableAt: [2, 3], // Available everywhere
+    tags: ["coffee", "hot-drink"],
+    availableAt: ["maple-haven", "the-springfield-roastery", "coffee-corner"],
   },
   {
-    id: 4,
-    name: "Pizza",
+    name: "Chicken Pizza",
     img: "/images/pizza.jpg",
-    about:
-      "Lorem ipsum dolor sit, amet consectetur adipisicing elit. orem ipsum dolor sit, amet consectetur adipisicing elit.",
-    price: 17,
-    tags: ["Cafe", "Green"],
-    availableAt: [1, 2], // Available everywhere
+    about: "Pizza topped with seasoned chicken, cheese, and herbs.",
+    price: 19,
+    tags: ["pizza", "food"],
+    availableAt: ["the-springfield-roastery", "coffee-corner"],
   },
   {
-    id: 5,
-    name: "Pizza",
+    name: "Veggie Pizza",
     img: "/images/pizza.jpg",
-    about:
-      "Lorem ipsum dolor sit, amet consectetur adipisicing elit. orem ipsum dolor sit, amet consectetur adipisicing elit.",
-    price: 17,
-    tags: ["Cafe", "Green"],
-    availableAt: [1, 2], // Available everywhere
+    about: "A fresh vegetable pizza with peppers, onions, and sweet corn.",
+    price: 16,
+    tags: ["pizza", "vegetarian"],
+    availableAt: ["maple-haven", "the-springfield-roastery"],
   },
   {
-    id: 6,
-    name: "Pizza",
-    img: "/images/pizza.jpg",
-    about:
-      "Lorem ipsum dolor sit, amet consectetur adipisicing elit. orem ipsum dolor sit, amet consectetur adipisicing elit.",
-    price: 17,
-    tags: ["Cafe", "Green"],
-    availableAt: [2, 3], // Available everywhere
+    name: "Iced Coffee",
+    img: "/images/latte.jpg",
+    about: "Cold coffee served over ice for a refreshing boost.",
+    price: 10,
+    tags: ["coffee", "cold-drink"],
+    availableAt: ["maple-haven", "maple-lekki", "ikeja-espresso"],
+  },
+  {
+    name: "Caramel Latte",
+    img: "/images/latte.jpg",
+    about: "Smooth latte blended with sweet caramel flavor.",
+    price: 14,
+    tags: ["coffee", "hot-drink"],
+    availableAt: ["coffee-corner", "brewed-bliss", "maple-lekki"],
   },
 ];
 
@@ -100,59 +89,50 @@ const locations = [
 ];
 
 const locatedStores = [
-  // SPRINGFIELD STORES
   {
-    id: 1,
+    id: "maple-haven",
     name: "Maple Haven",
     img: "/images/store1.jpg",
     address: "123 Maple Street, Springfield, IL",
   },
   {
-    id: 2,
+    id: "the-springfield-roastery",
     name: "The Springfield Roastery",
     img: "/images/store2.jpg",
     address: "99 Oak Avenue, Springfield, IL",
   },
-
-  // AUSTIN STORES
   {
-    id: 3,
+    id: "coffee-corner",
     name: "Coffee Corner",
     img: "/images/store3.jpg",
     address: "456 Elm Avenue, Austin, TX",
   },
   {
-    id: 4,
+    id: "keep-austin-brewed",
     name: "Keep Austin Brewed",
     img: "/images/store4.jpg",
     address: "22 Congress Ave, Austin, TX",
   },
-
-  // DENVER STORES
   {
-    id: 5,
+    id: "brewed-bliss",
     name: "Brewed Bliss",
     img: "/images/store5.jpg",
     address: "789 Oak Lane, Denver, CO",
   },
-
-  // SEATTLE STORES
   {
-    id: 6,
+    id: "caffeine-cove",
     name: "Caffeine Cove",
     img: "/images/store6.jpg",
     address: "101 Pine Road, Seattle, WA",
   },
-
-  // LAGOS STORES
   {
-    id: 7,
+    id: "maple-lekki",
     name: "Maple Lekki",
     img: "/images/store7.jpg",
     address: "Plot 15, Admiralty Way, Lekki, Lagos",
   },
   {
-    id: 8,
+    id: "ikeja-espresso",
     name: "Ikeja Espresso",
     img: "/images/store8.jpg",
     address: "Allen Avenue, Ikeja, Lagos",
