@@ -238,7 +238,7 @@ export default function Order() {
     <section className="min-h-screen flex flex-col">
       <div className="mx-18 mt-13">
         <h1 className="text-7xl font-extrabold mb-13 leading-[1.2]">
-          {store.name} <span className="text-lime-300">yo</span>
+          {store.name}
         </h1>
 
         <div className="flex gap-x-3">
