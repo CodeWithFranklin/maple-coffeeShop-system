@@ -9,6 +9,7 @@ import {
   where,
   setDoc,
   doc,
+  deleteDoc,
 } from "firebase/firestore";
 
 export default function Order() {
@@ -153,34 +154,39 @@ export default function Order() {
     );
   };
 
-  useEffect(() => {
-    const syncCartToDB = async () => {
-      if (!user?.uid || !store?.id) return;
+ useEffect(() => {
+   const syncCartToDB = async () => {
+     if (!user?.uid || !store?.id) return;
 
-      try {
-        const cartRef = doc(db, "users", user.uid, "carts", store.id);
+     try {
+       const cartRef = doc(db, "users", user.uid, "carts", store.id);
 
-        await setDoc(
-          cartRef,
-          {
-            storeId: store.id,
-            storeName: store.name,
-            items: cart,
-            lastUpdated: new Date().toISOString(),
-            cartTotal: cart.reduce(
-              (acc, item) => acc + item.price * item.quantity,
-              0
-            ),
-          },
-          { merge: true }
-        );
-      } catch (err) {
-        console.error("DB Sync Error:", err);
-      }
-    };
+       if (cart.length === 0) {
+         await deleteDoc(cartRef);
+         return;
+       }
 
-    syncCartToDB();
-  }, [cart, user, store]);
+       await setDoc(
+         cartRef,
+         {
+           storeId: store.id,
+           storeName: store.name,
+           items: cart,
+           lastUpdated: new Date().toISOString(),
+           cartTotal: cart.reduce(
+             (acc, item) => acc + item.price * item.quantity,
+             0
+           ),
+         },
+         { merge: true }
+       );
+     } catch (err) {
+       console.error("DB Sync Error:", err);
+     }
+   };
+
+   syncCartToDB();
+ }, [cart, user?.uid, store?.id, store?.name]);
 
   const handleCheckout = () => {
     if (cart.length === 0) return;
