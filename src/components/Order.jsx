@@ -1,19 +1,25 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { db } from "../firebase";
 import { useAuth } from "../hooks/useAuth";
-import { useLocation, Navigate, NavLink, useNavigate } from "react-router-dom";
-import { collection, getDocs, query, where, setDoc, doc } from "firebase/firestore";
+import { useLocation, Navigate, useNavigate } from "react-router-dom";
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  setDoc,
+  doc,
+} from "firebase/firestore";
 
 export default function Order() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 1. EXTRACT ROUTE DATA
   const store = location.state?.selectedStore;
   const initialSearch = location.state?.autoSearch || "";
 
-  // 2. INITIALIZE STATE & REFS
   const { user } = useAuth();
+
   const [loading, setLoading] = useState(true);
   const [menu, setMenu] = useState([]);
   const [filteredMenu, setFilteredMenu] = useState([]);
@@ -21,24 +27,33 @@ export default function Order() {
   const [quantity, setQuantity] = useState(1);
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [selectedCategory, setSelectedCategory] = useState("All");
+
   const modalRef = useRef(null);
-  const categories = useMemo(() => {
-    return ["All", ...new Set(menu.flatMap((item) => item.tags || []))];
-  }, [menu]);
+
   const autoSearchValue = location.state?.autoSearch;
   const currentPath = location.pathname;
 
   const [cart, setCart] = useState(() => {
     if (!store?.id) return [];
+
     const saved = localStorage.getItem(`cart_store_${store.id}`);
     return saved ? JSON.parse(saved) : [];
   });
 
-  // 3. HANDLERS (Moved UP to avoid Initialization Errors)
+  const categories = useMemo(() => {
+    return ["All", ...new Set(menu.flatMap((item) => item.tags || []))];
+  }, [menu]);
+
+  const subTotal = useMemo(() => {
+    return cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  }, [cart]);
 
   const openModal = useCallback((item) => {
+    if (item.stock <= 0 || item.available === false) return;
+
     setQuantity(1);
     setActiveItem(item);
+
     if (modalRef.current) {
       modalRef.current.showModal();
     }
@@ -47,25 +62,63 @@ export default function Order() {
   const addToCart = useCallback(() => {
     if (!activeItem) return;
 
+    if (activeItem.stock <= 0 || activeItem.available === false) {
+      alert("This item is currently out of stock.");
+      return;
+    }
+
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.id === activeItem.id);
+      const existingQuantity = existingItem?.quantity || 0;
+      const newQuantity = existingQuantity + quantity;
+
+      if (newQuantity > activeItem.stock) {
+        alert(`Only ${activeItem.stock} unit(s) available.`);
+        return prevCart;
+      }
+
       if (existingItem) {
         return prevCart.map((item) =>
-          item.id === activeItem.id
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
+          item.id === activeItem.id ? { ...item, quantity: newQuantity } : item
         );
       }
-      return [...prevCart, { ...activeItem, quantity: quantity }];
+
+      return [
+        ...prevCart,
+        {
+          id: activeItem.id,
+          productId: activeItem.productId,
+          name: activeItem.name,
+          img: activeItem.img,
+          tags: activeItem.tags,
+          price: activeItem.price,
+          stock: activeItem.stock,
+          quantity,
+        },
+      ];
     });
 
     if (modalRef.current) {
       modalRef.current.close();
     }
-  }, [activeItem, quantity]); // Correct dependencies
+  }, [activeItem, quantity]);
 
-  const increaseQty = () => setQuantity((prev) => prev + 1);
-  const decreaseQty = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+  const increaseQty = () => {
+    if (!activeItem) return;
+
+    setQuantity((prev) => {
+      if (prev >= activeItem.stock) {
+        alert(`Only ${activeItem.stock} unit(s) available.`);
+        return prev;
+      }
+
+      return prev + 1;
+    });
+  };
+
+  const decreaseQty = () => {
+    setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+  };
 
   const handleCategoryFilter = useCallback((tag) => {
     setSelectedCategory(tag);
@@ -79,27 +132,41 @@ export default function Order() {
   const updateCartQuantity = (productId, amount) => {
     setCart((prev) =>
       prev.map((item) => {
-        if (item.id === productId) {
-          const newQty = item.quantity + amount;
-          return { ...item, quantity: newQty > 0 ? newQty : 1 };
+        if (item.id !== productId) return item;
+
+        const menuItem = menu.find((product) => product.id === productId);
+        const stock = menuItem?.stock ?? item.stock ?? 0;
+
+        const newQty = item.quantity + amount;
+
+        if (newQty < 1) {
+          return { ...item, quantity: 1 };
         }
-        return item;
+
+        if (newQty > stock) {
+          alert(`Only ${stock} unit(s) available.`);
+          return item;
+        }
+
+        return { ...item, quantity: newQty };
       })
     );
   };
-  // Inside Order.js
+
   useEffect(() => {
     const syncCartToDB = async () => {
-      if (!user?.uid || !store?.id || cart.length === 0) return;
+      if (!user?.uid || !store?.id) return;
 
       try {
         const cartRef = doc(db, "users", user.uid, "carts", store.id);
+
         await setDoc(
           cartRef,
           {
+            storeId: store.id,
+            storeName: store.name,
             items: cart,
             lastUpdated: new Date().toISOString(),
-            // Storing the calculated total here saves a 'reduce' operation later
             cartTotal: cart.reduce(
               (acc, item) => acc + item.price * item.quantity,
               0
@@ -113,57 +180,96 @@ export default function Order() {
     };
 
     syncCartToDB();
-  }, [cart, user, store?.id]);
+  }, [cart, user, store]);
 
   const handleCheckout = () => {
+    if (cart.length === 0) return;
+
     if (!user) {
       localStorage.setItem("last_active_store_id", store.id);
       localStorage.setItem("pending_store", JSON.stringify(store));
       navigate("/signup");
-    } else {
-      navigate("/checkout", {
-        state: {
-          total: subTotal,
-          cartItems: cart,
-          selectedStore: store,
-        },
-      });
+      return;
     }
+
+    navigate("/checkout", {
+      state: {
+        total: subTotal,
+        cartItems: cart,
+        selectedStore: store,
+      },
+    });
   };
 
-  // 4. COMPUTED VALUES
-  const subTotal = useMemo(() => {
-    return cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  }, [cart]);
-
-  // 5. EFFECTS (Logic Triggers)
-
-  // Fetch Firestore Menu
   useEffect(() => {
     const fetchStoreMenu = async () => {
       if (!store?.id) return;
+
       setLoading(true);
+
       try {
-        const q = query(
+        const productsQuery = query(
           collection(db, "products"),
-          where("availableAt", "array-contains", store.id)
+          where("isActive", "==", true)
         );
-        const querySnapshot = await getDocs(q);
-        const items = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+
+        const inventoryRef = collection(db, "stores", store.id, "inventory");
+
+        const [productsSnapshot, inventorySnapshot] = await Promise.all([
+          getDocs(productsQuery),
+          getDocs(inventoryRef),
+        ]);
+
+        const inventoryMap = new Map();
+
+        inventorySnapshot.docs.forEach((docSnap) => {
+          inventoryMap.set(docSnap.id, {
+            id: docSnap.id,
+            ...docSnap.data(),
+          });
+        });
+
+        const items = productsSnapshot.docs.map((docSnap) => {
+          const productId = docSnap.id;
+          const product = docSnap.data();
+          const inventory = inventoryMap.get(productId);
+
+          const stock = Number(inventory?.stock || 0);
+          const available = inventory?.available ?? stock > 0;
+
+          return {
+            id: productId,
+            productId,
+
+            name: product.name || "",
+            description: product.description || product.about || "",
+            about: product.about || product.description || "",
+            img: product.img || "",
+            tags: product.tags || [],
+            category: product.category || "",
+
+            basePrice: Number(product.basePrice || product.price || 0),
+            price: Number(
+              inventory?.price || product.basePrice || product.price || 0
+            ),
+
+            stock,
+            available,
+          };
+        });
+
         setMenu(items);
+        setFilteredMenu(items);
       } catch (error) {
-        console.error("Error fetching menu:", error);
+        console.error("Error fetching store menu:", error);
       } finally {
         setLoading(false);
       }
     };
+
     fetchStoreMenu();
   }, [store?.id]);
 
-  // LocalStorage Sync
   useEffect(() => {
     if (store?.id) {
       localStorage.setItem(`cart_store_${store.id}`, JSON.stringify(cart));
@@ -171,18 +277,12 @@ export default function Order() {
     }
   }, [cart, store]);
 
-  // Real-time Search & Category Filter
   useEffect(() => {
-    // If the menu hasn't loaded yet, do nothing
-    if (menu.length === 0) return;
-
     const filtered = menu.filter((item) => {
-      // Check Category
       const categoryMatch =
         selectedCategory === "All" ||
         (item.tags && item.tags.includes(selectedCategory));
 
-      // Check Search (This will now be an empty string if a pill was just clicked)
       const searchMatch = item.name
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
@@ -193,9 +293,7 @@ export default function Order() {
     setFilteredMenu(filtered);
   }, [searchTerm, menu, selectedCategory]);
 
-  // Smart Relay (Modal Auto-Open)
   useEffect(() => {
-    // Change: Use the stable primitive 'autoSearchValue'
     if (!loading && menu.length > 0 && autoSearchValue && modalRef.current) {
       const relayedItem = menu.find(
         (item) => item.name.toLowerCase() === autoSearchValue.toLowerCase()
@@ -203,16 +301,17 @@ export default function Order() {
 
       if (relayedItem) {
         setSearchTerm(autoSearchValue);
-        openModal(relayedItem);
+
+        if (relayedItem.stock > 0 && relayedItem.available !== false) {
+          openModal(relayedItem);
+        }
       }
 
-      // Change: Use the stable 'currentPath'
       navigate(currentPath, {
         replace: true,
         state: { ...location.state, autoSearch: undefined },
       });
     }
-    // Change: Dependency array now uses stable primitives
   }, [
     loading,
     menu,
@@ -223,8 +322,7 @@ export default function Order() {
     location.state,
   ]);
 
-  // 6. RENDER GUARDS
-  if (!store) return <Navigate to="/store" replace />;
+  if (!store) return <Navigate to="/stores" replace />;
 
   if (loading) {
     return (
@@ -242,7 +340,6 @@ export default function Order() {
         </h1>
 
         <div className="flex gap-x-3">
-          {/* Main Menu Side */}
           <div className="lg:w-200">
             <div className="mb- w-fit mb-19 mx-auto">
               <ul className="steps font-bold">
@@ -265,8 +362,8 @@ export default function Order() {
                       onClick={() => handleCategoryFilter(tag)}
                       className={`btn rounded-full h-9 transition-all ${
                         isActive
-                          ? "btn-primary shadow-md scale-105" // Active Style
-                          : "bg-white/50 border-none hover:bg-white text-gray-500" // Inactive/Neutral Style
+                          ? "btn-primary shadow-md scale-105"
+                          : "bg-white/50 border-none hover:bg-white text-gray-500"
                       }`}
                     >
                       {tag}
@@ -274,6 +371,7 @@ export default function Order() {
                   );
                 })}
               </form>
+
               <label className="input rounded-xl flex items-center gap-2">
                 <i className="bx bx-search opacity-50"></i>
                 <input
@@ -286,62 +384,99 @@ export default function Order() {
             </div>
 
             <div className="flex flex-wrap gap-6">
-              {filteredMenu.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex flex-col max-w-95 sm:p-6 p-5 rounded-3xl bg-blue-200 overflow-hidden shadow-sm"
-                >
-                  <h3 className="text-3xl font-extrabold line-clamp-1 mb-2">
-                    {item.name}
-                  </h3>
-                  <div className="flex items-center gap-2 overflow-hidden">
-                    <div className="flex-1 flex flex-col gap-2">
-                      <p className="font-black text-lime-600 text-3xl">
-                        {item.price}$
-                      </p>
-                      <div className="flex gap-2 flex-wrap min-h-[24px]">
-                        {item.tags?.map((tag, tIndex) => (
-                          <span
-                            key={tIndex}
-                            className="badge font-semibold text-[11px] px-2 py-1 rounded-full bg-white/50 border-0"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                      <p className="font-light text-sm line-clamp-2">
-                        {item.about}
-                      </p>
-                      <div className="flex gap-2 items-center mt-2 w-fit">
-                        <button
-                          onClick={() => openModal(item)}
-                          className="font-bold border-0 badge py-4 rounded-xl bg-lime-300 hover:bg-lime-400 transition-colors hover:cursor-pointer text-sm"
-                        >
-                          Place order
-                        </button>
-                      </div>
-                    </div>
-                    <div className="w-33 h-33 md:w-37 md:h-37 flex-shrink-0 ml-auto">
-                      <div className="w-full h-full aspect-square overflow-hidden rounded-full shadow-md">
-                        <img
-                          src={item.img}
-                          className="w-full h-full object-cover"
-                          alt={item.name}
-                        />
-                      </div>
-                    </div>
-                  </div>
+              {filteredMenu.length === 0 ? (
+                <div className="w-full border border-dashed border-gray-300 rounded-3xl p-8 text-center text-gray-400">
+                  <p className="font-bold text-lg text-gray-500">
+                    No menu item found.
+                  </p>
+                  <p className="text-sm mt-1">
+                    Try searching for another item or category.
+                  </p>
                 </div>
-              ))}
+              ) : (
+                filteredMenu.map((item) => {
+                  const isOutOfStock =
+                    item.stock <= 0 || item.available === false;
+                  const isLowStock = item.stock > 0 && item.stock <= 5;
+                  return (
+                    <div
+                      key={item.id}
+                      className={`flex flex-col max-w-95 sm:p-6 p-5 rounded-3xl overflow-hidden shadow-sm ${
+                        isOutOfStock ? "bg-gray-100 opacity-70" : "bg-blue-200"
+                      }`}
+                    >
+                      <h3 className="text-3xl font-extrabold line-clamp-1 mb-2">
+                        {item.name}
+                      </h3>
+
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <div className="flex-1 flex flex-col gap-2">
+                          <p className="font-black text-lime-600 text-3xl">
+                            ${item.price}
+                          </p>
+
+                          <div className="flex gap-2 flex-wrap min-h-[24px]">
+                            {item.tags?.map((tag, tIndex) => (
+                              <span
+                                key={tIndex}
+                                className="badge font-semibold text-[11px] px-2 py-1 rounded-full bg-white/50 border-0"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+
+                          {isOutOfStock ? (
+                            <span className="badge badge-error w-fit">
+                              Out of stock
+                            </span>
+                          ) : isLowStock ? (
+                            <span className="badge badge-warning w-fit">
+                              Only {item.stock} left
+                            </span>
+                          ) : (
+                            <span className="badge badge-success w-fit">
+                              {item.stock} available
+                            </span>
+                          )}
+                          <p className="font-light text-sm line-clamp-2">
+                            {item.description}
+                          </p>
+
+                          <div className="flex gap-2 items-center mt-2 w-fit">
+                            <button
+                              disabled={isOutOfStock}
+                              onClick={() => openModal(item)}
+                              className="font-bold border-0 badge py-4 rounded-xl bg-lime-300 hover:bg-lime-400 transition-colors hover:cursor-pointer text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {isOutOfStock ? "Out of stock" : "Place order"}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="w-33 h-33 md:w-37 md:h-37 flex-shrink-0 ml-auto">
+                          <div className="w-full h-full aspect-square overflow-hidden rounded-full shadow-md">
+                            <img
+                              src={item.img}
+                              className="w-full h-full object-cover"
+                              alt={item.name}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
 
-          {/* Cart Sidebar */}
           <div className="lg:w-100 mx-auto relative">
             <ul className="list bg-base-100 rounded-3xl shadow-md w-85 sticky top-29 mx-auto pb-4">
               <li className="p-4 pb-2 text-lg font-extrabold opacity-60 tracking-wide">
                 Order Summary ({cart.length})
               </li>
+
               {cart.length === 0 ? (
                 <li className="p-2 text-center opacity-40 font-bold">
                   Your cart is empty
@@ -359,12 +494,14 @@ export default function Order() {
                         </span>
                       </div>
                     </div>
+
                     <div className="w-60 px-2">
                       <div className="font-bold truncate">{item.name}</div>
                       <div className="text-xs uppercase font-semibold opacity-60 truncate">
                         {item.tags?.[0] || "Beverage"}
                       </div>
                     </div>
+
                     <div className="flex items-center gap-1 font-bold">
                       <button
                         onClick={() => updateCartQuantity(item.id, -1)}
@@ -372,6 +509,7 @@ export default function Order() {
                       >
                         <i className="bx bx-minus"></i>
                       </button>
+
                       <button
                         onClick={() => updateCartQuantity(item.id, 1)}
                         className="btn btn-circle h-7 w-7 btn-ghost bg-lime-200"
@@ -379,6 +517,7 @@ export default function Order() {
                         <i className="bx bx-plus"></i>
                       </button>
                     </div>
+
                     <button
                       onClick={() => removeFromCart(item.id)}
                       className="btn btn-square btn-ghost text-error"
@@ -390,26 +529,26 @@ export default function Order() {
                   </li>
                 ))
               )}
+
               <li className="flex mx-5 mt-6 justify-between border-t border-gray-300 pt-4">
                 <p className="text-lg">Total</p>
                 <p className="font-bold text-lg">${subTotal.toFixed(2)}</p>
               </li>
+
               <div className="flex justify-center mt-4">
-                <NavLink
+                <button
                   onClick={handleCheckout}
                   disabled={cart.length === 0}
-                  to={"/checkout"}
-                  className="btn btn-primary my-4 rounded-full w-70 mx-auto"
+                  className="btn btn-primary my-4 rounded-full w-70 mx-auto disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Order
-                </NavLink>
+                </button>
               </div>
             </ul>
           </div>
         </div>
       </div>
 
-      {/* PRODUCT MODAL */}
       <dialog
         ref={modalRef}
         id="product_modal"
@@ -423,17 +562,25 @@ export default function Order() {
                   ✕
                 </button>
               </form>
+
               <img
                 src={activeItem?.img}
                 alt={activeItem?.name}
                 className="rounded-2xl h-64 w-full object-cover"
               />
             </figure>
+
             <div className="card-body items-center text-center">
               <h2 className="card-title text-3xl font-black">
                 {activeItem?.name}
               </h2>
-              <p className="text-gray-500 mb-4">{activeItem?.about}</p>
+
+              <p className="text-gray-500 mb-2">{activeItem?.description}</p>
+
+              <p className="text-sm font-bold text-gray-500 mb-4">
+                {activeItem?.stock} unit(s) available
+              </p>
+
               <div className="flex items-center gap-6 bg-gray-100 p-2 rounded-2xl mb-6">
                 <button
                   onClick={decreaseQty}
@@ -441,7 +588,9 @@ export default function Order() {
                 >
                   <i className="bx bx-minus text-lg"></i>
                 </button>
+
                 <span className="text-2xl font-bold w-8">{quantity}</span>
+
                 <button
                   onClick={increaseQty}
                   className="btn btn-circle btn-sm bg-lime-300 border-none shadow-sm hover:bg-lime-400"
@@ -449,6 +598,7 @@ export default function Order() {
                   <i className="bx bx-plus text-lg"></i>
                 </button>
               </div>
+
               <div className="card-actions w-full">
                 <button
                   onClick={addToCart}
@@ -463,6 +613,7 @@ export default function Order() {
             </div>
           </div>
         </div>
+
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
         </form>

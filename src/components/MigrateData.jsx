@@ -33,7 +33,6 @@ const STORES = [
     state: "Lagos",
     stateCode: "LA",
     city: "Lekki",
-    citySlug: "lekki",
     phone: "+234 800 000 1001",
     img: "/images/store1.jpg",
   },
@@ -46,7 +45,6 @@ const STORES = [
     state: "Lagos",
     stateCode: "LA",
     city: "Ikeja",
-    citySlug: "ikeja",
     phone: "+234 800 000 1002",
     img: "/images/store2.jpg",
   },
@@ -59,7 +57,6 @@ const STORES = [
     state: "Federal Capital Territory",
     stateCode: "FCT",
     city: "Abuja",
-    citySlug: "abuja",
     phone: "+234 800 000 1003",
     img: "/images/store3.jpg",
   },
@@ -72,7 +69,6 @@ const STORES = [
     state: "Colorado",
     stateCode: "CO",
     city: "Denver",
-    citySlug: "denver",
     phone: "+1 303 555 0101",
     img: "/images/store4.jpg",
   },
@@ -85,7 +81,6 @@ const STORES = [
     state: "California",
     stateCode: "CA",
     city: "Los Angeles",
-    citySlug: "los-angeles",
     phone: "+1 213 555 0102",
     img: "/images/store5.jpg",
   },
@@ -98,60 +93,21 @@ const STORES = [
     state: "Texas",
     stateCode: "TX",
     city: "Houston",
-    citySlug: "houston",
     phone: "+1 713 555 0103",
     img: "/images/store6.jpg",
   },
 ];
 
-const TAGS = [
-  {
-    id: "coffee",
-    name: "Coffee",
-    description: "Hot and cold coffee drinks.",
-  },
-  {
-    id: "tea",
-    name: "Tea",
-    description: "Tea-based drinks and blends.",
-  },
-  {
-    id: "pastry",
-    name: "Pastry",
-    description: "Baked snacks and pastries.",
-  },
-  {
-    id: "pizza",
-    name: "Pizza",
-    description: "Freshly prepared pizza options.",
-  },
-  {
-    id: "cold-drink",
-    name: "Cold Drink",
-    description: "Iced and chilled drinks.",
-  },
-  {
-    id: "hot-drink",
-    name: "Hot Drink",
-    description: "Warm drinks and beverages.",
-  },
-  {
-    id: "featured",
-    name: "Featured",
-    description: "Products shown in featured sections.",
-  },
-];
-
-const getProductBasePrice = (product) => {
-  return product.basePrice ?? product.price ?? 0;
+const getProductDescription = (product) => {
+  return product.description || product.about || "";
 };
 
-const getProductDescription = (product) => {
-  return product.description ?? product.about ?? "";
+const getProductPrice = (product) => {
+  return Number(product.basePrice || product.price || 0);
 };
 
 const getProductTags = (product) => {
-  const rawTags = product.tags ?? [];
+  const rawTags = product.tags || [];
 
   if (rawTags.length > 0) {
     return rawTags.map((tag) => createSlug(tag));
@@ -159,13 +115,24 @@ const getProductTags = (product) => {
 
   const name = product.name?.toLowerCase() || "";
 
-  if (name.includes("pizza")) return ["pizza"];
-  if (name.includes("latte") || name.includes("coffee") || name.includes("espresso"))
+  if (name.includes("pizza")) return ["pizza", "food"];
+  if (
+    name.includes("latte") ||
+    name.includes("coffee") ||
+    name.includes("espresso") ||
+    name.includes("cappuccino")
+  ) {
     return ["coffee", "hot-drink"];
+  }
   if (name.includes("iced") || name.includes("cold")) return ["cold-drink"];
   if (name.includes("tea")) return ["tea"];
-  if (name.includes("cake") || name.includes("bread") || name.includes("croissant"))
+  if (
+    name.includes("cake") ||
+    name.includes("bread") ||
+    name.includes("croissant")
+  ) {
     return ["pastry"];
+  }
 
   return ["featured"];
 };
@@ -175,31 +142,9 @@ const getProductCategory = (product) => {
   return tags[0] || "featured";
 };
 
-const getStoresForProduct = (product, index) => {
-  const productName = product.name?.toLowerCase() || "";
-
-  if (productName.includes("pizza")) {
-    return ["maple-lekki", "maple-ikeja", "maple-los-angeles", "maple-houston"];
-  }
-
-  if (
-    productName.includes("latte") ||
-    productName.includes("coffee") ||
-    productName.includes("espresso") ||
-    productName.includes("cappuccino")
-  ) {
-    return STORES.map((store) => store.id);
-  }
-
-  if (index % 3 === 0) {
-    return ["maple-lekki", "maple-denver", "maple-los-angeles"];
-  }
-
-  if (index % 3 === 1) {
-    return ["maple-ikeja", "maple-abuja", "maple-houston"];
-  }
-
-  return ["maple-lekki", "maple-ikeja", "maple-denver"];
+const getRandomStock = () => {
+  const stockOptions = [0, 3, 6, 10, 15, 20, 25, 30, 40, 50];
+  return stockOptions[Math.floor(Math.random() * stockOptions.length)];
 };
 
 const commitBatch = async (operations) => {
@@ -207,7 +152,11 @@ const commitBatch = async (operations) => {
   let count = 0;
 
   for (const operation of operations) {
-    batch.set(operation.ref, operation.data, operation.options ?? { merge: true });
+    batch.set(
+      operation.ref,
+      operation.data,
+      operation.options || { merge: true }
+    );
     count++;
 
     if (count === 450) {
@@ -225,15 +174,24 @@ const commitBatch = async (operations) => {
 export const seedFreshMapleDatabase = async () => {
   try {
     const operations = [];
+    const seenProductIds = new Set();
 
-    // 1. Create fresh stores
+    // 1. Create stores
     STORES.forEach((store) => {
       const storeRef = doc(db, "stores", store.id);
 
       operations.push({
         ref: storeRef,
         data: {
-          ...store,
+          name: store.name,
+          address: store.address,
+          country: store.country,
+          countryCode: store.countryCode,
+          state: store.state,
+          stateCode: store.stateCode,
+          city: store.city,
+          phone: store.phone,
+          img: store.img,
           isActive: true,
           rating: 0,
           reviewCount: 0,
@@ -241,27 +199,26 @@ export const seedFreshMapleDatabase = async () => {
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         },
-        options: { merge: true },
       });
     });
 
-    // 2. Create cities from store locations
+    // 2. Create cities
     const uniqueCities = new Map();
 
     STORES.forEach((store) => {
-      uniqueCities.set(store.citySlug, {
-        id: store.citySlug,
+      const cityId = createSlug(store.city);
+
+      uniqueCities.set(cityId, {
         name: store.city,
-        slug: store.citySlug,
-        state: store.state,
-        stateCode: store.stateCode,
         country: store.country,
         countryCode: store.countryCode,
+        state: store.state,
+        stateCode: store.stateCode,
       });
     });
 
-    uniqueCities.forEach((city) => {
-      const cityRef = doc(db, "cities", city.id);
+    uniqueCities.forEach((city, cityId) => {
+      const cityRef = doc(db, "cities", cityId);
 
       operations.push({
         ref: cityRef,
@@ -270,44 +227,35 @@ export const seedFreshMapleDatabase = async () => {
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         },
-        options: { merge: true },
       });
     });
 
-    // 3. Create tags
-    TAGS.forEach((tag) => {
-      const tagRef = doc(db, "tags", tag.id);
-
-      operations.push({
-        ref: tagRef,
-        data: {
-          ...tag,
-          isActive: true,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        },
-        options: { merge: true },
-      });
-    });
-
-    // 4. Create products and store inventory
+    // 3. Create products and inventory for every store
     menuList.forEach((product, index) => {
       const productId = createSlug(product.name);
-      const productRef = doc(db, "products", productId);
 
-      const basePrice = getProductBasePrice(product);
+      if (seenProductIds.has(productId)) {
+        throw new Error(
+          `Duplicate product name found: "${product.name}". Rename it because it creates duplicate ID "${productId}".`
+        );
+      }
+
+      seenProductIds.add(productId);
+
       const description = getProductDescription(product);
+      const basePrice = getProductPrice(product);
       const tags = getProductTags(product);
       const category = getProductCategory(product);
+
+      const productRef = doc(db, "products", productId);
 
       operations.push({
         ref: productRef,
         data: {
-          id: productId,
           name: product.name,
           description,
-          about: product.about ?? "",
-          img: product.img ?? "",
+          about: description,
+          img: product.img || "",
           tags,
           category,
           basePrice,
@@ -315,33 +263,34 @@ export const seedFreshMapleDatabase = async () => {
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         },
-        options: { merge: true },
       });
 
-      const storeIds = getStoresForProduct(product, index);
-
-      storeIds.forEach((storeId) => {
-        const inventoryRef = doc(db, "stores", storeId, "inventory", productId);
+      // Every store sells every product.
+      // Inventory only controls stock, price, and availability.
+      STORES.forEach((store) => {
+        const stock = getRandomStock();
+        const inventoryRef = doc(
+          db,
+          "stores",
+          store.id,
+          "inventory",
+          productId
+        );
 
         operations.push({
           ref: inventoryRef,
           data: {
             productId,
-            name: product.name,
-            img: product.img ?? "",
-            tags,
-            category,
             price: basePrice,
-            available: true,
-            stock: 50,
+            stock,
+            available: stock > 0,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
           },
-          options: { merge: true },
         });
       });
 
-      // 5. Create homepage menus from first 6 products
+      // Homepage featured products
       if (index < 6) {
         const homepageRef = doc(db, "homepage_menus", `home-${productId}`);
 
@@ -350,14 +299,15 @@ export const seedFreshMapleDatabase = async () => {
           data: {
             productId,
             name: product.name,
-            price: basePrice,
-            img: product.img ?? "",
             description,
-            categories: tags,
+            img: product.img || "",
+            price: basePrice,
+            tags,
+            category,
             order: index + 1,
-            addedAt: serverTimestamp(),
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
           },
-          options: { merge: true },
         });
       }
     });
@@ -367,7 +317,7 @@ export const seedFreshMapleDatabase = async () => {
     alert("Fresh Maple database seeded successfully!");
   } catch (error) {
     console.error("Fresh Maple database seed failed:", error);
-    alert("Fresh Maple database seed failed. Check console.");
+    alert(error.message || "Fresh Maple database seed failed. Check console.");
   }
 };
 
