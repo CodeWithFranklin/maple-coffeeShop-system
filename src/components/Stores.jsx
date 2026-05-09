@@ -13,6 +13,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import { usePrevNextButtons } from "./hooks/usePrevNextButtons";
 import { NextButton, PrevButton } from "./embela/EmblaCarouselArrowButtons";
 import { useAuth } from "../hooks/useAuth.jsx";
+import { toast } from "sonner";
 
 const createSlug = (text = "") =>
   text
@@ -20,6 +21,31 @@ const createSlug = (text = "") =>
     .trim()
     .replace(/\s+/g, "-")
     .replace(/[^\w-]+/g, "");
+
+const POPULAR_STORE_LIMIT = 6;
+
+// More forgiving while your Firestore data is still being cleaned.
+// This does not require every store to already have rating/isActive.
+const fetchPopularStores = async (validStoreIds = null) => {
+  const storesQuery = query(collection(db, "stores"), limit(POPULAR_STORE_LIMIT));
+
+  const storesSnapshot = await getDocs(storesQuery);
+
+  let stores = storesSnapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
+
+  stores = stores
+    .filter((store) => store.isActive !== false)
+    .sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
+
+  if (validStoreIds) {
+    stores = stores.filter((store) => validStoreIds.has(store.id));
+  }
+
+  return stores;
+};
 
 function LocationDropdown({
   label,
@@ -121,39 +147,6 @@ export default function Stores() {
     onNextButtonClick,
   } = usePrevNextButtons(emblaApi);
 
-  const fetchMixedStores = async () => {
-    const nigeriaQuery = query(
-      collection(db, "stores"),
-      where("country", "==", "Nigeria"),
-      where("isActive", "==", true),
-      limit(3)
-    );
-
-    const usaQuery = query(
-      collection(db, "stores"),
-      where("country", "==", "USA"),
-      where("isActive", "==", true),
-      limit(3)
-    );
-
-    const [nigeriaSnapshot, usaSnapshot] = await Promise.all([
-      getDocs(nigeriaQuery),
-      getDocs(usaQuery),
-    ]);
-
-    const nigeriaStores = nigeriaSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    const usaStores = usaSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    return [...nigeriaStores, ...usaStores];
-  };
-
   useEffect(() => {
     const fetchLocations = async () => {
       setLocationsLoading(true);
@@ -161,14 +154,15 @@ export default function Stores() {
       try {
         const citiesSnapshot = await getDocs(collection(db, "cities"));
 
-        const citiesData = citiesSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
-        setDbLocations(citiesData);
+        setDbLocations(
+          citiesSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }))
+        );
       } catch (error) {
-        console.error("Error fetching locations:", error);
+        toast.error("Error fetching locations");
+        console.error(error);
       } finally {
         setLocationsLoading(false);
       }
@@ -181,11 +175,6 @@ export default function Stores() {
     if (!hasPrefilledLocation && userInfo?.country && userInfo?.state) {
       setSelectedCountry(userInfo.country);
       setSelectedState(userInfo.state);
-
-      if (userInfo.city) {
-        setSelectedCity(userInfo.city);
-      }
-
       setHasPrefilledLocation(true);
     }
   }, [userInfo, hasPrefilledLocation]);
@@ -211,55 +200,30 @@ export default function Stores() {
     ].sort();
   }, [dbLocations, selectedCountry]);
 
-  const cityOptions = useMemo(() => {
-    if (!selectedCountry || !selectedState) return [];
+ const cityOptions = useMemo(() => {
+   if (!selectedCountry || !selectedState) return [];
 
-    return [
-      ...new Set(
-        dbLocations
-          .filter(
-            (location) =>
-              location.country === selectedCountry &&
-              location.state === selectedState
-          )
-          .map((location) => location.name || location.city)
-          .filter(Boolean)
-      ),
-    ].sort();
-  }, [dbLocations, selectedCountry, selectedState]);
+   return [
+     ...new Set(
+       dbLocations
+         .filter(
+           (location) =>
+             location.country === selectedCountry &&
+             location.state === selectedState
+         )
+         .map((location) => location.city)
+         .filter(Boolean)
+     ),
+   ].sort();
+ }, [dbLocations, selectedCountry, selectedState]);
 
-  useEffect(() => {
+useEffect(() => {
+  const timeoutId = setTimeout(() => {
     const fetchStores = async () => {
       setStoresLoading(true);
 
       try {
-        let storesData = [];
-
-        if (selectedCountry && selectedState) {
-          const storeConditions = [
-            where("country", "==", selectedCountry),
-            where("state", "==", selectedState),
-            where("isActive", "==", true),
-          ];
-
-          if (selectedCity) {
-            storeConditions.push(where("city", "==", selectedCity));
-          }
-
-          const storesQuery = query(
-            collection(db, "stores"),
-            ...storeConditions
-          );
-
-          const storesSnapshot = await getDocs(storesQuery);
-
-          storesData = storesSnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-        } else {
-          storesData = await fetchMixedStores();
-        }
+        let validStoreIds = null;
 
         if (relaySearch) {
           const productId = createSlug(relaySearch);
@@ -272,15 +236,49 @@ export default function Stores() {
 
           const inventorySnapshot = await getDocs(inventoryQuery);
 
-          const validStoreIds = new Set(
+          validStoreIds = new Set(
             inventorySnapshot.docs
               .map((doc) => doc.ref.parent.parent?.id)
               .filter(Boolean)
           );
+        }
 
-          storesData = storesData.filter((store) =>
-            validStoreIds.has(store.id)
+        let storesData = [];
+
+        if (selectedCountry) {
+          const conditions = [
+            where("country", "==", selectedCountry),
+            where("isActive", "==", true),
+          ];
+
+          if (selectedState) {
+            conditions.push(where("state", "==", selectedState));
+          }
+
+          if (selectedCity) {
+            conditions.push(where("city", "==", selectedCity));
+          }
+
+          const storesSnapshot = await getDocs(
+            query(collection(db, "stores"), ...conditions)
           );
+
+          storesData = storesSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+
+          if (validStoreIds) {
+            storesData = storesData.filter((store) =>
+              validStoreIds.has(store.id)
+            );
+          }
+
+          storesData.sort(
+            (a, b) => Number(b.rating || 0) - Number(a.rating || 0)
+          );
+        } else {
+          storesData = await fetchPopularStores(validStoreIds);
         }
 
         setDbStores(storesData);
@@ -295,25 +293,31 @@ export default function Stores() {
           return previewStillExists ? currentPreview : null;
         });
       } catch (error) {
-        console.error("Error fetching stores:", error);
+        toast.error("Error fetching stores");
+        console.error(error);
       } finally {
         setStoresLoading(false);
       }
     };
 
     fetchStores();
-  }, [selectedCountry, selectedState, selectedCity, relaySearch]);
+  }, 300);
+
+  return () => clearTimeout(timeoutId);
+}, [selectedCountry, selectedState, selectedCity, relaySearch]);
 
   const locationTitle = useMemo(() => {
-    if (!selectedCountry || !selectedState) {
-      return "Popular Maple stores";
-    }
+    if (!selectedCountry) return "Popular Maple stores";
 
     if (selectedCity) {
       return `Stores in ${selectedCity}, ${selectedState}, ${selectedCountry}`;
     }
 
-    return `Stores in ${selectedState}, ${selectedCountry}`;
+    if (selectedState) {
+      return `Stores in ${selectedState}, ${selectedCountry}`;
+    }
+
+    return `Stores in ${selectedCountry}`;
   }, [selectedCountry, selectedState, selectedCity]);
 
   const previewImages =
@@ -397,10 +401,15 @@ export default function Stores() {
                 />
               </div>
 
-              {!selectedCountry || !selectedState ? (
+              {!selectedCountry ? (
                 <p className="text-xs text-gray-400 mt-2">
-                  Showing popular Maple stores from different locations. Select
-                  your country, state, and city to find stores closer to you.
+                  Showing top-rated Maple stores. Select your country, state,
+                  and city to find stores closer to you.
+                </p>
+              ) : !selectedState ? (
+                <p className="text-xs text-gray-400 mt-2">
+                  Showing top-rated Maple stores in {selectedCountry}. Select a
+                  state and city to narrow your search.
                 </p>
               ) : userInfo?.country && userInfo?.state ? (
                 <p className="text-xs text-gray-400 mt-2">
@@ -467,6 +476,10 @@ export default function Stores() {
                       <div className="text-sm">
                         <p className="font-bold">{store.name}</p>
                         <p>{store.address}</p>
+                        <p className="text-xs text-gray-400">
+                          ⭐ {store.rating || 0} ·{" "}
+                          {store.reviewCount || store.ratingCount || 0} reviews
+                        </p>
                       </div>
                     </div>
 
@@ -544,9 +557,14 @@ export default function Stores() {
                   </p>
 
                   <p>
-                    Experience the finest Maple blends at our{" "}
-                    {previewStore.name} location. Great for study sessions or
-                    quick coffee runs.
+                    {previewStore.description ||
+                      `Experience the finest Maple blends at our ${previewStore.name} location.`}
+                  </p>
+
+                  <p className="text-xs text-gray-400">
+                    ⭐ {previewStore.rating || 0} ·{" "}
+                    {previewStore.reviewCount || previewStore.ratingCount || 0}{" "}
+                    reviews
                   </p>
 
                   <div className="text-xs text-gray-400 mt-2">
