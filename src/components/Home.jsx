@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { db } from "../firebase";
 import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
@@ -343,8 +343,11 @@ export default function Home() {
                         <div className="flex gap-2 items-center mt-2 w-fit">
                           <button
                             onClick={() =>
-                              navigate("/store", {
-                                state: { autoSearch: menu.name },
+                              navigate("/stores", {
+                                state: {
+                                  autoSearch: menu.name,
+                                  productId: menu.productId || menu.id,
+                                },
                               })
                             }
                             className="font-bold border-0 badge py-4 rounded-xl bg-lime-300 hover:bg-lime-400 transition-colors hover:cursor-pointer text-sm"

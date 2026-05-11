@@ -15,6 +15,20 @@ import { NextButton, PrevButton } from "./embela/EmblaCarouselArrowButtons";
 import { useAuth } from "../hooks/useAuth.jsx";
 import { toast } from "sonner";
 
+const POPULAR_STORE_LIMIT = 6;
+const STORE_FETCH_LIMIT = 50;
+const DEBOUNCE_MS = 300;
+const DAYS = [
+  "sunday",
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+];
+
+// Helpers 
 const createSlug = (text = "") =>
   text
     .toLowerCase()
@@ -22,31 +36,85 @@ const createSlug = (text = "") =>
     .replace(/\s+/g, "-")
     .replace(/[^\w-]+/g, "");
 
-const POPULAR_STORE_LIMIT = 6;
+const getTodayHours = (openingHours) => {
+  const today = DAYS[new Date().getDay()];
+  return openingHours?.[today] || null;
+};
 
-// More forgiving while your Firestore data is still being cleaned.
-// This does not require every store to already have rating/isActive.
+const sortByRating = (stores) =>
+  [...stores].sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
+
+// Data Fetchers 
 const fetchPopularStores = async (validStoreIds = null) => {
-  const storesQuery = query(collection(db, "stores"), limit(POPULAR_STORE_LIMIT));
-
-  const storesSnapshot = await getDocs(storesQuery);
+  const storesSnapshot = await getDocs(
+    query(
+      collection(db, "stores"),
+      where("isActive", "==", true),
+      limit(STORE_FETCH_LIMIT)
+    )
+  );
 
   let stores = storesSnapshot.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
   }));
 
-  stores = stores
-    .filter((store) => store.isActive !== false)
-    .sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
+  if (validStoreIds) {
+    stores = stores.filter((store) => validStoreIds.has(store.id));
+  }
+
+  return sortByRating(stores).slice(0, POPULAR_STORE_LIMIT);
+};
+
+const fetchStoresByLocation = async ({
+  country,
+  state,
+  city,
+  validStoreIds,
+}) => {
+  // Build conditions in the same order as composite index:
+  // country → state → city → isActive
+  const conditions = [
+    where("country", "==", country),
+    where("isActive", "==", true),
+  ];
+
+  if (state) conditions.push(where("state", "==", state));
+  if (city) conditions.push(where("city", "==", city));
+
+  const storesSnapshot = await getDocs(
+    query(collection(db, "stores"), ...conditions)
+  );
+
+  let stores = storesSnapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
 
   if (validStoreIds) {
     stores = stores.filter((store) => validStoreIds.has(store.id));
   }
 
-  return stores;
+  return sortByRating(stores);
 };
 
+const fetchValidStoreIds = async (productId) => {
+  const inventorySnapshot = await getDocs(
+    query(
+      collectionGroup(db, "inventory"),
+      where("productId", "==", productId),
+      where("available", "==", true)
+    )
+  );
+
+  return new Set(
+    inventorySnapshot.docs
+      .map((doc) => doc.ref.parent.parent?.id)
+      .filter(Boolean)
+  );
+};
+
+//  LocationDropdown 
 function LocationDropdown({
   label,
   value,
@@ -60,7 +128,6 @@ function LocationDropdown({
       <h3 className="font-semibold mb-1 text-sm">
         <i className="bx bxs-map"></i> {label}
       </h3>
-
       <div
         tabIndex={disabled ? -1 : 0}
         role="button"
@@ -71,7 +138,6 @@ function LocationDropdown({
         <span className={!value ? "text-gray-400" : ""}>
           {value || placeholder}
         </span>
-
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -87,7 +153,6 @@ function LocationDropdown({
           />
         </svg>
       </div>
-
       {!disabled && (
         <ul
           tabIndex={0}
@@ -119,26 +184,32 @@ function LocationDropdown({
   );
 }
 
+// Main Component 
 export default function Stores() {
   const location = useLocation();
   const { userInfo } = useAuth();
 
   const relaySearch = location.state?.autoSearch || "";
+  const relayProductId = location.state?.productId || "";
 
+  // State
   const [dbLocations, setDbLocations] = useState([]);
   const [dbStores, setDbStores] = useState([]);
-
   const [locationsLoading, setLocationsLoading] = useState(true);
   const [storesLoading, setStoresLoading] = useState(false);
-
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedState, setSelectedState] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
-
-  const [hasPrefilledLocation, setHasPrefilledLocation] = useState(false);
+  const [profileLocationChecked, setProfileLocationChecked] = useState(false);
   const [previewStore, setPreviewStore] = useState(null);
 
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
+  //  Carousel 
+  // Reinitialize carousel when previewStore changes
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, []);
+
+  useEffect(() => {
+    if (emblaApi) emblaApi.reInit();
+  }, [emblaApi, previewStore]);
 
   const {
     prevBtnDisabled,
@@ -147,176 +218,138 @@ export default function Stores() {
     onNextButtonClick,
   } = usePrevNextButtons(emblaApi);
 
+  // Fetch Locations 
   useEffect(() => {
     const fetchLocations = async () => {
       setLocationsLoading(true);
-
       try {
         const citiesSnapshot = await getDocs(collection(db, "cities"));
-
         setDbLocations(
-          citiesSnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }))
+          citiesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
         );
       } catch (error) {
-        toast.error("Error fetching locations");
+        toast.error("Failed to load locations. Please refresh.");
         console.error(error);
       } finally {
         setLocationsLoading(false);
       }
     };
-
     fetchLocations();
   }, []);
 
+  //  Prefill from User Profile 
   useEffect(() => {
-    if (!hasPrefilledLocation && userInfo?.country && userInfo?.state) {
+    if (profileLocationChecked) return;
+
+    // Wait for userInfo to resolve — null means not logged in, undefined means still loading
+    if (userInfo === undefined) return;
+
+    if (userInfo?.country && userInfo?.state) {
       setSelectedCountry(userInfo.country);
       setSelectedState(userInfo.state);
-      setHasPrefilledLocation(true);
     }
-  }, [userInfo, hasPrefilledLocation]);
 
-  const countryOptions = useMemo(() => {
-    return [
-      ...new Set(
-        dbLocations.map((location) => location.country).filter(Boolean)
-      ),
-    ].sort();
-  }, [dbLocations]);
+    setProfileLocationChecked(true);
+  }, [userInfo, profileLocationChecked]);
+
+  //  Derived Options 
+  const countryOptions = useMemo(
+    () =>
+      [...new Set(dbLocations.map((l) => l.country).filter(Boolean))].sort(),
+    [dbLocations]
+  );
 
   const stateOptions = useMemo(() => {
     if (!selectedCountry) return [];
-
     return [
       ...new Set(
         dbLocations
-          .filter((location) => location.country === selectedCountry)
-          .map((location) => location.state)
+          .filter((l) => l.country === selectedCountry)
+          .map((l) => l.state)
           .filter(Boolean)
       ),
     ].sort();
   }, [dbLocations, selectedCountry]);
 
- const cityOptions = useMemo(() => {
-   if (!selectedCountry || !selectedState) return [];
+  const cityOptions = useMemo(() => {
+    if (!selectedCountry || !selectedState) return [];
+    return [
+      ...new Set(
+        dbLocations
+          .filter(
+            (l) => l.country === selectedCountry && l.state === selectedState
+          )
+          .map((l) => l.city)
+          .filter(Boolean)
+      ),
+    ].sort();
+  }, [dbLocations, selectedCountry, selectedState]);
 
-   return [
-     ...new Set(
-       dbLocations
-         .filter(
-           (location) =>
-             location.country === selectedCountry &&
-             location.state === selectedState
-         )
-         .map((location) => location.city)
-         .filter(Boolean)
-     ),
-   ].sort();
- }, [dbLocations, selectedCountry, selectedState]);
+  // Fetch Stores 
+  useEffect(() => {
+    // Wait for profile location check before fetching
+    // so we don't fetch popular stores then immediately refetch with user location
+    if (!profileLocationChecked) return;
 
-useEffect(() => {
-  const timeoutId = setTimeout(() => {
-    const fetchStores = async () => {
+    const timeoutId = setTimeout(async () => {
       setStoresLoading(true);
-
       try {
         let validStoreIds = null;
 
         if (relaySearch) {
-          const productId = createSlug(relaySearch);
+          const productId = relayProductId || createSlug(relaySearch);
+          validStoreIds = await fetchValidStoreIds(productId);
 
-          const inventoryQuery = query(
-            collectionGroup(db, "inventory"),
-            where("productId", "==", productId),
-            where("available", "==", true)
-          );
-
-          const inventorySnapshot = await getDocs(inventoryQuery);
-
-          validStoreIds = new Set(
-            inventorySnapshot.docs
-              .map((doc) => doc.ref.parent.parent?.id)
-              .filter(Boolean)
-          );
+          // If relay search returns no matching stores, show empty state early
+          if (validStoreIds.size === 0) {
+            setDbStores([]);
+            setPreviewStore(null);
+            return;
+          }
         }
 
         let storesData = [];
 
         if (selectedCountry) {
-          const conditions = [
-            where("country", "==", selectedCountry),
-            where("isActive", "==", true),
-          ];
-
-          if (selectedState) {
-            conditions.push(where("state", "==", selectedState));
-          }
-
-          if (selectedCity) {
-            conditions.push(where("city", "==", selectedCity));
-          }
-
-          const storesSnapshot = await getDocs(
-            query(collection(db, "stores"), ...conditions)
-          );
-
-          storesData = storesSnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-
-          if (validStoreIds) {
-            storesData = storesData.filter((store) =>
-              validStoreIds.has(store.id)
-            );
-          }
-
-          storesData.sort(
-            (a, b) => Number(b.rating || 0) - Number(a.rating || 0)
-          );
+          storesData = await fetchStoresByLocation({
+            country: selectedCountry,
+            state: selectedState,
+            city: selectedCity,
+            validStoreIds,
+          });
         } else {
           storesData = await fetchPopularStores(validStoreIds);
         }
 
         setDbStores(storesData);
-
-        setPreviewStore((currentPreview) => {
-          if (!currentPreview) return null;
-
-          const previewStillExists = storesData.some(
-            (store) => store.id === currentPreview.id
-          );
-
-          return previewStillExists ? currentPreview : null;
+        setPreviewStore((current) => {
+          if (!current) return null;
+          return storesData.some((s) => s.id === current.id) ? current : null;
         });
       } catch (error) {
-        toast.error("Error fetching stores");
+        toast.error("Failed to load stores. Please try again.");
         console.error(error);
       } finally {
         setStoresLoading(false);
       }
-    };
+    }, DEBOUNCE_MS);
 
-    fetchStores();
-  }, 300);
+    return () => clearTimeout(timeoutId);
+  }, [
+    selectedCountry,
+    selectedState,
+    selectedCity,
+    relaySearch,
+    relayProductId,
+    profileLocationChecked,
+  ]);
 
-  return () => clearTimeout(timeoutId);
-}, [selectedCountry, selectedState, selectedCity, relaySearch]);
-
+  // Derived UI 
   const locationTitle = useMemo(() => {
     if (!selectedCountry) return "Popular Maple stores";
-
-    if (selectedCity) {
+    if (selectedCity)
       return `Stores in ${selectedCity}, ${selectedState}, ${selectedCountry}`;
-    }
-
-    if (selectedState) {
-      return `Stores in ${selectedState}, ${selectedCountry}`;
-    }
-
+    if (selectedState) return `Stores in ${selectedState}, ${selectedCountry}`;
     return `Stores in ${selectedCountry}`;
   }, [selectedCountry, selectedState, selectedCity]);
 
@@ -328,6 +361,10 @@ useEffect(() => {
             "https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp",
         ];
 
+  const todayHours = previewStore
+    ? getTodayHours(previewStore.openingHours)
+    : null;
+ 
   if (locationsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -374,7 +411,6 @@ useEffect(() => {
                     setPreviewStore(null);
                   }}
                 />
-
                 <LocationDropdown
                   label="State"
                   value={selectedState}
@@ -387,7 +423,6 @@ useEffect(() => {
                     setPreviewStore(null);
                   }}
                 />
-
                 <LocationDropdown
                   label="City"
                   value={selectedCity || "All cities"}
@@ -401,6 +436,7 @@ useEffect(() => {
                 />
               </div>
 
+              {/* Location hint */}
               {!selectedCountry ? (
                 <p className="text-xs text-gray-400 mt-2">
                   Showing top-rated Maple stores. Select your country, state,
@@ -422,6 +458,7 @@ useEffect(() => {
                 </p>
               )}
 
+              {/* Relay search notice */}
               {relaySearch && (
                 <p className="text-xs text-gray-400 mt-1">
                   Showing stores that have{" "}
@@ -433,6 +470,7 @@ useEffect(() => {
               )}
             </div>
 
+            {/* Store List */}
             <div>
               <h4 className="font-bold mb-3">{locationTitle}</h4>
 
@@ -446,9 +484,28 @@ useEffect(() => {
                   <p className="font-bold text-lg text-gray-500">
                     No stores found.
                   </p>
-                  <p className="text-sm mt-1">
-                    Try selecting another city, state, or country.
-                  </p>
+                  {relaySearch && selectedState ? (
+                    <p className="text-sm mt-1">
+                      No store with{" "}
+                      <span className="font-semibold text-gray-600">
+                        {relaySearch}
+                      </span>{" "}
+                      could be found in {selectedState}. Try changing your
+                      location.
+                    </p>
+                  ) : relaySearch ? (
+                    <p className="text-sm mt-1">
+                      No store with{" "}
+                      <span className="font-semibold text-gray-600">
+                        {relaySearch}
+                      </span>{" "}
+                      is currently available. Try changing your location.
+                    </p>
+                  ) : (
+                    <p className="text-sm mt-1">
+                      Try selecting another city, state, or country.
+                    </p>
+                  )}
                 </div>
               ) : (
                 dbStores.map((store) => (
@@ -472,7 +529,6 @@ useEffect(() => {
                           )}
                         </div>
                       </div>
-
                       <div className="text-sm">
                         <p className="font-bold">{store.name}</p>
                         <p>{store.address}</p>
@@ -490,7 +546,6 @@ useEffect(() => {
                       >
                         Preview Store
                       </button>
-
                       <NavLink
                         to="/order"
                         state={{
@@ -508,6 +563,7 @@ useEffect(() => {
             </div>
           </div>
 
+          {/* Preview Panel */}
           <div className="lg:w-100 mx-auto">
             {previewStore ? (
               <div className="card bg-base-100 w-80 shadow-sm sticky rounded-t-2xl rounded-b-none top-10 self-start translate-y-20 translate-x-10 h-fit">
@@ -538,7 +594,6 @@ useEffect(() => {
                         className="touch-manipulation btn aspect-square w-10 px-0 flex justify-center items-center rounded-full cursor-pointer shadow opacity-70"
                       />
                     </div>
-
                     <div className="pointer-events-auto">
                       <NextButton
                         onClick={onNextButtonClick}
@@ -551,31 +606,29 @@ useEffect(() => {
 
                 <div className="card-body">
                   <h2 className="card-title">{previewStore.name}</h2>
-
                   <p className="text-sm text-gray-500">
                     {previewStore.address}
                   </p>
-
                   <p>
                     {previewStore.description ||
                       `Experience the finest Maple blends at our ${previewStore.name} location.`}
                   </p>
-
                   <p className="text-xs text-gray-400">
                     ⭐ {previewStore.rating || 0} ·{" "}
                     {previewStore.reviewCount || previewStore.ratingCount || 0}{" "}
                     reviews
                   </p>
 
+                  {/* Today's hours */}
                   <div className="text-xs text-gray-400 mt-2">
-                    <p>
-                      Opens:{" "}
-                      {previewStore.openingHours?.monday?.open || "08:00"}
-                    </p>
-                    <p>
-                      Closes:{" "}
-                      {previewStore.openingHours?.monday?.close || "20:00"}
-                    </p>
+                    {todayHours ? (
+                      <>
+                        <p>Opens: {todayHours.open}</p>
+                        <p>Closes: {todayHours.close}</p>
+                      </>
+                    ) : (
+                      <p>Hours not available</p>
+                    )}
                   </div>
 
                   <div className="card-actions justify-end mt-4">
@@ -585,7 +638,6 @@ useEffect(() => {
                     >
                       Close Preview
                     </button>
-
                     <NavLink
                       to="/order"
                       state={{
