@@ -55,26 +55,43 @@ export default function SignUp() {
     },
     validationSchema: signUpSchema,
     onSubmit: async (values, { setSubmitting }) => {
+      const toastId = toast.loading("Creating your account...");
+
       try {
         const userCredential = await createUserWithEmailAndPassword(
           auth,
           values.email,
           values.password
         );
+
+        toast.loading("Account created. Setting up your profile...", {
+          id: toastId,
+        });
+
         await updateProfile(userCredential.user, {
           displayName: values.name,
         });
+
         const completeProfile = httpsCallable(functions, "syncUserProfile");
+
         await completeProfile({
           name: values.name,
           phone: values.phone,
           country: values.country,
           state: values.state,
+          contactEmail: values.email,
+          useAuthEmailAsContact: true,
         });
-        toast.success("Account created!");
+
+        toast.success("Account created!", {
+          id: toastId,
+        });
+
         redirectToRelevantPage();
       } catch (error) {
-        toast.error(customAlert(error.message, error.code));
+        toast.error(customAlert(error.message, error.code), {
+          id: toastId,
+        });
       } finally {
         setSubmitting(false);
       }

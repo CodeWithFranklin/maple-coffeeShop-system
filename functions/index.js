@@ -3,6 +3,7 @@ const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const functions = require("firebase-functions/v1");
 
 initializeApp();
+
 const db = getFirestore();
 
 const normalizeProvider = (providerId) => {
@@ -30,13 +31,17 @@ const buildBaseUserDoc = ({
   providers,
 }) => ({
   uid,
-  email,
+  email: email || "",
   name: name || "New User",
   photoURL: photoURL || null,
   role: 0,
   createdAt: FieldValue.serverTimestamp(),
   authMethod,
   allProviders: providers.map(normalizeProvider),
+
+  // Contact email defaults
+  contactEmail: email || "",
+  useAuthEmailAsContact: true,
 });
 
 exports.createUserDocument = functions.auth.user().onCreate(async (user) => {
@@ -62,6 +67,7 @@ exports.createUserDocument = functions.auth.user().onCreate(async (user) => {
     console.error("Error in createUserDocument:", error);
   }
 });
+
 exports.syncUserProfile = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError(
@@ -82,7 +88,7 @@ exports.syncUserProfile = functions.https.onCall(async (data, context) => {
   const { uid, token } = context.auth;
 
   const name = data.name || token.name || "New User";
-  const email = token.email;
+  const email = token.email || "";
 
   const provider = token.firebase?.sign_in_provider || "unknown";
 
@@ -97,9 +103,12 @@ exports.syncUserProfile = functions.https.onCall(async (data, context) => {
     );
   }
 
+  // Default to auth email unless the frontend explicitly says false
+  const shouldUseAuthEmailAsContact = useAuthEmailAsContact !== false;
+
   let finalContactEmail;
 
-  if (useAuthEmailAsContact) {
+  if (shouldUseAuthEmailAsContact) {
     finalContactEmail = email;
   } else {
     if (!contactEmail) {
@@ -108,6 +117,7 @@ exports.syncUserProfile = functions.https.onCall(async (data, context) => {
         "Contact email is required."
       );
     }
+
     finalContactEmail = contactEmail;
   }
 
@@ -123,10 +133,9 @@ exports.syncUserProfile = functions.https.onCall(async (data, context) => {
       ...(photoURL !== undefined && { photoURL }),
 
       contactEmail: finalContactEmail,
+      useAuthEmailAsContact: shouldUseAuthEmailAsContact,
 
-      ...(typeof useAuthEmailAsContact === "boolean" && {
-        useAuthEmailAsContact,
-      }),
+      updatedAt: FieldValue.serverTimestamp(),
     };
 
     if (!snapshot.exists) {
@@ -141,8 +150,6 @@ exports.syncUserProfile = functions.https.onCall(async (data, context) => {
 
       finalData = {
         ...baseDoc,
-        contactEmail: email,
-        useAuthEmailAsContact: true,
         ...finalData,
       };
     }
