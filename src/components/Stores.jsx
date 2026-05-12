@@ -14,10 +14,17 @@ import { usePrevNextButtons } from "./hooks/usePrevNextButtons";
 import { NextButton, PrevButton } from "./embela/EmblaCarouselArrowButtons";
 import { useAuth } from "../hooks/useAuth.jsx";
 import { toast } from "sonner";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezonePlugin from "dayjs/plugin/timezone";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+
+dayjs.extend(utc);
+dayjs.extend(timezonePlugin);
+dayjs.extend(customParseFormat);
 
 const POPULAR_STORE_LIMIT = 6;
-const STORE_FETCH_LIMIT = 50;
-const DEBOUNCE_MS = 300;
+
 const DAYS = [
   "sunday",
   "monday",
@@ -28,7 +35,16 @@ const DAYS = [
   "saturday",
 ];
 
-// Helpers 
+const DEFAULT_OPENING_HOURS = {
+  monday: { open: "08:00", close: "18:00", closed: false },
+  tuesday: { open: "08:00", close: "18:00", closed: false },
+  wednesday: { open: "08:00", close: "18:00", closed: false },
+  thursday: { open: "08:00", close: "18:00", closed: false },
+  friday: { open: "08:00", close: "18:00", closed: false },
+  saturday: { open: "08:00", close: "18:00", closed: false },
+  sunday: { open: "08:00", close: "18:00", closed: false },
+};
+
 const createSlug = (text = "") =>
   text
     .toLowerCase()
@@ -36,66 +52,74 @@ const createSlug = (text = "") =>
     .replace(/\s+/g, "-")
     .replace(/[^\w-]+/g, "");
 
-const getTodayHours = (openingHours) => {
-  const today = DAYS[new Date().getDay()];
-  return openingHours?.[today] || null;
-};
-
 const sortByRating = (stores) =>
   [...stores].sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
 
-// Data Fetchers 
-const fetchPopularStores = async (validStoreIds = null) => {
-  const storesSnapshot = await getDocs(
-    query(
-      collection(db, "stores"),
-      where("isActive", "==", true),
-      limit(STORE_FETCH_LIMIT)
-    )
-  );
+const getTodayHours = (store) => {
+  const timezone = store?.timezone || "Africa/Lagos";
+  const openingHours = store?.openingHours || DEFAULT_OPENING_HOURS;
 
-  let stores = storesSnapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  }));
+  const storeNow = dayjs().tz(timezone);
+  const today = DAYS[storeNow.day()];
 
-  if (validStoreIds) {
-    stores = stores.filter((store) => validStoreIds.has(store.id));
-  }
-
-  return sortByRating(stores).slice(0, POPULAR_STORE_LIMIT);
+  return openingHours?.[today] || null;
 };
 
-const fetchStoresByLocation = async ({
-  country,
-  state,
-  city,
-  validStoreIds,
-}) => {
-  // Build conditions in the same order as composite index:
-  // country → state → city → isActive
-  const conditions = [
-    where("country", "==", country),
-    where("isActive", "==", true),
-  ];
+const getStoreOpenStatus = (store) => {
+  const timezone = store?.timezone || "Africa/Lagos";
+  const openingHours = store?.openingHours || DEFAULT_OPENING_HOURS;
 
-  if (state) conditions.push(where("state", "==", state));
-  if (city) conditions.push(where("city", "==", city));
+  const storeNow = dayjs().tz(timezone);
+  const today = DAYS[storeNow.day()];
+  const todayHours = openingHours?.[today];
 
-  const storesSnapshot = await getDocs(
-    query(collection(db, "stores"), ...conditions)
-  );
-
-  let stores = storesSnapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  }));
-
-  if (validStoreIds) {
-    stores = stores.filter((store) => validStoreIds.has(store.id));
+  if (!todayHours || todayHours.closed) {
+    return {
+      isOpen: false,
+      label: "Closed",
+      message: "Pickup is currently unavailable. This store is closed.",
+      todayHours,
+      timezone,
+    };
   }
 
-  return sortByRating(stores);
+  if (!todayHours.open || !todayHours.close) {
+    return {
+      isOpen: false,
+      label: "Closed",
+      message: "Pickup is currently unavailable. This store is closed.",
+      todayHours,
+      timezone,
+    };
+  }
+
+  const storeDate = storeNow.format("YYYY-MM-DD");
+
+  const openTime = dayjs.tz(
+    `${storeDate} ${todayHours.open}`,
+    "YYYY-MM-DD HH:mm",
+    timezone
+  );
+
+  const closeTime = dayjs.tz(
+    `${storeDate} ${todayHours.close}`,
+    "YYYY-MM-DD HH:mm",
+    timezone
+  );
+
+  const isOpen =
+    storeNow.isSame(openTime) ||
+    (storeNow.isAfter(openTime) && storeNow.isBefore(closeTime));
+
+  return {
+    isOpen,
+    label: isOpen ? "Open" : "Closed",
+    message: isOpen
+      ? "This store is open."
+      : "Pickup is currently unavailable. This store is closed.",
+    todayHours,
+    timezone,
+  };
 };
 
 const fetchValidStoreIds = async (productId) => {
@@ -109,12 +133,65 @@ const fetchValidStoreIds = async (productId) => {
 
   return new Set(
     inventorySnapshot.docs
-      .map((doc) => doc.ref.parent.parent?.id)
+      .map((docSnap) => docSnap.ref.parent.parent?.id)
       .filter(Boolean)
   );
 };
 
-//  LocationDropdown 
+const fetchPopularStores = async (validStoreIds = null) => {
+  const storesSnapshot = await getDocs(
+    query(collection(db, "stores"), limit(POPULAR_STORE_LIMIT))
+  );
+
+  let stores = storesSnapshot.docs.map((docSnap) => ({
+    id: docSnap.id,
+    ...docSnap.data(),
+  }));
+
+  stores = stores.filter((store) => store.isActive !== false);
+
+  if (validStoreIds) {
+    stores = stores.filter((store) => validStoreIds.has(store.id));
+  }
+
+  return sortByRating(stores);
+};
+
+const fetchStoresByLocation = async ({
+  country,
+  state,
+  city,
+  validStoreIds,
+}) => {
+  const conditions = [
+    where("country", "==", country),
+    where("isActive", "==", true),
+  ];
+
+  if (state) {
+    conditions.push(where("state", "==", state));
+  }
+
+  if (city) {
+    conditions.push(where("city", "==", city));
+  }
+
+  const storesSnapshot = await getDocs(
+    query(collection(db, "stores"), ...conditions)
+  );
+
+  let stores = storesSnapshot.docs.map((docSnap) => ({
+    id: docSnap.id,
+    ...docSnap.data(),
+  }));
+
+  if (validStoreIds) {
+    stores = stores.filter((store) => validStoreIds.has(store.id));
+  }
+
+  return sortByRating(stores);
+};
+
 function LocationDropdown({
   label,
   value,
@@ -128,6 +205,7 @@ function LocationDropdown({
       <h3 className="font-semibold mb-1 text-sm">
         <i className="bx bxs-map"></i> {label}
       </h3>
+
       <div
         tabIndex={disabled ? -1 : 0}
         role="button"
@@ -138,6 +216,7 @@ function LocationDropdown({
         <span className={!value ? "text-gray-400" : ""}>
           {value || placeholder}
         </span>
+
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -153,6 +232,7 @@ function LocationDropdown({
           />
         </svg>
       </div>
+
       {!disabled && (
         <ul
           tabIndex={0}
@@ -184,32 +264,28 @@ function LocationDropdown({
   );
 }
 
-// Main Component 
 export default function Stores() {
   const location = useLocation();
-  const { userInfo } = useAuth();
+
+  const { userInfo, userInfoLoading } = useAuth();
 
   const relaySearch = location.state?.autoSearch || "";
   const relayProductId = location.state?.productId || "";
 
-  // State
   const [dbLocations, setDbLocations] = useState([]);
   const [dbStores, setDbStores] = useState([]);
+
   const [locationsLoading, setLocationsLoading] = useState(true);
   const [storesLoading, setStoresLoading] = useState(false);
+
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedState, setSelectedState] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
+
   const [profileLocationChecked, setProfileLocationChecked] = useState(false);
   const [previewStore, setPreviewStore] = useState(null);
 
-  //  Carousel 
-  // Reinitialize carousel when previewStore changes
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, []);
-
-  useEffect(() => {
-    if (emblaApi) emblaApi.reInit();
-  }, [emblaApi, previewStore]);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
 
   const {
     prevBtnDisabled,
@@ -218,54 +294,65 @@ export default function Stores() {
     onNextButtonClick,
   } = usePrevNextButtons(emblaApi);
 
-  // Fetch Locations 
+  useEffect(() => {
+    if (emblaApi) emblaApi.reInit();
+  }, [emblaApi, previewStore]);
+
   useEffect(() => {
     const fetchLocations = async () => {
       setLocationsLoading(true);
+
       try {
         const citiesSnapshot = await getDocs(collection(db, "cities"));
+
         setDbLocations(
-          citiesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+          citiesSnapshot.docs.map((docSnap) => ({
+            id: docSnap.id,
+            ...docSnap.data(),
+          }))
         );
       } catch (error) {
-        toast.error("Failed to load locations. Please refresh.");
+        toast.error("Error fetching locations");
         console.error(error);
       } finally {
         setLocationsLoading(false);
       }
     };
+
     fetchLocations();
   }, []);
 
-  //  Prefill from User Profile 
   useEffect(() => {
     if (profileLocationChecked) return;
 
-    // Wait for userInfo to resolve — null means not logged in, undefined means still loading
-    if (userInfo === undefined) return;
+    if (userInfoLoading) return;
 
-    if (userInfo?.country && userInfo?.state) {
+    if (userInfo?.country) {
       setSelectedCountry(userInfo.country);
-      setSelectedState(userInfo.state);
     }
 
-    setProfileLocationChecked(true);
-  }, [userInfo, profileLocationChecked]);
+    setSelectedState("");
+    setSelectedCity("");
 
-  //  Derived Options 
-  const countryOptions = useMemo(
-    () =>
-      [...new Set(dbLocations.map((l) => l.country).filter(Boolean))].sort(),
-    [dbLocations]
-  );
+    setProfileLocationChecked(true);
+  }, [userInfo, userInfoLoading, profileLocationChecked]);
+
+  const countryOptions = useMemo(() => {
+    return [
+      ...new Set(
+        dbLocations.map((locationItem) => locationItem.country).filter(Boolean)
+      ),
+    ].sort();
+  }, [dbLocations]);
 
   const stateOptions = useMemo(() => {
     if (!selectedCountry) return [];
+
     return [
       ...new Set(
         dbLocations
-          .filter((l) => l.country === selectedCountry)
-          .map((l) => l.state)
+          .filter((locationItem) => locationItem.country === selectedCountry)
+          .map((locationItem) => locationItem.state)
           .filter(Boolean)
       ),
     ].sort();
@@ -273,66 +360,72 @@ export default function Stores() {
 
   const cityOptions = useMemo(() => {
     if (!selectedCountry || !selectedState) return [];
+
     return [
       ...new Set(
         dbLocations
           .filter(
-            (l) => l.country === selectedCountry && l.state === selectedState
+            (locationItem) =>
+              locationItem.country === selectedCountry &&
+              locationItem.state === selectedState
           )
-          .map((l) => l.city)
+          .map((locationItem) => locationItem.city || locationItem.name)
           .filter(Boolean)
       ),
     ].sort();
   }, [dbLocations, selectedCountry, selectedState]);
 
-  // Fetch Stores 
   useEffect(() => {
-    // Wait for profile location check before fetching
-    // so we don't fetch popular stores then immediately refetch with user location
     if (!profileLocationChecked) return;
 
-    const timeoutId = setTimeout(async () => {
-      setStoresLoading(true);
-      try {
-        let validStoreIds = null;
+    const timeoutId = setTimeout(() => {
+      const fetchStores = async () => {
+        setStoresLoading(true);
 
-        if (relaySearch) {
-          const productId = relayProductId || createSlug(relaySearch);
-          validStoreIds = await fetchValidStoreIds(productId);
+        try {
+          let validStoreIds = null;
 
-          // If relay search returns no matching stores, show empty state early
-          if (validStoreIds.size === 0) {
-            setDbStores([]);
-            setPreviewStore(null);
-            return;
+          if (relaySearch) {
+            const productId = relayProductId || createSlug(relaySearch);
+            validStoreIds = await fetchValidStoreIds(productId);
+
+            if (validStoreIds.size === 0) {
+              setDbStores([]);
+              setPreviewStore(null);
+              return;
+            }
           }
-        }
 
-        let storesData = [];
+          const storesData = selectedCountry
+            ? await fetchStoresByLocation({
+                country: selectedCountry,
+                state: selectedState,
+                city: selectedCity,
+                validStoreIds,
+              })
+            : await fetchPopularStores(validStoreIds);
 
-        if (selectedCountry) {
-          storesData = await fetchStoresByLocation({
-            country: selectedCountry,
-            state: selectedState,
-            city: selectedCity,
-            validStoreIds,
+          setDbStores(storesData);
+
+          setPreviewStore((currentPreview) => {
+            if (!currentPreview) return null;
+
+            const previewStillExists = storesData.some(
+              (store) => store.id === currentPreview.id
+            );
+
+            return previewStillExists ? currentPreview : null;
           });
-        } else {
-          storesData = await fetchPopularStores(validStoreIds);
+        } catch (error) {
+          toast.error("Error fetching stores");
+          console.error(error);
+        } finally {
+          setStoresLoading(false);
         }
+      };
 
-        setDbStores(storesData);
-        setPreviewStore((current) => {
-          if (!current) return null;
-          return storesData.some((s) => s.id === current.id) ? current : null;
-        });
-      } catch (error) {
-        toast.error("Failed to load stores. Please try again.");
-        console.error(error);
-      } finally {
-        setStoresLoading(false);
-      }
-    }, DEBOUNCE_MS);
+      fetchStores();
+    }, 300);
 
     return () => clearTimeout(timeoutId);
   }, [
@@ -344,14 +437,34 @@ export default function Stores() {
     profileLocationChecked,
   ]);
 
-  // Derived UI 
+  const storesWithStatus = useMemo(() => {
+    return dbStores.map((store) => ({
+      ...store,
+      openStatus: getStoreOpenStatus(store),
+    }));
+  }, [dbStores]);
+
+  const allSelectedNigeriaStoresClosed =
+    selectedCountry === "Nigeria" &&
+    storesWithStatus.length > 0 &&
+    storesWithStatus.every((store) => !store.openStatus.isOpen);
+
   const locationTitle = useMemo(() => {
     if (!selectedCountry) return "Popular Maple stores";
-    if (selectedCity)
+
+    if (selectedCity) {
       return `Stores in ${selectedCity}, ${selectedState}, ${selectedCountry}`;
-    if (selectedState) return `Stores in ${selectedState}, ${selectedCountry}`;
-    return `Stores in ${selectedCountry}`;
+    }
+
+    if (selectedState) {
+      return `Stores in ${selectedState}, ${selectedCountry}`;
+    }
+
+    return `Maple stores in ${selectedCountry}`;
   }, [selectedCountry, selectedState, selectedCity]);
+
+  const previewStatus = previewStore ? getStoreOpenStatus(previewStore) : null;
+  const previewTodayHours = previewStore ? getTodayHours(previewStore) : null;
 
   const previewImages =
     previewStore?.images?.length > 0
@@ -361,15 +474,15 @@ export default function Stores() {
             "https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp",
         ];
 
-  const todayHours = previewStore
-    ? getTodayHours(previewStore.openingHours)
-    : null;
- 
-  if (locationsLoading) {
+  const showClosedStoreToast = () => {
+    toast.error("Pickup is currently unavailable. This store is closed.");
+  };
+
+  if (locationsLoading || !profileLocationChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <span className="loading loading-spinner loading-lg text-lime-400"></span>
-        <p className="ml-4 font-bold">Loading locations...</p>
+        <p className="ml-4 font-bold">Loading stores...</p>
       </div>
     );
   }
@@ -411,6 +524,7 @@ export default function Stores() {
                     setPreviewStore(null);
                   }}
                 />
+
                 <LocationDropdown
                   label="State"
                   value={selectedState}
@@ -423,9 +537,10 @@ export default function Stores() {
                     setPreviewStore(null);
                   }}
                 />
+
                 <LocationDropdown
                   label="City"
-                  value={selectedCity || "All cities"}
+                  value={selectedCity}
                   placeholder="All cities"
                   options={["All cities", ...cityOptions]}
                   disabled={!selectedCountry || !selectedState}
@@ -436,29 +551,28 @@ export default function Stores() {
                 />
               </div>
 
-              {/* Location hint */}
               {!selectedCountry ? (
                 <p className="text-xs text-gray-400 mt-2">
-                  Showing top-rated Maple stores. Select your country, state,
-                  and city to find stores closer to you.
+                  Showing top-rated Maple stores. Select a country to find
+                  stores closer to you.
                 </p>
               ) : !selectedState ? (
                 <p className="text-xs text-gray-400 mt-2">
-                  Showing top-rated Maple stores in {selectedCountry}. Select a
-                  state and city to narrow your search.
+                  Showing Maple stores in {selectedCountry}. Select a state if
+                  you want to narrow your search.
                 </p>
-              ) : userInfo?.country && userInfo?.state ? (
+              ) : !selectedCity ? (
                 <p className="text-xs text-gray-400 mt-2">
-                  Using your saved profile location. You can change it above.
+                  Showing Maple stores in {selectedState}, {selectedCountry}.
+                  Select a city to narrow your search further.
                 </p>
               ) : (
                 <p className="text-xs text-gray-400 mt-2">
-                  Showing stores based on your selected location. Set your
-                  location in your profile for faster results next time.
+                  Showing Maple stores in {selectedCity}, {selectedState},{" "}
+                  {selectedCountry}.
                 </p>
               )}
 
-              {/* Relay search notice */}
               {relaySearch && (
                 <p className="text-xs text-gray-400 mt-1">
                   Showing stores that have{" "}
@@ -470,100 +584,152 @@ export default function Stores() {
               )}
             </div>
 
-            {/* Store List */}
             <div>
               <h4 className="font-bold mb-3">{locationTitle}</h4>
+
+              {allSelectedNigeriaStoresClosed && (
+                <div className="mb-5 rounded-3xl border border-orange-200 bg-orange-50 p-5">
+                  <div className="flex items-start gap-3">
+                    <i className="bx bx-time-five text-2xl text-orange-600"></i>
+
+                    <div>
+                      <p className="font-bold text-orange-700">
+                        All Nigerian Maple stores are closed for the day.
+                      </p>
+                      <p className="text-sm text-orange-600 mt-1">
+                        Pickup is available from 8:00 AM to 6:00 PM local store
+                        time.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {storesLoading ? (
                 <div className="py-12 flex items-center justify-center">
                   <span className="loading loading-spinner loading-md text-lime-400"></span>
                   <p className="ml-3 font-semibold">Finding stores...</p>
                 </div>
-              ) : dbStores.length === 0 ? (
+              ) : storesWithStatus.length === 0 ? (
                 <div className="border border-dashed border-gray-300 rounded-3xl p-8 text-center text-gray-400">
                   <p className="font-bold text-lg text-gray-500">
                     No stores found.
                   </p>
-                  {relaySearch && selectedState ? (
+
+                  {relaySearch ? (
                     <p className="text-sm mt-1">
                       No store with{" "}
                       <span className="font-semibold text-gray-600">
                         {relaySearch}
                       </span>{" "}
-                      could be found in {selectedState}. Try changing your
-                      location.
-                    </p>
-                  ) : relaySearch ? (
-                    <p className="text-sm mt-1">
-                      No store with{" "}
-                      <span className="font-semibold text-gray-600">
-                        {relaySearch}
-                      </span>{" "}
-                      is currently available. Try changing your location.
+                      is currently available in this location.
                     </p>
                   ) : (
                     <p className="text-sm mt-1">
-                      Try selecting another city, state, or country.
+                      Try selecting another country, state, or city.
                     </p>
                   )}
                 </div>
               ) : (
-                dbStores.map((store) => (
-                  <div
-                    key={store.id}
-                    className="flex items-center justify-between border border-gray-400 min-h-22 w-full rounded-full px-5 py-3 mb-5"
-                  >
-                    <div className="min-w-40 max-w-75 flex h-fit gap-x-3 items-center">
-                      <div className="avatar">
-                        <div className="bg-neutral text-neutral-content w-10 h-10 rounded-full overflow-hidden">
-                          {store.img ? (
-                            <img
-                              src={store.img}
-                              alt={store.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span className="flex items-center justify-center h-full">
-                              {store.name?.slice(0, 2).toUpperCase()}
-                            </span>
-                          )}
+                storesWithStatus.map((store) => {
+                  const storeIsOpen = store.openStatus.isOpen;
+                  const todayHours = store.openStatus.todayHours;
+
+                  return (
+                    <div
+                      key={store.id}
+                      className={`flex items-center justify-between border min-h-22 w-full rounded-full px-5 py-3 mb-5 transition-all ${
+                        storeIsOpen
+                          ? "border-gray-400 bg-white"
+                          : "border-gray-200 bg-gray-50 opacity-90"
+                      }`}
+                    >
+                      <div className="min-w-40 max-w-75 flex h-fit gap-x-3 items-center">
+                        <div className="avatar">
+                          <div className="bg-neutral text-neutral-content w-10 h-10 rounded-full overflow-hidden">
+                            {store.img ? (
+                              <img
+                                src={store.img}
+                                alt={store.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span className="flex items-center justify-center h-full">
+                                {store.name?.slice(0, 2).toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="text-sm">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-bold">{store.name}</p>
+
+                            {storeIsOpen ? (
+                              <span className="badge badge-success rounded-full text-[10px]">
+                                Open
+                              </span>
+                            ) : (
+                              <span className="badge badge-error rounded-full text-[10px]">
+                                Closed
+                              </span>
+                            )}
+                          </div>
+
+                          <p>{store.address}</p>
+
+                          <p className="text-xs text-gray-400">
+                            ⭐ {store.rating || 0} ·{" "}
+                            {store.reviewCount || store.ratingCount || 0}{" "}
+                            reviews
+                          </p>
+
+                          <p className="text-xs text-gray-400">
+                            Today: {todayHours?.open || "08:00"} -{" "}
+                            {todayHours?.close || "18:00"} ·{" "}
+                            {store.timezone || "Africa/Lagos"}
+                          </p>
                         </div>
                       </div>
-                      <div className="text-sm">
-                        <p className="font-bold">{store.name}</p>
-                        <p>{store.address}</p>
-                        <p className="text-xs text-gray-400">
-                          ⭐ {store.rating || 0} ·{" "}
-                          {store.reviewCount || store.ratingCount || 0} reviews
-                        </p>
+
+                      <div className="flex gap-x-2">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewStore(store)}
+                          className="btn h-9 border-0 rounded-3xl border border-gray-400"
+                        >
+                          Preview Store
+                        </button>
+
+                        {storeIsOpen ? (
+                          <NavLink
+                            to="/order"
+                            state={{
+                              selectedStore: store,
+                              autoSearch: relaySearch,
+                              productId: relayProductId,
+                            }}
+                            className="btn h-9 border-0 rounded-3xl border border-gray-400"
+                          >
+                            Order Here
+                          </NavLink>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={showClosedStoreToast}
+                            className="btn h-9 border-0 rounded-3xl bg-gray-200 text-gray-500 hover:bg-gray-200 cursor-not-allowed"
+                          >
+                            Closed
+                          </button>
+                        )}
                       </div>
                     </div>
-
-                    <div className="flex gap-x-2">
-                      <button
-                        onClick={() => setPreviewStore(store)}
-                        className="btn h-9 border-0 rounded-3xl border border-gray-400"
-                      >
-                        Preview Store
-                      </button>
-                      <NavLink
-                        to="/order"
-                        state={{
-                          selectedStore: store,
-                          autoSearch: relaySearch,
-                        }}
-                        className="btn h-9 border-0 rounded-3xl border border-gray-400"
-                      >
-                        Order Here
-                      </NavLink>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
 
-          {/* Preview Panel */}
           <div className="lg:w-100 mx-auto">
             {previewStore ? (
               <div className="card bg-base-100 w-80 shadow-sm sticky rounded-t-2xl rounded-b-none top-10 self-start translate-y-20 translate-x-10 h-fit">
@@ -594,6 +760,7 @@ export default function Stores() {
                         className="touch-manipulation btn aspect-square w-10 px-0 flex justify-center items-center rounded-full cursor-pointer shadow opacity-70"
                       />
                     </div>
+
                     <div className="pointer-events-auto">
                       <NextButton
                         onClick={onNextButtonClick}
@@ -605,49 +772,71 @@ export default function Stores() {
                 </figure>
 
                 <div className="card-body">
-                  <h2 className="card-title">{previewStore.name}</h2>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="card-title">{previewStore.name}</h2>
+
+                    {previewStatus?.isOpen ? (
+                      <span className="badge badge-success rounded-full">
+                        Open
+                      </span>
+                    ) : (
+                      <span className="badge badge-error rounded-full">
+                        Closed
+                      </span>
+                    )}
+                  </div>
+
                   <p className="text-sm text-gray-500">
                     {previewStore.address}
                   </p>
+
                   <p>
                     {previewStore.description ||
                       `Experience the finest Maple blends at our ${previewStore.name} location.`}
                   </p>
+
                   <p className="text-xs text-gray-400">
                     ⭐ {previewStore.rating || 0} ·{" "}
                     {previewStore.reviewCount || previewStore.ratingCount || 0}{" "}
                     reviews
                   </p>
 
-                  {/* Today's hours */}
                   <div className="text-xs text-gray-400 mt-2">
-                    {todayHours ? (
-                      <>
-                        <p>Opens: {todayHours.open}</p>
-                        <p>Closes: {todayHours.close}</p>
-                      </>
-                    ) : (
-                      <p>Hours not available</p>
-                    )}
+                    <p>Opens: {previewTodayHours?.open || "08:00"}</p>
+                    <p>Closes: {previewTodayHours?.close || "18:00"}</p>
+                    <p>Timezone: {previewStore.timezone || "Africa/Lagos"}</p>
                   </div>
 
                   <div className="card-actions justify-end mt-4">
                     <button
+                      type="button"
                       className="btn btn-secondary"
                       onClick={() => setPreviewStore(null)}
                     >
                       Close Preview
                     </button>
-                    <NavLink
-                      to="/order"
-                      state={{
-                        selectedStore: previewStore,
-                        autoSearch: relaySearch,
-                      }}
-                      className="btn h-9 border-0 rounded-3xl border border-gray-400"
-                    >
-                      Order Here
-                    </NavLink>
+
+                    {previewStatus?.isOpen ? (
+                      <NavLink
+                        to="/order"
+                        state={{
+                          selectedStore: previewStore,
+                          autoSearch: relaySearch,
+                          productId: relayProductId,
+                        }}
+                        className="btn h-9 border-0 rounded-3xl border border-gray-400"
+                      >
+                        Order Here
+                      </NavLink>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={showClosedStoreToast}
+                        className="btn h-9 border-0 rounded-3xl bg-gray-200 text-gray-500 hover:bg-gray-200 cursor-not-allowed"
+                      >
+                        Closed
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
