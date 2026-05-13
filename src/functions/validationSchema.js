@@ -38,6 +38,11 @@ const phoneField = yup
     const phone = parsePhoneNumberFromString(value, countryCode);
     return phone ? phone.isValid() : false;
   });
+const checkoutPhoneField = yup
+  .string()
+  .trim()
+  .required("Phone number is required")
+  .matches(/^\+?[0-9\s\-()]{7,20}$/, "Enter a valid phone number");
 
 export const signUpSchema = yup.object().shape({
   name: nameField,
@@ -119,4 +124,12 @@ export const passwordChangeSchema = yup.object().shape({
     .string()
     .oneOf([yup.ref("newPassword"), null], "Passwords must match")
     .required("Please confirm your new password"),
+});
+export const checkoutContactSchema = yup.object().shape({
+  fullName: nameField,
+
+  contactEmail: emailField,
+
+  phone: checkoutPhoneField,
+
 });

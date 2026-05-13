@@ -1,141 +1,205 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezonePlugin from "dayjs/plugin/timezone";
+import customParseFormat from "dayjs/plugin/customParseFormat";
 
-const OPEN_HOUR = 8; 
-const CLOSE_HOUR = 18; 
-const LEAD_TIME = 20; 
-const HOURS_LIST = [
-  "01",
-  "02",
-  "03",
-  "04",
-  "05",
-  "06",
-  "07",
-  "08",
-  "09",
-  "10",
-  "11",
-  "12",
+dayjs.extend(utc);
+dayjs.extend(timezonePlugin);
+dayjs.extend(customParseFormat);
+
+const LEAD_TIME_MINUTES = 20;
+const SLOT_INTERVAL_MINUTES = 15;
+
+const DAYS = [
+  "sunday",
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
 ];
-const MINUTES_LIST = ["00", "15", "30", "45"];
-const PERIODS_LIST = ["AM", "PM"];
 
-// Base Logic Function
-const checkIsValid = (h, m, p) => {
-  const now = new Date();
-  const checkDate = new Date();
-
-  let h24 = parseInt(h);
-  if (p === "PM" && h24 !== 12) h24 += 12;
-  if (p === "AM" && h24 === 12) h24 = 0;
-
-  checkDate.setHours(h24, parseInt(m), 0, 0);
-
-  const isWithinHours = h24 >= OPEN_HOUR && h24 < CLOSE_HOUR;
-  const earliestPossible = new Date(now.getTime() + LEAD_TIME * 60000);
-
-  return isWithinHours && checkDate >= earliestPossible;
+const DEFAULT_OPENING_HOURS = {
+  monday: { open: "08:00", close: "18:00", closed: false },
+  tuesday: { open: "08:00", close: "18:00", closed: false },
+  wednesday: { open: "08:00", close: "18:00", closed: false },
+  thursday: { open: "08:00", close: "18:00", closed: false },
+  friday: { open: "08:00", close: "18:00", closed: false },
+  saturday: { open: "08:00", close: "18:00", closed: false },
+  sunday: { open: "08:00", close: "18:00", closed: false },
 };
 
-export default function TimePicker({ onChange }) {
-  // 1. Auto-Calculate the first valid time on initial load
-  const initialTime = useMemo(() => {
-    for (let p of PERIODS_LIST) {
-      for (let h of HOURS_LIST) {
-        for (let m of MINUTES_LIST) {
-          if (checkIsValid(h, m, p)) return { h, m, p };
-        }
-      }
+const roundUpToNextSlot = (dateTime) => {
+  const minute = dateTime.minute();
+  const remainder = minute % SLOT_INTERVAL_MINUTES;
+
+  if (remainder === 0) {
+    return dateTime.second(0).millisecond(0);
+  }
+
+  return dateTime
+    .add(SLOT_INTERVAL_MINUTES - remainder, "minute")
+    .second(0)
+    .millisecond(0);
+};
+
+const buildStoreTime = ({ storeNow, time, timezone }) => {
+  const storeDate = storeNow.format("YYYY-MM-DD");
+
+  return dayjs.tz(`${storeDate} ${time}`, "YYYY-MM-DD HH:mm", timezone);
+};
+
+export default function TimePicker({
+  timezone = "Africa/Lagos",
+  openingHours = DEFAULT_OPENING_HOURS,
+  onChange,
+}) {
+  const [selectedValue, setSelectedValue] = useState("");
+
+  const { timeSlots, availableSlots, storeClosedMessage } = useMemo(() => {
+    const storeNow = dayjs().tz(timezone);
+    const today = DAYS[storeNow.day()];
+    const todayHours = openingHours?.[today];
+
+    if (!todayHours || todayHours.closed) {
+      return {
+        timeSlots: [],
+        availableSlots: [],
+        storeClosedMessage: "This store is closed today.",
+      };
     }
-    return { h: "08", m: "00", p: "AM" }; // Fallback
-  }, []);
 
-  const [hour, setHour] = useState(initialTime.h);
-  const [minute, setMinute] = useState(initialTime.m);
-  const [period, setPeriod] = useState(initialTime.p);
+    if (!todayHours.open || !todayHours.close) {
+      return {
+        timeSlots: [],
+        availableSlots: [],
+        storeClosedMessage: "Pickup hours are not available for this store.",
+      };
+    }
 
-  // 2. The "Lookahead" functions to prevent deadlocks
-  const canSelectHour = (h, p) =>
-    MINUTES_LIST.some((m) => checkIsValid(h, m, p));
-  const canSelectPeriod = (p) => HOURS_LIST.some((h) => canSelectHour(h, p));
+    const openTime = buildStoreTime({
+      storeNow,
+      time: todayHours.open,
+      timezone,
+    });
 
-  // 3. Safe Export to Parent
+    const closeTime = buildStoreTime({
+      storeNow,
+      time: todayHours.close,
+      timezone,
+    });
+
+    const minimumPickupTime = roundUpToNextSlot(
+      storeNow.add(LEAD_TIME_MINUTES, "minute")
+    );
+
+    const slots = [];
+    let cursor = openTime;
+
+    while (cursor.isBefore(closeTime)) {
+      const isPastStoreTime = cursor.isBefore(storeNow);
+      const isBeforeMinimumPickupTime = cursor.isBefore(minimumPickupTime);
+
+      const disabled = isPastStoreTime || isBeforeMinimumPickupTime;
+
+      slots.push({
+        label: cursor.format("hh:mm A"),
+        value: cursor.toISOString(),
+        localDateTime: cursor.format("YYYY-MM-DDTHH:mm:ss"),
+        timezone,
+        disabled,
+      });
+
+      cursor = cursor.add(SLOT_INTERVAL_MINUTES, "minute");
+    }
+
+    const enabledSlots = slots.filter((slot) => !slot.disabled);
+
+    return {
+      timeSlots: slots,
+      availableSlots: enabledSlots,
+      storeClosedMessage:
+        enabledSlots.length === 0
+          ? "This store may be closed or past pickup hours."
+          : "",
+    };
+  }, [timezone, openingHours]);
+
   useEffect(() => {
-    const isValid = checkIsValid(hour, minute, period);
-    if (onChange) {
-      onChange(isValid ? `${hour}:${minute} ${period}` : null);
+    if (availableSlots.length === 0) {
+      setSelectedValue("");
+      onChange?.(null);
+      return;
     }
-  }, [hour, minute, period, onChange]);
 
-  const currentCombinationValid = checkIsValid(hour, minute, period);
+    const stillValid = availableSlots.some(
+      (slot) => slot.value === selectedValue
+    );
+
+    if (!selectedValue || !stillValid) {
+      const firstSlot = availableSlots[0];
+
+      setSelectedValue(firstSlot.value);
+
+      onChange?.({
+        displayTime: firstSlot.label,
+        scheduledDateTime: firstSlot.value,
+        localDateTime: firstSlot.localDateTime,
+        storeTimezone: firstSlot.timezone,
+      });
+    }
+  }, [availableSlots, selectedValue, onChange]);
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+    const selectedSlot = timeSlots.find((slot) => slot.value === value);
+
+    if (!selectedSlot || selectedSlot.disabled) {
+      onChange?.(null);
+      return;
+    }
+
+    setSelectedValue(value);
+
+    onChange?.({
+      displayTime: selectedSlot.label,
+      scheduledDateTime: selectedSlot.value,
+      localDateTime: selectedSlot.localDateTime,
+      storeTimezone: selectedSlot.timezone,
+    });
+  };
+
+  if (timeSlots.length === 0 || availableSlots.length === 0) {
+    return (
+      <div className="flex flex-col gap-1">
+        <p className="text-sm font-bold text-red-500">
+          No pickup time available today
+        </p>
+        <p className="text-xs text-gray-400">{storeClosedMessage}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-1 w-fit">
-      <div className="flex items-center justify-between">
-        {!currentCombinationValid && (
-          <p className="text-[10px] font-bold text-red-500 animate-pulse">
-            Invalid Time
-          </p>
-        )}
-      </div>
-
-      <div
-        className={`flex items-center bg-white border-2 rounded-xl p-1 gap-1 shadow-sm transition-colors ${
-          currentCombinationValid
-            ? "border-gray-200"
-            : "border-red-400 bg-red-50"
-        }`}
+      <select
+        value={selectedValue}
+        onChange={handleChange}
+        className="select select-bordered rounded-xl font-bold text-sm bg-white"
       >
-        {/* Hour Select */}
-        <select
-          value={hour}
-          onChange={(e) => setHour(e.target.value)}
-          className="bg-transparent font-bold text-sm px-2 py-1 focus:outline-none cursor-pointer appearance-none"
-        >
-          {HOURS_LIST.map((h) => (
-            <option key={h} value={h} disabled={!canSelectHour(h, period)}>
-              {h}
-            </option>
-          ))}
-        </select>
+        {timeSlots.map((slot) => (
+          <option key={slot.value} value={slot.value} disabled={slot.disabled}>
+            {slot.label}
+            {slot.disabled ? " — unavailable" : ""}
+          </option>
+        ))}
+      </select>
 
-        <span className="font-bold text-gray-400">:</span>
-
-        {/* Minute Select */}
-        <select
-          value={minute}
-          onChange={(e) => setMinute(e.target.value)}
-          className="bg-transparent font-bold text-sm px-2 py-1 focus:outline-none cursor-pointer appearance-none"
-        >
-          {MINUTES_LIST.map((m) => (
-            <option key={m} value={m} disabled={!checkIsValid(hour, m, period)}>
-              {m}
-            </option>
-          ))}
-        </select>
-
-        {/* Period Control */}
-        <div className="flex bg-gray-100 rounded-lg p-0.5 ml-1">
-          {PERIODS_LIST.map((p) => {
-            const disabled = !canSelectPeriod(p);
-            return (
-              <button
-                key={p}
-                type="button"
-                disabled={disabled}
-                onClick={() => setPeriod(p)}
-                className={`px-3 py-1 rounded-md text-[10px] font-black transition-all ${
-                  period === p
-                    ? "bg-white text-green-700 shadow-sm"
-                    : "text-gray-400"
-                } ${disabled ? "opacity-20 cursor-not-allowed" : ""}`}
-              >
-                {p}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <p className="text-[10px] text-gray-400 font-semibold">
+        Store time: {timezone}
+      </p>
     </div>
   );
 }

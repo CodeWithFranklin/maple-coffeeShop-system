@@ -12,6 +12,13 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 
+const formatMoney = (amount, currencyCode = "USD", locale = "en-US") => {
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: currencyCode,
+  }).format(Number(amount || 0));
+};
+
 export default function Order() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -20,6 +27,9 @@ export default function Order() {
   const initialSearch = location.state?.autoSearch || "";
 
   const { user } = useAuth();
+
+  const storeCurrencyCode = store?.currency?.code || "USD";
+  const storeCurrencyLocale = store?.currency?.locale || "en-US";
 
   const [loading, setLoading] = useState(true);
   const [menu, setMenu] = useState([]);
@@ -46,7 +56,10 @@ export default function Order() {
   }, [menu]);
 
   const subTotal = useMemo(() => {
-    return cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    return cart.reduce(
+      (acc, item) => acc + Number(item.price || 0) * Number(item.quantity || 0),
+      0
+    );
   }, [cart]);
 
   const openModal = useCallback((item) => {
@@ -80,7 +93,20 @@ export default function Order() {
 
       if (existingItem) {
         return prevCart.map((item) =>
-          item.id === activeItem.id ? { ...item, quantity: newQuantity } : item
+          item.id === activeItem.id
+            ? {
+                ...item,
+                quantity: newQuantity,
+                price: activeItem.price,
+                stock: activeItem.stock,
+                category: activeItem.category,
+                tags: activeItem.tags,
+                currency: {
+                  code: storeCurrencyCode,
+                  locale: storeCurrencyLocale,
+                },
+              }
+            : item
         );
       }
 
@@ -92,9 +118,14 @@ export default function Order() {
           name: activeItem.name,
           img: activeItem.img,
           tags: activeItem.tags,
+          category: activeItem.category,
           price: activeItem.price,
           stock: activeItem.stock,
           quantity,
+          currency: {
+            code: storeCurrencyCode,
+            locale: storeCurrencyLocale,
+          },
         },
       ];
     });
@@ -102,7 +133,7 @@ export default function Order() {
     if (modalRef.current) {
       modalRef.current.close();
     }
-  }, [activeItem, quantity]);
+  }, [activeItem, quantity, storeCurrencyCode, storeCurrencyLocale]);
 
   const increaseQty = () => {
     if (!activeItem) return;
@@ -154,39 +185,51 @@ export default function Order() {
     );
   };
 
- useEffect(() => {
-   const syncCartToDB = async () => {
-     if (!user?.uid || !store?.id) return;
+  useEffect(() => {
+    const syncCartToDB = async () => {
+      if (!user?.uid || !store?.id) return;
 
-     try {
-       const cartRef = doc(db, "users", user.uid, "carts", store.id);
+      try {
+        const cartRef = doc(db, "users", user.uid, "carts", store.id);
 
-       if (cart.length === 0) {
-         await deleteDoc(cartRef);
-         return;
-       }
+        if (cart.length === 0) {
+          await deleteDoc(cartRef);
+          return;
+        }
 
-       await setDoc(
-         cartRef,
-         {
-           storeId: store.id,
-           storeName: store.name,
-           items: cart,
-           lastUpdated: new Date().toISOString(),
-           cartTotal: cart.reduce(
-             (acc, item) => acc + item.price * item.quantity,
-             0
-           ),
-         },
-         { merge: true }
-       );
-     } catch (err) {
-       console.error("DB Sync Error:", err);
-     }
-   };
+        await setDoc(
+          cartRef,
+          {
+            storeId: store.id,
+            storeName: store.name,
+            currency: {
+              code: storeCurrencyCode,
+              locale: storeCurrencyLocale,
+            },
+            items: cart,
+            lastUpdated: new Date().toISOString(),
+            cartTotal: cart.reduce(
+              (acc, item) =>
+                acc + Number(item.price || 0) * Number(item.quantity || 0),
+              0
+            ),
+          },
+          { merge: true }
+        );
+      } catch (err) {
+        console.error("DB Sync Error:", err);
+      }
+    };
 
-   syncCartToDB();
- }, [cart, user?.uid, store?.id, store?.name]);
+    syncCartToDB();
+  }, [
+    cart,
+    user?.uid,
+    store?.id,
+    store?.name,
+    storeCurrencyCode,
+    storeCurrencyLocale,
+  ]);
 
   const handleCheckout = () => {
     if (cart.length === 0) return;
@@ -229,40 +272,52 @@ export default function Order() {
         const inventoryMap = new Map();
 
         inventorySnapshot.docs.forEach((docSnap) => {
-          inventoryMap.set(docSnap.id, {
+          const inventoryData = docSnap.data();
+          const productId = inventoryData.productId || docSnap.id;
+
+          inventoryMap.set(productId, {
             id: docSnap.id,
-            ...docSnap.data(),
+            productId,
+            ...inventoryData,
           });
         });
 
-        const items = productsSnapshot.docs.map((docSnap) => {
-          const productId = docSnap.id;
-          const product = docSnap.data();
-          const inventory = inventoryMap.get(productId);
+        const items = productsSnapshot.docs
+          .filter((docSnap) => inventoryMap.has(docSnap.id))
+          .map((docSnap) => {
+            const productId = docSnap.id;
+            const product = docSnap.data();
+            const inventory = inventoryMap.get(productId);
 
-          const stock = Number(inventory?.stock || 0);
-          const available = inventory?.available ?? stock > 0;
+            const price = Number(inventory?.price);
+            const stock = Number(inventory?.stock || 0);
+            const available = inventory?.available ?? stock > 0;
 
-          return {
-            id: productId,
-            productId,
+            if (!Number.isFinite(price) || price <= 0) {
+              console.warn(
+                `Inventory item "${productId}" in store "${store.id}" has no valid price.`
+              );
 
-            name: product.name || "",
-            description: product.description || product.about || "",
-            about: product.about || product.description || "",
-            img: product.img || "",
-            tags: product.tags || [],
-            category: product.category || "",
+              return null;
+            }
 
-            basePrice: Number(product.basePrice || product.price || 0),
-            price: Number(
-              inventory?.price || product.basePrice || product.price || 0
-            ),
+            return {
+              id: productId,
+              productId,
 
-            stock,
-            available,
-          };
-        });
+              name: product.name || "",
+              description: product.description || product.about || "",
+              about: product.about || product.description || "",
+              img: product.img || "",
+              tags: product.tags || [],
+              category: product.category || "",
+
+              price,
+              stock,
+              available,
+            };
+          })
+          .filter(Boolean);
 
         setMenu(items);
         setFilteredMenu(items);
@@ -275,6 +330,46 @@ export default function Order() {
 
     fetchStoreMenu();
   }, [store?.id]);
+
+  useEffect(() => {
+    if (loading || menu.length === 0 || cart.length === 0) return;
+
+    setCart((prevCart) => {
+      const menuMap = new Map(menu.map((item) => [item.id, item]));
+
+      return prevCart
+        .filter((cartItem) => {
+          const menuItem = menuMap.get(cartItem.id);
+
+          if (!menuItem) return false;
+          if (menuItem.available === false) return false;
+          if (Number(menuItem.stock || 0) <= 0) return false;
+
+          return true;
+        })
+        .map((cartItem) => {
+          const menuItem = menuMap.get(cartItem.id);
+
+          const safeQuantity = Math.min(
+            Number(cartItem.quantity || 1),
+            Number(menuItem.stock || 1)
+          );
+
+          return {
+            ...cartItem,
+            price: menuItem.price,
+            stock: menuItem.stock,
+            category: menuItem.category,
+            tags: menuItem.tags,
+            quantity: safeQuantity,
+            currency: {
+              code: storeCurrencyCode,
+              locale: storeCurrencyLocale,
+            },
+          };
+        });
+    });
+  }, [loading, menu, cart.length, storeCurrencyCode, storeCurrencyLocale]);
 
   useEffect(() => {
     if (store?.id) {
@@ -347,7 +442,7 @@ export default function Order() {
 
         <div className="flex gap-x-3">
           <div className="lg:w-200">
-            <div className="mb- w-fit mb-19 mx-auto">
+            <div className="w-fit mb-19 mx-auto">
               <ul className="steps font-bold">
                 <li className="step step-primary">Select store</li>
                 <li className="step step-primary">Select Product</li>
@@ -404,6 +499,7 @@ export default function Order() {
                   const isOutOfStock =
                     item.stock <= 0 || item.available === false;
                   const isLowStock = item.stock > 0 && item.stock <= 5;
+
                   return (
                     <div
                       key={item.id}
@@ -418,7 +514,11 @@ export default function Order() {
                       <div className="flex items-center gap-2 overflow-hidden">
                         <div className="flex-1 flex flex-col gap-2">
                           <p className="font-black text-lime-600 text-3xl">
-                            ${item.price}
+                            {formatMoney(
+                              item.price,
+                              storeCurrencyCode,
+                              storeCurrencyLocale
+                            )}
                           </p>
 
                           <div className="flex gap-2 flex-wrap min-h-[24px]">
@@ -445,12 +545,14 @@ export default function Order() {
                               {item.stock} available
                             </span>
                           )}
+
                           <p className="font-light text-sm line-clamp-2">
                             {item.description}
                           </p>
 
                           <div className="flex gap-2 items-center mt-2 w-fit">
                             <button
+                              type="button"
                               disabled={isOutOfStock}
                               onClick={() => openModal(item)}
                               className="font-bold border-0 badge py-4 rounded-xl bg-lime-300 hover:bg-lime-400 transition-colors hover:cursor-pointer text-sm disabled:opacity-50 disabled:cursor-not-allowed"
@@ -504,12 +606,20 @@ export default function Order() {
                     <div className="w-60 px-2">
                       <div className="font-bold truncate">{item.name}</div>
                       <div className="text-xs uppercase font-semibold opacity-60 truncate">
-                        {item.tags?.[0] || "Beverage"}
+                        {item.tags?.[0] || "Item"}
+                      </div>
+                      <div className="text-xs font-bold opacity-70">
+                        {formatMoney(
+                          Number(item.price || 0) * Number(item.quantity || 0),
+                          storeCurrencyCode,
+                          storeCurrencyLocale
+                        )}
                       </div>
                     </div>
 
                     <div className="flex items-center gap-1 font-bold">
                       <button
+                        type="button"
                         onClick={() => updateCartQuantity(item.id, -1)}
                         className="btn btn-circle h-7 w-7 btn-ghost bg-lime-200"
                       >
@@ -517,6 +627,7 @@ export default function Order() {
                       </button>
 
                       <button
+                        type="button"
                         onClick={() => updateCartQuantity(item.id, 1)}
                         className="btn btn-circle h-7 w-7 btn-ghost bg-lime-200"
                       >
@@ -525,6 +636,7 @@ export default function Order() {
                     </div>
 
                     <button
+                      type="button"
                       onClick={() => removeFromCart(item.id)}
                       className="btn btn-square btn-ghost text-error"
                     >
@@ -538,11 +650,18 @@ export default function Order() {
 
               <li className="flex mx-5 mt-6 justify-between border-t border-gray-300 pt-4">
                 <p className="text-lg">Total</p>
-                <p className="font-bold text-lg">${subTotal.toFixed(2)}</p>
+                <p className="font-bold text-lg">
+                  {formatMoney(
+                    subTotal,
+                    storeCurrencyCode,
+                    storeCurrencyLocale
+                  )}
+                </p>
               </li>
 
               <div className="flex justify-center mt-4">
                 <button
+                  type="button"
                   onClick={handleCheckout}
                   disabled={cart.length === 0}
                   className="btn btn-primary my-4 rounded-full w-70 mx-auto disabled:opacity-50 disabled:cursor-not-allowed"
@@ -589,6 +708,7 @@ export default function Order() {
 
               <div className="flex items-center gap-6 bg-gray-100 p-2 rounded-2xl mb-6">
                 <button
+                  type="button"
                   onClick={decreaseQty}
                   className="btn btn-circle btn-sm bg-white border-none shadow-sm hover:bg-gray-200"
                 >
@@ -598,6 +718,7 @@ export default function Order() {
                 <span className="text-2xl font-bold w-8">{quantity}</span>
 
                 <button
+                  type="button"
                   onClick={increaseQty}
                   className="btn btn-circle btn-sm bg-lime-300 border-none shadow-sm hover:bg-lime-400"
                 >
@@ -607,12 +728,17 @@ export default function Order() {
 
               <div className="card-actions w-full">
                 <button
+                  type="button"
                   onClick={addToCart}
                   className="btn btn-primary w-full rounded-xl text-lg flex justify-between px-8"
                 >
                   <span>Add to Cart</span>
                   <span className="opacity-70">
-                    ${(activeItem?.price * quantity).toFixed(2)}
+                    {formatMoney(
+                      Number(activeItem?.price || 0) * quantity,
+                      storeCurrencyCode,
+                      storeCurrencyLocale
+                    )}
                   </span>
                 </button>
               </div>

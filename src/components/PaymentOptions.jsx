@@ -12,7 +12,7 @@ export const PaymentMethod = ({ onSelect }) => {
     <div className="mt-10 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 bg-white  rounded-4xl p-7">
       <p className="font-bold text-lg">Payment Method</p>
       <div className="flex">
-        <div className="flex flex-col gap-4">
+        <div className="flex  gap-4">
           {/* Debit Card Option */}
           <button
             onClick={() => setSelected("card")}
