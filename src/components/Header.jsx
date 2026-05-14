@@ -1,14 +1,73 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { auth } from "../firebase.js";
+import { auth, db } from "../firebase.js";
 import { signOut } from "firebase/auth";
+import { collection, onSnapshot } from "firebase/firestore";
 import { useAuth } from "../hooks/useAuth";
 import { toast } from "sonner";
 
+const getGuestCartCount = () => {
+  let count = 0;
+
+  Object.keys(localStorage).forEach((key) => {
+    if (!key.startsWith("cart_store_")) return;
+
+    try {
+      const cartItems = JSON.parse(localStorage.getItem(key) || "[]");
+
+      count += cartItems.reduce((total, item) => {
+        return total + Number(item.quantity || 0);
+      }, 0);
+    } catch (error) {
+      console.error("Could not read local cart:", error);
+    }
+  });
+
+  return count;
+};
+
 export default function Header() {
   const [signingOut, setSigningOut] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+
   const { user, userInfo, userInfoLoading } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user?.uid) {
+      const updateGuestCartCount = () => {
+        setCartCount(getGuestCartCount());
+      };
+
+      updateGuestCartCount();
+
+      window.addEventListener("storage", updateGuestCartCount);
+      window.addEventListener("maple-cart-updated", updateGuestCartCount);
+
+      return () => {
+        window.removeEventListener("storage", updateGuestCartCount);
+        window.removeEventListener("maple-cart-updated", updateGuestCartCount);
+      };
+    }
+
+    const cartsRef = collection(db, "users", user.uid, "carts");
+
+    const unsubscribe = onSnapshot(cartsRef, (snapshot) => {
+      const totalItems = snapshot.docs.reduce((total, cartDoc) => {
+        const items = cartDoc.data()?.items || [];
+
+        const cartTotal = items.reduce((sum, item) => {
+          return sum + Number(item.quantity || 0);
+        }, 0);
+
+        return total + cartTotal;
+      }, 0);
+
+      setCartCount(totalItems);
+    });
+
+    return () => unsubscribe();
+  }, [user?.uid]);
 
   const handleSignOut = async () => {
     if (!window.navigator.onLine) {
@@ -17,6 +76,7 @@ export default function Header() {
     }
 
     setSigningOut(true);
+
     try {
       await signOut(auth);
       localStorage.clear();
@@ -30,6 +90,7 @@ export default function Header() {
       setSigningOut(false);
     }
   };
+
   return (
     <header className="flex justify-center pt-3 mb-20">
       <nav className="navbar max-w-screen-xl w-[95%] lg:w-[90%] mx-auto px-4 sm:px-6 lg:px-8 bg-white/30 backdrop-blur-lg rounded-3xl py-3 pe-5 fixed z-10">
@@ -52,6 +113,7 @@ export default function Header() {
                 />
               </svg>
             </div>
+
             <ul
               tabIndex={0}
               className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
@@ -59,6 +121,7 @@ export default function Header() {
               <li>
                 <NavLink to="/">Home</NavLink>
               </li>
+
               <li>
                 <a>Services</a>
                 <ul className="p-2">
@@ -68,8 +131,12 @@ export default function Header() {
                   <li>
                     <NavLink to="/stores">Our Store</NavLink>
                   </li>
+                  <li>
+                    <NavLink to="/cart">Cart</NavLink>
+                  </li>
                 </ul>
               </li>
+
               <li>
                 <a>Contact</a>
               </li>
@@ -83,6 +150,7 @@ export default function Header() {
                 Home
               </NavLink>
             </li>
+
             <li className="font-bold btn-ghost rounded-lg list-none">
               <div className="dropdown dropdown-hover group h-[34px] flex items-center">
                 <div
@@ -106,6 +174,7 @@ export default function Header() {
                     />
                   </svg>
                 </div>
+
                 <div className="dropdown-content z-[1] pt-4 w-full top-[25px] right-2 bg-transparent">
                   <ul className="menu p-2 shadow bg-base-100 rounded-box min-w-45 mx-0 border-none before:hidden">
                     <li>
@@ -118,6 +187,7 @@ export default function Header() {
                 </div>
               </div>
             </li>
+
             <li>
               <a className="font-bold">Contact</a>
             </li>
@@ -140,12 +210,48 @@ export default function Header() {
           <button className="avatar aspect-square border rounded-full border-black w-11 hidden lg:flex justify-center items-center">
             <i className="bx bx-search"></i>
           </button>
-          <NavLink
-            to="/order"
-            className="avatar aspect-square border rounded-full border-black w-11 hidden lg:flex justify-center items-center"
-          >
-            <i className="bx bx-cart"></i>
-          </NavLink>
+
+          {/* Cart Dropdown */}
+          <div className="dropdown dropdown-end hidden lg:block">
+            <div
+              tabIndex={0}
+              role="button"
+              className="avatar aspect-square border rounded-full border-black w-11 flex justify-center items-center relative cursor-pointer"
+              aria-label={`Cart with ${cartCount} item(s)`}
+            >
+              <i className="bx bx-cart"></i>
+
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-error text-white text-[11px] font-black flex items-center justify-center">
+                  {cartCount > 99 ? "99+" : cartCount}
+                </span>
+              )}
+            </div>
+
+            <div
+              tabIndex={0}
+              className="card card-compact dropdown-content bg-base-100 z-[50] mt-4 w-64 shadow-xl"
+            >
+              <div className="card-body">
+                <span className="text-lg font-bold">
+                  {cartCount} {cartCount === 1 ? "Item" : "Items"}
+                </span>
+
+                <span className="text-sm text-gray-500">
+                  {cartCount > 0
+                    ? "You have items waiting in your cart."
+                    : "Your cart is currently empty."}
+                </span>
+
+                <div className="card-actions mt-3">
+                  <NavLink to="/cart" className="btn btn-primary btn-block">
+                    View cart
+                  </NavLink>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {userInfoLoading ? (
             <div className="flex items-center justify-center w-11 h-11">
               <span className="loading loading-spinner loading-sm opacity-30"></span>
@@ -158,6 +264,7 @@ export default function Header() {
               >
                 Login
               </NavLink>
+
               <NavLink
                 to="/signup"
                 className="btn btn-primary btn-sm rounded-xl font-bold px-5"
@@ -180,7 +287,7 @@ export default function Header() {
               >
                 <NavLink
                   to="/account"
-                  className="flex items-center gap-x-2 group hover:bg-base-200/50  px-4 py-3 rounded-lg transition-colors"
+                  className="flex items-center gap-x-2 group hover:bg-base-200/50 px-4 py-3 rounded-lg transition-colors"
                 >
                   <div className="avatar placeholder">
                     <div className="bg-black text-white rounded-full w-12 aspect-square text-center">
@@ -217,8 +324,10 @@ export default function Header() {
                         `${userInfo.state}, ${userInfo.country}`}
                     </p>
                   </div>
+
                   <i className="bx bx-pencil bx-xs ms-auto"></i>
                 </NavLink>
+
                 <hr className="opacity-10" />
 
                 <ul className="flex flex-col gap-y-2 mt-2 font-semibold px-2">
@@ -228,37 +337,44 @@ export default function Header() {
                       Orders
                     </a>
                   </li>
+
+                  
                   <li>
                     <a>
                       <i className="bx bx-xs bx-calendar-check"></i>
                       Bookings
                     </a>
                   </li>
+
                   <li>
                     <a>
                       <i className="bx bx-xs bx-book-bookmark"></i>
                       Library
                     </a>
                   </li>
+
                   <li>
                     <a>
                       <i className="bx bx-xs bx-help-circle"></i>
                       Help Center
                     </a>
                   </li>
+
                   <li>
                     <a>
                       <i className="bx bx-xs bx-cog"></i>
                       Account Settings
                     </a>
-                  </li>{" "}
+                  </li>
+
                   <li>
                     <button
                       onClick={handleSignOut}
                       className="text-error font-bold hover:bg-error/10"
                       disabled={signingOut}
                     >
-                      <i className="bx bx-xs bx-log-out"></i> Sign Out
+                      <i className="bx bx-xs bx-log-out"></i>{" "}
+                      {signingOut ? "Signing Out..." : "Sign Out"}
                     </button>
                   </li>
                 </ul>

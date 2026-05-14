@@ -7,6 +7,7 @@ import Home from "./components/Home";
 import Account from "./components/updateAccountPage/Account";
 import Main from "./components/Main";
 import Order from "./components/Order";
+import Cart from "./components/Cart";
 import Stores from "./components/Stores";
 import Checkout from "./components/Checkout";
 import SimpleLayout from "./components/SimpleLayout";
@@ -29,6 +30,7 @@ function App() {
             <Route path="/signin" element={<SignIn />} />
             <Route path="/account" element={<Account />} />
             <Route path="/stores" element={<Stores />} />
+            <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
           </Route>
         </Routes>
