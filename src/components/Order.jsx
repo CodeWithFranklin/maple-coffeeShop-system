@@ -19,6 +19,85 @@ const formatMoney = (amount, currencyCode = "USD", locale = "en-US") => {
   }).format(Number(amount || 0));
 };
 
+const buildCartSummary = ({ cart, menu }) => {
+  const menuMap = new Map(menu.map((item) => [item.id, item]));
+
+  const items = cart.map((cartItem) => {
+    const menuItem = menuMap.get(cartItem.id);
+
+    if (!menuItem) {
+      return {
+        ...cartItem,
+        blocked: true,
+        blockReason: "This item is no longer available at this store.",
+      };
+    }
+
+    const stock = Number(menuItem.stock || 0);
+    const quantity = Number(cartItem.quantity || 1);
+
+    if (menuItem.available === false) {
+      return {
+        ...cartItem,
+        ...menuItem,
+        quantity,
+        blocked: true,
+        blockReason: "This item is currently unavailable.",
+      };
+    }
+
+    if (stock <= 0) {
+      return {
+        ...cartItem,
+        ...menuItem,
+        quantity,
+        blocked: true,
+        blockReason: "This item is out of stock.",
+      };
+    }
+
+    if (quantity > stock) {
+      return {
+        ...cartItem,
+        ...menuItem,
+        quantity,
+        blocked: true,
+        blockReason: `Only ${stock} unit(s) available. Reduce the quantity or remove it.`,
+      };
+    }
+
+    return {
+      ...cartItem,
+      ...menuItem,
+      quantity,
+      blocked: false,
+      blockReason: "",
+    };
+  });
+
+  const validItems = items.filter((item) => !item.blocked);
+  const blockedItems = items.filter((item) => item.blocked);
+
+  const subtotal = validItems.reduce(
+    (acc, item) => acc + Number(item.price || 0) * Number(item.quantity || 0),
+    0
+  );
+
+  const itemCount = items.reduce(
+    (acc, item) => acc + Number(item.quantity || 0),
+    0
+  );
+
+  return {
+    items,
+    validItems,
+    blockedItems,
+    subtotal,
+    itemCount,
+    canCheckout: validItems.length > 0 && blockedItems.length === 0,
+  };
+};
+
 export default function Order() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -51,16 +130,18 @@ export default function Order() {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const cartSummary = useMemo(() => {
+    return buildCartSummary({
+      cart,
+      menu,
+    });
+  }, [cart, menu]);
+
   const categories = useMemo(() => {
     return ["All", ...new Set(menu.flatMap((item) => item.tags || []))];
   }, [menu]);
 
-  const subTotal = useMemo(() => {
-    return cart.reduce(
-      (acc, item) => acc + Number(item.price || 0) * Number(item.quantity || 0),
-      0
-    );
-  }, [cart]);
+  const subTotal = cartSummary.subtotal;
 
   const openModal = useCallback((item) => {
     if (item.stock <= 0 || item.available === false) return;
@@ -99,6 +180,8 @@ export default function Order() {
                 quantity: newQuantity,
                 price: activeItem.price,
                 stock: activeItem.stock,
+                name: activeItem.name,
+                img: activeItem.img,
                 category: activeItem.category,
                 tags: activeItem.tags,
                 currency: {
@@ -167,9 +250,19 @@ export default function Order() {
         if (item.id !== productId) return item;
 
         const menuItem = menu.find((product) => product.id === productId);
-        const stock = menuItem?.stock ?? item.stock ?? 0;
 
-        const newQty = item.quantity + amount;
+        if (!menuItem) {
+          alert("This item is no longer available at this store.");
+          return item;
+        }
+
+        if (menuItem.available === false || Number(menuItem.stock || 0) <= 0) {
+          alert("This item is currently unavailable.");
+          return item;
+        }
+
+        const stock = Number(menuItem.stock || 0);
+        const newQty = Number(item.quantity || 1) + amount;
 
         if (newQty < 1) {
           return { ...item, quantity: 1 };
@@ -180,7 +273,20 @@ export default function Order() {
           return item;
         }
 
-        return { ...item, quantity: newQty };
+        return {
+          ...item,
+          quantity: newQty,
+          price: menuItem.price,
+          stock: menuItem.stock,
+          name: menuItem.name,
+          img: menuItem.img,
+          category: menuItem.category,
+          tags: menuItem.tags,
+          currency: {
+            code: storeCurrencyCode,
+            locale: storeCurrencyLocale,
+          },
+        };
       })
     );
   };
@@ -208,11 +314,8 @@ export default function Order() {
             },
             items: cart,
             lastUpdated: new Date().toISOString(),
-            cartTotal: cart.reduce(
-              (acc, item) =>
-                acc + Number(item.price || 0) * Number(item.quantity || 0),
-              0
-            ),
+            cartTotal: cartSummary.subtotal,
+            hasBlockedItems: cartSummary.blockedItems.length > 0,
           },
           { merge: true }
         );
@@ -224,6 +327,8 @@ export default function Order() {
     syncCartToDB();
   }, [
     cart,
+    cartSummary.subtotal,
+    cartSummary.blockedItems.length,
     user?.uid,
     store?.id,
     store?.name,
@@ -232,7 +337,7 @@ export default function Order() {
   ]);
 
   const handleCheckout = () => {
-    if (cart.length === 0) return;
+    if (!cartSummary.canCheckout) return;
 
     if (!user) {
       localStorage.setItem("last_active_store_id", store.id);
@@ -243,8 +348,8 @@ export default function Order() {
 
     navigate("/checkout", {
       state: {
-        total: subTotal,
-        cartItems: cart,
+        total: cartSummary.subtotal,
+        cartItems: cartSummary.validItems,
         selectedStore: store,
       },
     });
@@ -330,46 +435,6 @@ export default function Order() {
 
     fetchStoreMenu();
   }, [store?.id]);
-
-  useEffect(() => {
-    if (loading || menu.length === 0 || cart.length === 0) return;
-
-    setCart((prevCart) => {
-      const menuMap = new Map(menu.map((item) => [item.id, item]));
-
-      return prevCart
-        .filter((cartItem) => {
-          const menuItem = menuMap.get(cartItem.id);
-
-          if (!menuItem) return false;
-          if (menuItem.available === false) return false;
-          if (Number(menuItem.stock || 0) <= 0) return false;
-
-          return true;
-        })
-        .map((cartItem) => {
-          const menuItem = menuMap.get(cartItem.id);
-
-          const safeQuantity = Math.min(
-            Number(cartItem.quantity || 1),
-            Number(menuItem.stock || 1)
-          );
-
-          return {
-            ...cartItem,
-            price: menuItem.price,
-            stock: menuItem.stock,
-            category: menuItem.category,
-            tags: menuItem.tags,
-            quantity: safeQuantity,
-            currency: {
-              code: storeCurrencyCode,
-              locale: storeCurrencyLocale,
-            },
-          };
-        });
-    });
-  }, [loading, menu, cart.length, storeCurrencyCode, storeCurrencyLocale]);
 
   useEffect(() => {
     if (store?.id) {
@@ -582,21 +647,34 @@ export default function Order() {
           <div className="lg:w-100 mx-auto relative">
             <ul className="list bg-base-100 rounded-3xl shadow-md w-85 sticky top-29 mx-auto pb-4">
               <li className="p-4 pb-2 text-lg font-extrabold opacity-60 tracking-wide">
-                Order Summary ({cart.length})
+                Order Summary ({cartSummary.itemCount})
               </li>
 
-              {cart.length === 0 ? (
+              {cartSummary.blockedItems.length > 0 && (
+                <li className="mx-4 mb-2 rounded-2xl bg-red-50 text-red-700 p-3 text-xs font-semibold">
+                  Some items are no longer available. Please remove or update
+                  them before checkout.
+                </li>
+              )}
+
+              {cartSummary.items.length === 0 ? (
                 <li className="p-2 text-center opacity-40 font-bold">
                   Your cart is empty
                 </li>
               ) : (
-                cart.map((item) => (
+                cartSummary.items.map((item) => (
                   <li
                     key={item.id}
-                    className="list-row flex items-center px-4 py-2"
+                    className={`list-row flex items-center px-4 py-2 ${
+                      item.blocked ? "opacity-60" : ""
+                    }`}
                   >
                     <div className="avatar avatar-placeholder">
-                      <div className="bg-red-100 font-bold text-neutral-content w-10 rounded-full">
+                      <div
+                        className={`font-bold text-neutral-content w-10 rounded-full ${
+                          item.blocked ? "bg-red-200" : "bg-red-100"
+                        }`}
+                      >
                         <span className="text-md text-error">
                           {item.quantity}x
                         </span>
@@ -605,9 +683,11 @@ export default function Order() {
 
                     <div className="w-60 px-2">
                       <div className="font-bold truncate">{item.name}</div>
+
                       <div className="text-xs uppercase font-semibold opacity-60 truncate">
                         {item.tags?.[0] || "Item"}
                       </div>
+
                       <div className="text-xs font-bold opacity-70">
                         {formatMoney(
                           Number(item.price || 0) * Number(item.quantity || 0),
@@ -615,13 +695,20 @@ export default function Order() {
                           storeCurrencyLocale
                         )}
                       </div>
+
+                      {item.blocked && (
+                        <div className="text-[10px] font-bold text-red-600 mt-1 leading-tight">
+                          {item.blockReason}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-1 font-bold">
                       <button
                         type="button"
                         onClick={() => updateCartQuantity(item.id, -1)}
-                        className="btn btn-circle h-7 w-7 btn-ghost bg-lime-200"
+                        disabled={item.blocked && item.blockReason !== ""}
+                        className="btn btn-circle h-7 w-7 btn-ghost bg-lime-200 disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <i className="bx bx-minus"></i>
                       </button>
@@ -629,7 +716,8 @@ export default function Order() {
                       <button
                         type="button"
                         onClick={() => updateCartQuantity(item.id, 1)}
-                        className="btn btn-circle h-7 w-7 btn-ghost bg-lime-200"
+                        disabled={item.blocked}
+                        className="btn btn-circle h-7 w-7 btn-ghost bg-lime-200 disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <i className="bx bx-plus"></i>
                       </button>
@@ -659,11 +747,17 @@ export default function Order() {
                 </p>
               </li>
 
+              {!cartSummary.canCheckout && cartSummary.items.length > 0 && (
+                <li className="mx-5 mt-3 text-xs font-semibold text-red-600">
+                  Remove unavailable items before checkout.
+                </li>
+              )}
+
               <div className="flex justify-center mt-4">
                 <button
                   type="button"
                   onClick={handleCheckout}
-                  disabled={cart.length === 0}
+                  disabled={!cartSummary.canCheckout}
                   className="btn btn-primary my-4 rounded-full w-70 mx-auto disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Order
