@@ -6,8 +6,8 @@ import { getFunctions, httpsCallable } from "firebase/functions";
 import { updateEmail, updateProfile } from "firebase/auth";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { auth, storage } from "../firebase.js";
-import { customAlert } from "../functions/customizeAlerts.js";
-import { profileSchema } from "../functions/validationSchema.js";
+import { customAlert } from "../utils/customizeAlerts.js";
+import { profileSchema } from "../utils/validationSchema.js";
 import locations from "../data/locations.json";
 
 const functions = getFunctions();

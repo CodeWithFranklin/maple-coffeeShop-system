@@ -7,11 +7,11 @@ import {
   EmailAuthProvider,
 } from "firebase/auth";
 import { auth } from "../../firebase.js";
-import { customAlert } from "../../functions/customizeAlerts.js";
+import { customAlert } from "../../utils/customizeAlerts.js";
 import {
     passwordChangeSchema
     
-} from "../../functions/validationSchema.js";
+} from "../../utils/validationSchema.js";
  
 export default function UpdatePassword({ user }) {
   const isGoogleUser = user?.providerData?.some(

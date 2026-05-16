@@ -1,109 +1,22 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useLocation, Navigate, useNavigate } from "react-router-dom";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { toast } from "sonner";
 import { db } from "../firebase";
 import { useAuth } from "../hooks/useAuth";
-import { useLocation, Navigate, useNavigate } from "react-router-dom";
-import {
-  collection,
-  getDocs,
-  query,
-  where,
-  setDoc,
-  doc,
-  deleteDoc,
-} from "firebase/firestore";
-
-const formatMoney = (amount, currencyCode = "USD", locale = "en-US") => {
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: currencyCode,
-  }).format(Number(amount || 0));
-};
-
-const buildCartSummary = ({ cart, menu }) => {
-  const menuMap = new Map(menu.map((item) => [item.id, item]));
-
-  const items = cart.map((cartItem) => {
-    const menuItem = menuMap.get(cartItem.id);
-
-    if (!menuItem) {
-      return {
-        ...cartItem,
-        blocked: true,
-        blockReason: "This item is no longer available at this store.",
-      };
-    }
-
-    const stock = Number(menuItem.stock || 0);
-    const quantity = Number(cartItem.quantity || 1);
-
-    if (menuItem.available === false) {
-      return {
-        ...cartItem,
-        ...menuItem,
-        quantity,
-        blocked: true,
-        blockReason: "This item is currently unavailable.",
-      };
-    }
-
-    if (stock <= 0) {
-      return {
-        ...cartItem,
-        ...menuItem,
-        quantity,
-        blocked: true,
-        blockReason: "This item is out of stock.",
-      };
-    }
-
-    if (quantity > stock) {
-      return {
-        ...cartItem,
-        ...menuItem,
-        quantity,
-        blocked: true,
-        blockReason: `Only ${stock} unit(s) available. Reduce the quantity or remove it.`,
-      };
-    }
-
-    return {
-      ...cartItem,
-      ...menuItem,
-      quantity,
-      blocked: false,
-      blockReason: "",
-    };
-  });
-
-  const validItems = items.filter((item) => !item.blocked);
-  const blockedItems = items.filter((item) => item.blocked);
-
-  const subtotal = validItems.reduce(
-    (acc, item) => acc + Number(item.price || 0) * Number(item.quantity || 0),
-    0
-  );
-
-  const itemCount = items.reduce(
-    (acc, item) => acc + Number(item.quantity || 0),
-    0
-  );
-
-  return {
-    items,
-    validItems,
-    blockedItems,
-    subtotal,
-    itemCount,
-    canCheckout: validItems.length > 0 && blockedItems.length === 0,
-  };
-};
+import { useStoreCart } from "../hooks/useStoreCart";
+import { formatMoney } from "../utils/cartUtils";
+import { savePendingStore } from "../utils/guestCartStorage";
 
 export default function Order() {
   const navigate = useNavigate();
   const location = useLocation();
+  const modalRef = useRef(null);
 
   const store = location.state?.selectedStore;
   const initialSearch = location.state?.autoSearch || "";
+  const autoSearchValue = location.state?.autoSearch;
+  const currentPath = location.pathname;
 
   const { user } = useAuth();
 
@@ -112,36 +25,41 @@ export default function Order() {
 
   const [loading, setLoading] = useState(true);
   const [menu, setMenu] = useState([]);
-  const [filteredMenu, setFilteredMenu] = useState([]);
   const [activeItem, setActiveItem] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [selectedCategory, setSelectedCategory] = useState("All");
 
-  const modalRef = useRef(null);
-
-  const autoSearchValue = location.state?.autoSearch;
-  const currentPath = location.pathname;
-
-  const [cart, setCart] = useState(() => {
-    if (!store?.id) return [];
-
-    const saved = localStorage.getItem(`cart_store_${store.id}`);
-    return saved ? JSON.parse(saved) : [];
+  const {
+    cartSummary,
+    cartLoading,
+    cartActionLoading,
+    addToCart,
+    removeFromCart,
+    updateCartQuantity,
+  } = useStoreCart({
+    user,
+    store,
+    inventoryItems: menu,
   });
-
-  const cartSummary = useMemo(() => {
-    return buildCartSummary({
-      cart,
-      menu,
-    });
-  }, [cart, menu]);
 
   const categories = useMemo(() => {
     return ["All", ...new Set(menu.flatMap((item) => item.tags || []))];
   }, [menu]);
 
-  const subTotal = cartSummary.subtotal;
+  const filteredMenu = useMemo(() => {
+    return menu.filter((item) => {
+      const categoryMatch =
+        selectedCategory === "All" ||
+        (item.tags && item.tags.includes(selectedCategory));
+
+      const searchMatch = item.name
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
+      return categoryMatch && searchMatch;
+    });
+  }, [menu, searchTerm, selectedCategory]);
 
   const openModal = useCallback((item) => {
     if (item.stock <= 0 || item.available === false) return;
@@ -149,199 +67,87 @@ export default function Order() {
     setQuantity(1);
     setActiveItem(item);
 
-    if (modalRef.current) {
-      modalRef.current.showModal();
-    }
+    modalRef.current?.showModal();
   }, []);
 
-  const addToCart = useCallback(() => {
+  const closeModal = useCallback(() => {
+    modalRef.current?.close();
+  }, []);
+
+  const handleAddToCart = useCallback(async () => {
     if (!activeItem) return;
 
-    if (activeItem.stock <= 0 || activeItem.available === false) {
-      alert("This item is currently out of stock.");
+    const result = await addToCart({
+      item: activeItem,
+      quantity,
+    });
+
+    if (!result.success) {
+      toast.error(result.message);
       return;
     }
 
-    setCart((prevCart) => {
-      const existingItem = prevCart.find((item) => item.id === activeItem.id);
-      const existingQuantity = existingItem?.quantity || 0;
-      const newQuantity = existingQuantity + quantity;
+    toast.success("Item added to cart.");
+    closeModal();
+  }, [activeItem, addToCart, closeModal, quantity]);
 
-      if (newQuantity > activeItem.stock) {
-        alert(`Only ${activeItem.stock} unit(s) available.`);
-        return prevCart;
-      }
-
-      if (existingItem) {
-        return prevCart.map((item) =>
-          item.id === activeItem.id
-            ? {
-                ...item,
-                quantity: newQuantity,
-                price: activeItem.price,
-                stock: activeItem.stock,
-                name: activeItem.name,
-                img: activeItem.img,
-                category: activeItem.category,
-                tags: activeItem.tags,
-                currency: {
-                  code: storeCurrencyCode,
-                  locale: storeCurrencyLocale,
-                },
-              }
-            : item
-        );
-      }
-
-      return [
-        ...prevCart,
-        {
-          id: activeItem.id,
-          productId: activeItem.productId,
-          name: activeItem.name,
-          img: activeItem.img,
-          tags: activeItem.tags,
-          category: activeItem.category,
-          price: activeItem.price,
-          stock: activeItem.stock,
-          quantity,
-          currency: {
-            code: storeCurrencyCode,
-            locale: storeCurrencyLocale,
-          },
-        },
-      ];
-    });
-
-    if (modalRef.current) {
-      modalRef.current.close();
-    }
-  }, [activeItem, quantity, storeCurrencyCode, storeCurrencyLocale]);
-
-  const increaseQty = () => {
+  const increaseQty = useCallback(() => {
     if (!activeItem) return;
 
-    setQuantity((prev) => {
-      if (prev >= activeItem.stock) {
-        alert(`Only ${activeItem.stock} unit(s) available.`);
-        return prev;
+    setQuantity((previousQuantity) => {
+      if (previousQuantity >= Number(activeItem.stock || 0)) {
+        toast.error(`Only ${activeItem.stock} unit(s) available.`);
+        return previousQuantity;
       }
 
-      return prev + 1;
+      return previousQuantity + 1;
     });
-  };
+  }, [activeItem]);
 
-  const decreaseQty = () => {
-    setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
-  };
+  const decreaseQty = useCallback(() => {
+    setQuantity((previousQuantity) => {
+      return previousQuantity > 1 ? previousQuantity - 1 : 1;
+    });
+  }, []);
 
   const handleCategoryFilter = useCallback((tag) => {
     setSelectedCategory(tag);
     setSearchTerm("");
   }, []);
 
-  const removeFromCart = (productId) => {
-    setCart((prev) => prev.filter((item) => item.id !== productId));
-  };
+  const handleRemoveFromCart = useCallback(
+    async (productId) => {
+      const result = await removeFromCart(productId);
 
-  const updateCartQuantity = (productId, amount) => {
-    setCart((prev) =>
-      prev.map((item) => {
-        if (item.id !== productId) return item;
-
-        const menuItem = menu.find((product) => product.id === productId);
-
-        if (!menuItem) {
-          alert("This item is no longer available at this store.");
-          return item;
-        }
-
-        if (menuItem.available === false || Number(menuItem.stock || 0) <= 0) {
-          alert("This item is currently unavailable.");
-          return item;
-        }
-
-        const stock = Number(menuItem.stock || 0);
-        const newQty = Number(item.quantity || 1) + amount;
-
-        if (newQty < 1) {
-          return { ...item, quantity: 1 };
-        }
-
-        if (newQty > stock) {
-          alert(`Only ${stock} unit(s) available.`);
-          return item;
-        }
-
-        return {
-          ...item,
-          quantity: newQty,
-          price: menuItem.price,
-          stock: menuItem.stock,
-          name: menuItem.name,
-          img: menuItem.img,
-          category: menuItem.category,
-          tags: menuItem.tags,
-          currency: {
-            code: storeCurrencyCode,
-            locale: storeCurrencyLocale,
-          },
-        };
-      })
-    );
-  };
-
-  useEffect(() => {
-    const syncCartToDB = async () => {
-      if (!user?.uid || !store?.id) return;
-
-      try {
-        const cartRef = doc(db, "users", user.uid, "carts", store.id);
-
-        if (cart.length === 0) {
-          await deleteDoc(cartRef);
-          return;
-        }
-
-        await setDoc(
-          cartRef,
-          {
-            storeId: store.id,
-            storeName: store.name,
-            currency: {
-              code: storeCurrencyCode,
-              locale: storeCurrencyLocale,
-            },
-            items: cart,
-            lastUpdated: new Date().toISOString(),
-            cartTotal: cartSummary.subtotal,
-            hasBlockedItems: cartSummary.blockedItems.length > 0,
-          },
-          { merge: true }
-        );
-      } catch (err) {
-        console.error("DB Sync Error:", err);
+      if (!result.success) {
+        toast.error(result.message);
+        return;
       }
-    };
 
-    syncCartToDB();
-  }, [
-    cart,
-    cartSummary.subtotal,
-    cartSummary.blockedItems.length,
-    user?.uid,
-    store?.id,
-    store?.name,
-    storeCurrencyCode,
-    storeCurrencyLocale,
-  ]);
+      toast.success("Item removed from cart.");
+    },
+    [removeFromCart]
+  );
 
-  const handleCheckout = () => {
+  const handleUpdateCartQuantity = useCallback(
+    async (productId, amount) => {
+      const result = await updateCartQuantity({
+        productId,
+        amount,
+      });
+
+      if (!result.success) {
+        toast.error(result.message);
+      }
+    },
+    [updateCartQuantity]
+  );
+
+  const handleCheckout = useCallback(() => {
     if (!cartSummary.canCheckout) return;
 
     if (!user) {
-      localStorage.setItem("last_active_store_id", store.id);
-      localStorage.setItem("pending_store", JSON.stringify(store));
+      savePendingStore(store);
       navigate("/signup");
       return;
     }
@@ -353,7 +159,7 @@ export default function Order() {
         selectedStore: store,
       },
     });
-  };
+  }, [cartSummary, navigate, store, user]);
 
   useEffect(() => {
     const fetchStoreMenu = async () => {
@@ -409,25 +215,33 @@ export default function Order() {
             return {
               id: productId,
               productId,
-
-              name: product.name || "",
-              description: product.description || product.about || "",
-              about: product.about || product.description || "",
-              img: product.img || "",
-              tags: product.tags || [],
-              category: product.category || "",
-
+              name: inventory.name || product.name || "",
+              description:
+                inventory.description ||
+                product.description ||
+                product.about ||
+                "",
+              about:
+                inventory.about ||
+                inventory.description ||
+                product.about ||
+                product.description ||
+                "",
+              img: inventory.img || product.img || "",
+              tags: inventory.tags || product.tags || [],
+              category: inventory.category || product.category || "",
               price,
               stock,
               available,
+              isActive: inventory.isActive ?? true,
             };
           })
           .filter(Boolean);
 
         setMenu(items);
-        setFilteredMenu(items);
       } catch (error) {
         console.error("Error fetching store menu:", error);
+        toast.error("Failed to load store menu. Please refresh.");
       } finally {
         setLoading(false);
       }
@@ -435,29 +249,6 @@ export default function Order() {
 
     fetchStoreMenu();
   }, [store?.id]);
-
-  useEffect(() => {
-    if (store?.id) {
-      localStorage.setItem(`cart_store_${store.id}`, JSON.stringify(cart));
-      localStorage.setItem("pending_store", JSON.stringify(store));
-    }
-  }, [cart, store]);
-
-  useEffect(() => {
-    const filtered = menu.filter((item) => {
-      const categoryMatch =
-        selectedCategory === "All" ||
-        (item.tags && item.tags.includes(selectedCategory));
-
-      const searchMatch = item.name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-
-      return categoryMatch && searchMatch;
-    });
-
-    setFilteredMenu(filtered);
-  }, [searchTerm, menu, selectedCategory]);
 
   useEffect(() => {
     if (!loading && menu.length > 0 && autoSearchValue && modalRef.current) {
@@ -475,22 +266,25 @@ export default function Order() {
 
       navigate(currentPath, {
         replace: true,
-        state: { ...location.state, autoSearch: undefined },
+        state: {
+          ...location.state,
+          autoSearch: undefined,
+        },
       });
     }
   }, [
-    loading,
-    menu,
     autoSearchValue,
     currentPath,
+    loading,
+    location.state,
+    menu,
     navigate,
     openModal,
-    location.state,
   ]);
 
   if (!store) return <Navigate to="/stores" replace />;
 
-  if (loading) {
+  if (loading || cartLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <span className="loading loading-spinner loading-lg text-primary"></span>
@@ -544,7 +338,7 @@ export default function Order() {
                   type="search"
                   placeholder="Search menu..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(event) => setSearchTerm(event.target.value)}
                 />
               </label>
             </div>
@@ -587,9 +381,9 @@ export default function Order() {
                           </p>
 
                           <div className="flex gap-2 flex-wrap min-h-[24px]">
-                            {item.tags?.map((tag, tIndex) => (
+                            {item.tags?.map((tag, tagIndex) => (
                               <span
-                                key={tIndex}
+                                key={tagIndex}
                                 className="badge font-semibold text-[11px] px-2 py-1 rounded-full bg-white/50 border-0"
                               >
                                 {tag}
@@ -664,7 +458,7 @@ export default function Order() {
               ) : (
                 cartSummary.items.map((item) => (
                   <li
-                    key={item.id}
+                    key={item.productId || item.id}
                     className={`list-row flex items-center px-4 py-2 ${
                       item.blocked ? "opacity-60" : ""
                     }`}
@@ -706,8 +500,16 @@ export default function Order() {
                     <div className="flex items-center gap-1 font-bold">
                       <button
                         type="button"
-                        onClick={() => updateCartQuantity(item.id, -1)}
-                        disabled={item.blocked && item.blockReason !== ""}
+                        onClick={() =>
+                          handleUpdateCartQuantity(
+                            item.productId || item.id,
+                            -1
+                          )
+                        }
+                        disabled={
+                          cartActionLoading ||
+                          (item.blocked && item.blockReason !== "")
+                        }
                         className="btn btn-circle h-7 w-7 btn-ghost bg-lime-200 disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <i className="bx bx-minus"></i>
@@ -715,8 +517,10 @@ export default function Order() {
 
                       <button
                         type="button"
-                        onClick={() => updateCartQuantity(item.id, 1)}
-                        disabled={item.blocked}
+                        onClick={() =>
+                          handleUpdateCartQuantity(item.productId || item.id, 1)
+                        }
+                        disabled={cartActionLoading || item.blocked}
                         className="btn btn-circle h-7 w-7 btn-ghost bg-lime-200 disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <i className="bx bx-plus"></i>
@@ -725,8 +529,11 @@ export default function Order() {
 
                     <button
                       type="button"
-                      onClick={() => removeFromCart(item.id)}
-                      className="btn btn-square btn-ghost text-error"
+                      onClick={() =>
+                        handleRemoveFromCart(item.productId || item.id)
+                      }
+                      disabled={cartActionLoading}
+                      className="btn btn-square btn-ghost text-error disabled:opacity-40"
                     >
                       <svg width="18" height="18" fill="currentColor">
                         <path d="M6 7H5v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7H6zm10.618-3L15 2H9L7.382 4H3v2h18V4z"></path>
@@ -740,7 +547,7 @@ export default function Order() {
                 <p className="text-lg">Total</p>
                 <p className="font-bold text-lg">
                   {formatMoney(
-                    subTotal,
+                    cartSummary.subtotal,
                     storeCurrencyCode,
                     storeCurrencyLocale
                   )}
@@ -757,7 +564,7 @@ export default function Order() {
                 <button
                   type="button"
                   onClick={handleCheckout}
-                  disabled={!cartSummary.canCheckout}
+                  disabled={!cartSummary.canCheckout || cartActionLoading}
                   className="btn btn-primary my-4 rounded-full w-70 mx-auto disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Order
@@ -823,10 +630,11 @@ export default function Order() {
               <div className="card-actions w-full">
                 <button
                   type="button"
-                  onClick={addToCart}
-                  className="btn btn-primary w-full rounded-xl text-lg flex justify-between px-8"
+                  onClick={handleAddToCart}
+                  disabled={cartActionLoading}
+                  className="btn btn-primary w-full rounded-xl text-lg flex justify-between px-8 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <span>Add to Cart</span>
+                  <span>{cartActionLoading ? "Adding..." : "Add to Cart"}</span>
                   <span className="opacity-70">
                     {formatMoney(
                       Number(activeItem?.price || 0) * quantity,

@@ -1,13 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getRedirectResult, onAuthStateChanged } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { AuthContext } from "./AuthContext";
+import { migrateGuestCartToUser } from "../utils/migrateGuestCartToUser";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
   const [userInfoLoading, setUserInfoLoading] = useState(true);
+
+  const migratingUidRef = useRef(null);
 
   useEffect(() => {
     let unsubscribeAuth;
@@ -35,9 +38,27 @@ export function AuthProvider({ children }) {
                 setUserInfoLoading(false);
               }
             );
+
+            if (migratingUidRef.current !== currentUser.uid) {
+              migratingUidRef.current = currentUser.uid;
+
+              migrateGuestCartToUser(currentUser.uid)
+                .then((result) => {
+                  if (result.migratedItems > 0) {
+                    console.log(result.message);
+                  }
+                })
+                .catch((error) => {
+                  console.error("Guest cart migration failed:", error);
+                })
+                .finally(() => {
+                  migratingUidRef.current = null;
+                });
+            }
           } else {
             setUserInfo(null);
             setUserInfoLoading(false);
+            migratingUidRef.current = null;
           }
         });
       });

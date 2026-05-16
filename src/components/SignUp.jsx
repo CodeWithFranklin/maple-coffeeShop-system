@@ -7,9 +7,9 @@ import { auth } from "../firebase.js";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { AuthContext } from "../context/AuthContext.jsx";
-import { handleGoogleAuth } from "../functions/authHelpers.js";
-import { signUpSchema } from "../functions/validationSchema.js";
-import { customAlert } from "../functions/customizeAlerts.js";
+import { handleGoogleAuth } from "../utils/authHelpers.js";
+import { signUpSchema } from "../utils/validationSchema.js";
+import { customAlert } from "../utils/customizeAlerts.js";
 import locations from "../data/locations.json";
 
 const functions = getFunctions();

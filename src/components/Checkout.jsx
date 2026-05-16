@@ -13,7 +13,7 @@ import {
 import { db } from "../firebase";
 import { useAuth } from "../hooks/useAuth";
 import { PickupDetails, DeliveryDetails } from "./CheckoutPages";
-import { checkoutContactSchema } from "../functions/validationSchema";
+import { checkoutContactSchema } from "../utils/validationSchema";
 
 const formatMoney = (amount, currencyCode = "USD", locale = "en-US") => {
   return new Intl.NumberFormat(locale, {

@@ -3,10 +3,10 @@ import { useFormik } from "formik";
 import { useNavigate, Link } from "react-router-dom";
 import { auth } from "../firebase.js";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { handleGoogleAuth } from "../functions/authHelpers.js";
-import { signInSchema } from "../functions/validationSchema.js";
+import { handleGoogleAuth } from "../utils/authHelpers.js";
+import { signInSchema } from "../utils/validationSchema.js";
 import { toast } from "sonner";
-import { customAlert } from "../functions/customizeAlerts.js";
+import { customAlert } from "../utils/customizeAlerts.js";
 import { AuthContext } from "../context/AuthContext.jsx";
 
 export default function Login() {
