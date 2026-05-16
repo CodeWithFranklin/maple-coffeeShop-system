@@ -26,12 +26,33 @@ const getGuestCartCount = () => {
   return count;
 };
 
+const getInitials = ({ name, email }) => {
+  if (name) {
+    return name
+      .split(" ")
+      .slice(0, 2)
+      .map((item) => item.charAt(0).toUpperCase())
+      .join("");
+  }
+
+  return email?.charAt(0).toUpperCase() || "U";
+};
+
 export default function Header() {
   const [signingOut, setSigningOut] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [profileImageError, setProfileImageError] = useState(false);
 
   const { user, userInfo, userInfoLoading } = useAuth();
   const navigate = useNavigate();
+
+  const profilePhotoURL = userInfo?.photoURL || user?.photoURL;
+  const displayName = userInfo?.name || user?.displayName || "User";
+  const displayEmail = userInfo?.contactEmail || user?.email || "";
+
+  useEffect(() => {
+    setProfileImageError(false);
+  }, [profilePhotoURL]);
 
   useEffect(() => {
     if (!user?.uid) {
@@ -81,11 +102,11 @@ export default function Header() {
       await signOut(auth);
       localStorage.clear();
 
-      navigate("/signIn", { replace: true });
+      navigate("/signin", { replace: true });
 
       toast.success("You have been signed out.");
     } catch (error) {
-      toast.error("sign-out failed.");
+      toast.error("Sign-out failed.");
     } finally {
       setSigningOut(false);
     }
@@ -206,51 +227,29 @@ export default function Header() {
         </div>
 
         <div className="navbar-end flex items-center gap-2">
-          {/* Search and Cart Icons */}
-          <button className="avatar aspect-square border rounded-full border-black w-11 hidden lg:flex justify-center items-center">
+          {/* Search Icon */}
+          <button
+            type="button"
+            className="avatar aspect-square border rounded-full border-black w-11 hidden lg:flex justify-center items-center"
+            aria-label="Search"
+          >
             <i className="bx bx-search"></i>
           </button>
 
-          {/* Cart Dropdown */}
-          <div className="dropdown dropdown-end hidden lg:block">
-            <div
-              tabIndex={0}
-              role="button"
-              className="avatar aspect-square border rounded-full border-black w-11 flex justify-center items-center relative cursor-pointer"
-              aria-label={`Cart with ${cartCount} item(s)`}
-            >
-              <i className="bx bx-cart"></i>
+          {/* Cart Icon */}
+          <NavLink
+            to="/cart"
+            className="avatar aspect-square border rounded-full border-black w-11 hidden lg:flex justify-center items-center relative"
+            aria-label={`Cart with ${cartCount} item(s)`}
+          >
+            <i className="bx bx-cart"></i>
 
-              {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-error text-white text-[11px] font-black flex items-center justify-center">
-                  {cartCount > 99 ? "99+" : cartCount}
-                </span>
-              )}
-            </div>
-
-            <div
-              tabIndex={0}
-              className="card card-compact dropdown-content bg-base-100 z-[50] mt-4 w-64 shadow-xl"
-            >
-              <div className="card-body">
-                <span className="text-lg font-bold">
-                  {cartCount} {cartCount === 1 ? "Item" : "Items"}
-                </span>
-
-                <span className="text-sm text-gray-500">
-                  {cartCount > 0
-                    ? "You have items waiting in your cart."
-                    : "Your cart is currently empty."}
-                </span>
-
-                <div className="card-actions mt-3">
-                  <NavLink to="/cart" className="btn btn-primary btn-block">
-                    View cart
-                  </NavLink>
-                </div>
-              </div>
-            </div>
-          </div>
+            {cartCount > 0 && (
+              <span className="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-error text-white text-[11px] font-black flex items-center justify-center">
+                {cartCount > 99 ? "99+" : cartCount}
+              </span>
+            )}
+          </NavLink>
 
           {userInfoLoading ? (
             <div className="flex items-center justify-center w-11 h-11">
@@ -274,6 +273,7 @@ export default function Header() {
             </div>
           ) : (
             <div className="dropdown dropdown-end">
+              {/* Keep this as the user icon only. Do not replace with image. */}
               <div
                 tabIndex={0}
                 role="button"
@@ -281,6 +281,7 @@ export default function Header() {
               >
                 <i className="bx bx-user text-xl"></i>
               </div>
+
               <ul
                 tabIndex={0}
                 className="dropdown-content menu bg-base-100 rounded-box z-[1] w-85 p-0 pb-5 shadow mt-4"
@@ -289,36 +290,38 @@ export default function Header() {
                   to="/account"
                   className="flex items-center gap-x-2 group hover:bg-base-200/50 px-4 py-3 rounded-lg transition-colors"
                 >
+                  {/* Use profile image only inside the opened menu */}
                   <div className="avatar placeholder">
-                    <div className="bg-black text-white rounded-full w-12 aspect-square text-center">
-                      {user.photoURL ? (
+                    <div className="bg-black text-white rounded-full w-12 aspect-square text-center overflow-hidden flex items-center justify-center">
+                      {profilePhotoURL && !profileImageError ? (
                         <img
-                          src={user.photoURL}
+                          src={profilePhotoURL}
                           alt="Profile"
-                          className="rounded-full object-cover"
+                          referrerPolicy="no-referrer"
+                          className="rounded-full object-cover w-full h-full"
+                          onError={() => setProfileImageError(true)}
                         />
                       ) : (
-                        <div className="text-sm font-bold my-3">
-                          {user.displayName
-                            ? user.displayName
-                                .split(" ")
-                                .slice(0, 2)
-                                .map((n) => n.charAt(0).toUpperCase())
-                                .join("")
-                            : user.email.charAt(0).toUpperCase()}
+                        <div className="text-sm font-bold">
+                          {getInitials({
+                            name: displayName,
+                            email: displayEmail,
+                          })}
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="text-left cursor-pointer">
-                    <p className="text-[17px] font-semibold capitalize text-black group-hover:underline">
-                      {user?.displayName}
+                  <div className="text-left cursor-pointer min-w-0">
+                    <p className="text-[17px] font-semibold capitalize text-black group-hover:underline truncate">
+                      {displayName}
                     </p>
-                    <p className="font-medium text-[13px] text-gray-500 group-hover:underline">
-                      {user?.email}
+
+                    <p className="font-medium text-[13px] text-gray-500 group-hover:underline truncate">
+                      {displayEmail}
                     </p>
-                    <p className="font-medium capitalize text-sm text-black group-hover:underline">
+
+                    <p className="font-medium capitalize text-sm text-black group-hover:underline truncate">
                       {userInfo?.state &&
                         userInfo?.country &&
                         `${userInfo.state}, ${userInfo.country}`}
@@ -338,7 +341,18 @@ export default function Header() {
                     </a>
                   </li>
 
-                  
+                  <li>
+                    <NavLink to="/cart">
+                      <i className="bx bx-xs bx-cart"></i>
+                      Cart
+                      {cartCount > 0 && (
+                        <span className="badge badge-error badge-sm text-white ml-auto">
+                          {cartCount > 99 ? "99+" : cartCount}
+                        </span>
+                      )}
+                    </NavLink>
+                  </li>
+
                   <li>
                     <a>
                       <i className="bx bx-xs bx-calendar-check"></i>
@@ -349,7 +363,7 @@ export default function Header() {
                   <li>
                     <a>
                       <i className="bx bx-xs bx-book-bookmark"></i>
-                      Library
+                      Your Library
                     </a>
                   </li>
 
@@ -369,6 +383,7 @@ export default function Header() {
 
                   <li>
                     <button
+                      type="button"
                       onClick={handleSignOut}
                       className="text-error font-bold hover:bg-error/10"
                       disabled={signingOut}

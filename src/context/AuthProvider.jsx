@@ -18,6 +18,8 @@ export function AuthProvider({ children }) {
       .finally(() => {
         unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
           setUser(currentUser);
+          setUserInfoLoading(true);
+
           unsubscribeSnapshot?.();
 
           if (currentUser) {
@@ -29,6 +31,7 @@ export function AuthProvider({ children }) {
               },
               (error) => {
                 console.error("Snapshot error:", error.message);
+                setUserInfo(null);
                 setUserInfoLoading(false);
               }
             );
