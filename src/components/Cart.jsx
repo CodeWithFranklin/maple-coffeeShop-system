@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   collection,
   deleteDoc,
@@ -12,117 +12,98 @@ import {
   setDoc,
   where,
 } from "firebase/firestore";
+import { toast } from "sonner";
 import { db } from "../firebase";
 import { useAuth } from "../hooks/useAuth";
-import { toast } from "sonner";
+import {
+  buildCartSummary,
+  formatMoney,
+  getProductId,
+} from "../utils/cartUtils";
+import {
+  getAllGuestCarts,
+  saveGuestCart,
+  savePendingStore,
+} from "../utils/guestCartStorage";
 
-//  Helpers 
-const formatMoney = (amount, currencyCode = "USD", locale = "en-US") =>
-  new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: currencyCode,
-  }).format(Number(amount || 0));
+const fetchStoreAndInventoryGroups = async (rawCartGroups) => {
+  if (!rawCartGroups || rawCartGroups.length === 0) return [];
 
-const getProductId = (item) => item.productId || item.id;
+  const storeIds = rawCartGroups.map((group) => group.storeId).filter(Boolean);
 
-const buildCartSummary = ({ cartItems, inventoryItems }) => {
-  const inventoryMap = new Map(
-    inventoryItems.map((item) => [item.productId || item.id, item])
+  const storeSnaps = await Promise.all(
+    storeIds.map((storeId) => getDoc(doc(db, "stores", storeId)))
   );
 
-  const items = cartItems.map((cartItem) => {
-    const productId = getProductId(cartItem);
-    const inventoryItem = inventoryMap.get(productId);
-    const quantity = Number(cartItem.quantity || 1);
+  const storeMap = new Map(
+    storeSnaps
+      .filter((storeSnap) => storeSnap.exists())
+      .map((storeSnap) => [
+        storeSnap.id,
+        {
+          id: storeSnap.id,
+          ...storeSnap.data(),
+        },
+      ])
+  );
 
-    if (!inventoryItem) {
-      return {
-        ...cartItem,
-        id: productId,
-        productId,
-        name: cartItem.name || "Item",
-        img: cartItem.img || "",
-        price: Number(cartItem.price || 0),
-        quantity,
-        blocked: true,
-        blockReason: "This item is no longer available at this store.",
+  const cartGroups = await Promise.all(
+    rawCartGroups.map(async (group) => {
+      const storeId = group.storeId;
+      const cartItems = group.cartItems || [];
+
+      const store = storeMap.get(storeId) || {
+        id: storeId,
+        name: group.storeName || "Store",
+        currency: group.currency || {
+          code: "USD",
+          locale: "en-US",
+        },
       };
-    }
 
-    const stock = Number(inventoryItem.stock || 0);
-    const available = inventoryItem.available ?? stock > 0;
+      const productIds = cartItems.map(getProductId).filter(Boolean);
 
-    const currentItem = {
-      ...cartItem,
-      ...inventoryItem,
-      id: productId,
-      productId,
-      quantity,
-      price: Number(inventoryItem.price || 0),
-      lineTotal: Number(inventoryItem.price || 0) * quantity,
-    };
+      let inventoryItems = [];
 
-    if (inventoryItem.isActive === false) {
+      if (productIds.length > 0) {
+        const chunks = [];
+
+        for (let i = 0; i < productIds.length; i += 30) {
+          chunks.push(productIds.slice(i, i + 30));
+        }
+
+        const inventorySnaps = await Promise.all(
+          chunks.map((chunk) =>
+            getDocs(
+              query(
+                collection(db, "stores", storeId, "inventory"),
+                where(documentId(), "in", chunk)
+              )
+            )
+          )
+        );
+
+        inventoryItems = inventorySnaps
+          .flatMap((snap) => snap.docs)
+          .map((inventoryDoc) => ({
+            id: inventoryDoc.id,
+            productId: inventoryDoc.id,
+            ...inventoryDoc.data(),
+          }));
+      }
+
       return {
-        ...currentItem,
-        blocked: true,
-        blockReason: "This item is no longer active at this store.",
+        storeId,
+        store,
+        cartItems,
+        inventoryItems,
       };
-    }
+    })
+  );
 
-    if (!available) {
-      return {
-        ...currentItem,
-        blocked: true,
-        blockReason: "This item is currently unavailable.",
-      };
-    }
-
-    if (stock <= 0) {
-      return {
-        ...currentItem,
-        blocked: true,
-        blockReason: "This item is out of stock.",
-      };
-    }
-
-    if (quantity > stock) {
-      return {
-        ...currentItem,
-        blocked: true,
-        blockReason: `Only ${stock} unit(s) available. Reduce the quantity or remove it.`,
-      };
-    }
-
-    return {
-      ...currentItem,
-      blocked: false,
-      blockReason: "",
-    };
-  });
-
-  const validItems = items.filter((item) => !item.blocked);
-  const blockedItems = items.filter((item) => item.blocked);
-
-  const subtotal = validItems.reduce((acc, item) => {
-    return acc + Number(item.price || 0) * Number(item.quantity || 0);
-  }, 0);
-
-  const itemCount = items.reduce((acc, item) => {
-    return acc + Number(item.quantity || 0);
-  }, 0);
-
-  return {
-    items,
-    validItems,
-    blockedItems,
-    subtotal,
-    itemCount,
-    canCheckout: validItems.length > 0 && blockedItems.length === 0,
-  };
+  return cartGroups.filter((group) => group.cartItems.length > 0);
 };
 
-// Main Component 
 export default function Cart() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -131,99 +112,45 @@ export default function Cart() {
   const [storeCarts, setStoreCarts] = useState([]);
   const [updatingItems, setUpdatingItems] = useState(new Set());
 
-  //  Fetch Carts 
-  useEffect(() => {
-    const fetchUserCarts = async () => {
-      if (!user?.uid) return;
+  const isGuest = !user?.uid;
 
+  useEffect(() => {
+    const fetchCarts = async () => {
       setLoading(true);
 
       try {
-        const cartsSnapshot = await getDocs(
-          collection(db, "users", user.uid, "carts")
-        );
+        let rawCartGroups = [];
 
-        if (cartsSnapshot.empty) {
-          setStoreCarts([]);
-          return;
-        }
+        if (user?.uid) {
+          const cartsSnapshot = await getDocs(
+            collection(db, "users", user.uid, "carts")
+          );
 
-        const storeIds = cartsSnapshot.docs.map((cartDoc) => {
-          return cartDoc.data().storeId || cartDoc.id;
-        });
-
-        const storeSnaps = await Promise.all(
-          storeIds.map((storeId) => getDoc(doc(db, "stores", storeId)))
-        );
-
-        const storeMap = new Map(
-          storeSnaps
-            .filter((storeSnap) => storeSnap.exists())
-            .map((storeSnap) => [
-              storeSnap.id,
-              {
-                id: storeSnap.id,
-                ...storeSnap.data(),
-              },
-            ])
-        );
-
-        const cartGroups = await Promise.all(
-          cartsSnapshot.docs.map(async (cartDoc) => {
+          rawCartGroups = cartsSnapshot.docs.map((cartDoc) => {
             const cartData = cartDoc.data();
-            const storeId = cartData.storeId || cartDoc.id;
-            const cartItems = cartData.items || [];
 
-            const store = storeMap.get(storeId) || {
-              id: storeId,
-              name: cartData.storeName || "Store",
+            return {
+              storeId: cartData.storeId || cartDoc.id,
+              storeName: cartData.storeName || "Store",
               currency: cartData.currency || {
                 code: "USD",
                 locale: "en-US",
               },
+              cartItems: cartData.items || [],
             };
-
-            const productIds = cartItems.map(getProductId).filter(Boolean);
-
-            let inventoryItems = [];
-
-            if (productIds.length > 0) {
-              const chunks = [];
-
-              for (let i = 0; i < productIds.length; i += 30) {
-                chunks.push(productIds.slice(i, i + 30));
-              }
-
-              const inventorySnaps = await Promise.all(
-                chunks.map((chunk) =>
-                  getDocs(
-                    query(
-                      collection(db, "stores", storeId, "inventory"),
-                      where(documentId(), "in", chunk)
-                    )
-                  )
-                )
-              );
-
-              inventoryItems = inventorySnaps
-                .flatMap((snap) => snap.docs)
-                .map((inventoryDoc) => ({
-                  id: inventoryDoc.id,
-                  productId: inventoryDoc.id,
-                  ...inventoryDoc.data(),
-                }));
-            }
-
+          });
+        } else {
+          rawCartGroups = getAllGuestCarts().map((guestCart) => {
             return {
-              storeId,
-              store,
-              cartItems,
-              inventoryItems,
+              storeId: guestCart.storeId,
+              cartItems: guestCart.items || [],
             };
-          })
-        );
+          });
+        }
 
-        setStoreCarts(cartGroups.filter((cart) => cart.cartItems.length > 0));
+        const cartGroups = await fetchStoreAndInventoryGroups(rawCartGroups);
+
+        setStoreCarts(cartGroups);
       } catch (error) {
         console.error("Error loading carts:", error);
         toast.error("Failed to load your cart. Please refresh.");
@@ -232,10 +159,9 @@ export default function Cart() {
       }
     };
 
-    fetchUserCarts();
+    fetchCarts();
   }, [user?.uid]);
 
-  //  Derived Data 
   const cartGroups = useMemo(() => {
     return storeCarts.map((group) => {
       const summary = buildCartSummary({
@@ -275,10 +201,14 @@ export default function Cart() {
     }, 0);
   }, [cartGroups]);
 
-  //  Persist Cart 
   const persistCart = useCallback(
     async ({ storeId, nextItems }) => {
-      if (!user?.uid) return;
+      if (!storeId) return;
+
+      if (!user?.uid) {
+        saveGuestCart(storeId, nextItems);
+        return;
+      }
 
       const cartRef = doc(db, "users", user.uid, "carts", storeId);
 
@@ -306,10 +236,9 @@ export default function Cart() {
         { merge: true }
       );
     },
-    [user?.uid, storeCarts]
+    [storeCarts, user?.uid]
   );
 
-  //  Update Quantity 
   const updateCartQuantity = useCallback(
     async ({ storeId, productId, amount }) => {
       const itemKey = `${storeId}:${productId}`;
@@ -320,7 +249,7 @@ export default function Cart() {
       if (!group) return;
 
       const inventoryItem = group.inventoryItems.find((item) => {
-        return (item.productId || item.id) === productId;
+        return getProductId(item) === productId;
       });
 
       if (!inventoryItem) {
@@ -329,13 +258,20 @@ export default function Cart() {
       }
 
       const stock = Number(inventoryItem.stock || 0);
+      const available = inventoryItem.available ?? stock > 0;
+
+      if (!available || stock <= 0) {
+        toast.error("This item is currently unavailable.");
+        return;
+      }
+
       let blocked = false;
 
       const nextItems = group.cartItems.map((item) => {
         if (getProductId(item) !== productId) return item;
 
         const currentQuantity = Number(item.quantity || 1);
-        const nextQuantity = currentQuantity + amount;
+        const nextQuantity = currentQuantity + Number(amount || 0);
 
         if (nextQuantity < 1) {
           return {
@@ -352,6 +288,12 @@ export default function Cart() {
         return {
           ...item,
           quantity: nextQuantity,
+          price: Number(inventoryItem.price || 0),
+          stock: Number(inventoryItem.stock || 0),
+          name: inventoryItem.name || item.name || "",
+          img: inventoryItem.img || item.img || "",
+          category: inventoryItem.category || item.category || "",
+          tags: inventoryItem.tags || item.tags || [],
         };
       });
 
@@ -396,10 +338,9 @@ export default function Cart() {
         });
       }
     },
-    [storeCarts, updatingItems, persistCart]
+    [persistCart, storeCarts, updatingItems]
   );
 
-  //  Remove Item 
   const removeFromCart = useCallback(
     async ({ storeId, productId }) => {
       const group = storeCarts.find((cart) => cart.storeId === storeId);
@@ -435,10 +376,9 @@ export default function Cart() {
         console.error(error);
       }
     },
-    [storeCarts, persistCart]
+    [persistCart, storeCarts]
   );
 
-  //  Clear Store Cart 
   const clearStoreCart = useCallback(
     (storeId) => {
       toast("Clear this store cart?", {
@@ -452,9 +392,10 @@ export default function Cart() {
             );
 
             try {
-              if (user?.uid) {
-                await deleteDoc(doc(db, "users", user.uid, "carts", storeId));
-              }
+              await persistCart({
+                storeId,
+                nextItems: [],
+              });
             } catch (error) {
               setStoreCarts(previousCarts);
               toast.error("Failed to clear cart. Please try again.");
@@ -468,13 +409,19 @@ export default function Cart() {
         },
       });
     },
-    [storeCarts, user?.uid]
+    [persistCart, storeCarts]
   );
 
-  //  Checkout 
   const handleCheckout = useCallback(
     (group) => {
       if (!group.summary.canCheckout) return;
+
+      if (!user?.uid) {
+        savePendingStore(group.store);
+        toast.message("Please log in to continue checkout.");
+        navigate("/signin");
+        return;
+      }
 
       navigate("/checkout", {
         state: {
@@ -484,7 +431,7 @@ export default function Cart() {
         },
       });
     },
-    [navigate]
+    [navigate, user?.uid]
   );
 
   const handleContinueShopping = useCallback(
@@ -498,9 +445,6 @@ export default function Cart() {
     [navigate]
   );
 
-  //  Guards 
-  if (!user) return <Navigate to="/signin" replace />;
-
   if (loading) {
     return (
       <section className="min-h-screen flex items-center justify-center">
@@ -509,16 +453,16 @@ export default function Cart() {
     );
   }
 
-  //  Render 
   return (
     <section className="min-h-screen bg-gray-50/50">
       <div className="w-[90%] max-w-6xl mx-auto py-10">
-        {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
           <div>
-            <h1 className="text-4xl md:text-6xl font-black mt-1">
-              Your Cart
-            </h1>
+            <p className="text-sm font-bold text-green-700 uppercase tracking-wide">
+              Maple
+            </p>
+
+            <h1 className="text-4xl md:text-6xl font-black mt-1">Your Cart</h1>
 
             <p className="text-gray-500 mt-3 max-w-2xl">
               These are the items you added but have not checked out yet. Each
@@ -539,7 +483,16 @@ export default function Cart() {
           </div>
         </div>
 
-        {/* Empty State */}
+        {isGuest && cartGroups.length > 0 && (
+          <div className="mb-6 rounded-3xl bg-yellow-50 border border-yellow-100 text-yellow-800 p-5">
+            <p className="font-black">You are shopping as a guest.</p>
+            <p className="text-sm mt-1">
+              You can review and update your cart, but you need to log in before
+              checkout.
+            </p>
+          </div>
+        )}
+
         {cartGroups.length === 0 ? (
           <div className="bg-white border border-dashed border-gray-300 rounded-[32px] p-10 text-center">
             <div className="w-16 h-16 rounded-full bg-lime-100 mx-auto flex items-center justify-center">
@@ -562,7 +515,6 @@ export default function Cart() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Cart Groups */}
             <div className="lg:col-span-8 space-y-6">
               {cartGroups.map((group) => {
                 const currencyCode = group.store?.currency?.code || "USD";
@@ -573,7 +525,6 @@ export default function Cart() {
                     key={group.storeId}
                     className="bg-white rounded-[32px] shadow-sm border border-gray-100 overflow-hidden"
                   >
-                    {/* Store Header */}
                     <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                       <div>
                         <h2 className="text-2xl font-black">
@@ -606,7 +557,6 @@ export default function Cart() {
                       </div>
                     </div>
 
-                    {/* Blocked Items Warning */}
                     {group.summary.blockedItems.length > 0 && (
                       <div className="mx-6 mt-5 rounded-2xl bg-red-50 text-red-700 p-4 text-sm font-semibold">
                         Some items are no longer available. Remove or update
@@ -614,22 +564,19 @@ export default function Cart() {
                       </div>
                     )}
 
-                    {/* Items */}
                     <div className="divide-y divide-gray-100">
                       {group.summary.items.map((item) => {
-                        const itemKey = `${group.storeId}:${
-                          item.productId || item.id
-                        }`;
+                        const productId = item.productId || item.id;
+                        const itemKey = `${group.storeId}:${productId}`;
                         const isUpdating = updatingItems.has(itemKey);
 
                         return (
                           <div
-                            key={item.productId || item.id}
+                            key={productId}
                             className={`p-6 flex gap-4 items-center transition-opacity ${
                               item.blocked || isUpdating ? "opacity-70" : ""
                             }`}
                           >
-                            {/* Image */}
                             <div className="w-20 h-20 rounded-3xl overflow-hidden bg-gray-100 shrink-0">
                               {item.img ? (
                                 <img
@@ -644,7 +591,6 @@ export default function Cart() {
                               )}
                             </div>
 
-                            {/* Info */}
                             <div className="flex-1 min-w-0">
                               <p className="font-black text-lg truncate">
                                 {item.name}
@@ -670,7 +616,6 @@ export default function Cart() {
                               )}
                             </div>
 
-                            {/* Quantity + Remove */}
                             <div className="flex flex-col items-end gap-3">
                               <p className="font-black">
                                 {formatMoney(
@@ -687,7 +632,7 @@ export default function Cart() {
                                   onClick={() =>
                                     updateCartQuantity({
                                       storeId: group.storeId,
-                                      productId: item.productId || item.id,
+                                      productId,
                                       amount: -1,
                                     })
                                   }
@@ -710,7 +655,7 @@ export default function Cart() {
                                   onClick={() =>
                                     updateCartQuantity({
                                       storeId: group.storeId,
-                                      productId: item.productId || item.id,
+                                      productId,
                                       amount: 1,
                                     })
                                   }
@@ -730,7 +675,7 @@ export default function Cart() {
                                 onClick={() =>
                                   removeFromCart({
                                     storeId: group.storeId,
-                                    productId: item.productId || item.id,
+                                    productId,
                                   })
                                 }
                                 disabled={isUpdating}
@@ -744,7 +689,6 @@ export default function Cart() {
                       })}
                     </div>
 
-                    {/* Store Footer */}
                     <div className="p-6 bg-gray-50 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                       <div>
                         <p className="text-sm text-gray-400 font-bold">
@@ -766,7 +710,9 @@ export default function Cart() {
                         disabled={!group.summary.canCheckout}
                         className="btn btn-primary rounded-full px-8 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        Checkout {group.store?.name || "Store"}
+                        {isGuest
+                          ? "Log in to checkout"
+                          : `Checkout ${group.store?.name || "Store"}`}
                       </button>
                     </div>
                   </div>
@@ -774,7 +720,6 @@ export default function Cart() {
               })}
             </div>
 
-            {/* Summary Sidebar */}
             <aside className="lg:col-span-4">
               <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 sticky top-28">
                 <h3 className="font-black text-xl">Cart Summary</h3>
@@ -826,10 +771,22 @@ export default function Cart() {
                     </p>
                   </div>
 
+                  {isGuest && (
+                    <button
+                      type="button"
+                      onClick={() => navigate("/signin")}
+                      className="btn btn-primary rounded-full w-full mt-5"
+                    >
+                      Log in to checkout
+                    </button>
+                  )}
+
                   <button
                     type="button"
                     onClick={() => navigate("/stores")}
-                    className="btn btn-neutral rounded-full w-full mt-5"
+                    className={`btn btn-neutral rounded-full w-full ${
+                      isGuest ? "mt-2" : "mt-5"
+                    }`}
                   >
                     Continue Shopping
                   </button>
