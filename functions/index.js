@@ -1,3 +1,5 @@
+/* eslint-env node */
+/* global process */
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { getStorage } = require("firebase-admin/storage");
@@ -8,6 +10,24 @@ const crypto = require("crypto");
 initializeApp();
 
 const db = getFirestore();
+const getRequiredEnv = (key) => {
+  const value = process.env[key];
+
+  if (!value) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      `${key} is not configured.`
+    );
+  }
+
+  return value;
+};
+
+const getPaystackSecretKey = () => getRequiredEnv("PAYSTACK_SECRET_KEY");
+
+const getFrontendUrl = () => {
+  return process.env.FRONTEND_URL || "http://localhost:5173";
+};
 
 const normalizeProvider = (providerId) => {
   switch (providerId) {

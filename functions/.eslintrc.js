@@ -1,22 +1,27 @@
+/* eslint-env node */
+
 module.exports = {
+  root: true,
+
   env: {
-    root: true,
-    env: {
-      es6: true,
-      node: true,
-      commonjs: true,
-    },
-    extends: ["eslint:recommended", "google"],
+    es6: true,
+    node: true,
+    commonjs: true,
   },
+
   parserOptions: {
-    ecmaVersion: 2020,
+    ecmaVersion: 2022,
   },
+
   extends: ["eslint:recommended", "google"],
+
   rules: {
+    "require-jsdoc": "off",
     "no-restricted-globals": ["error", "name", "length"],
     "prefer-arrow-callback": "error",
     quotes: ["error", "double", { allowTemplateLiterals: true }],
   },
+
   overrides: [
     {
       files: ["**/*.spec.*"],
@@ -26,5 +31,4 @@ module.exports = {
       rules: {},
     },
   ],
-  globals: {},
 };
