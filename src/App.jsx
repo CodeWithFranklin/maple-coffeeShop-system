@@ -10,6 +10,7 @@ import Order from "./components/Order";
 import Cart from "./components/Cart";
 import Stores from "./components/Stores";
 import Checkout from "./components/Checkout";
+import PaymentCallback from "./components/PaymentCallback";
 import SimpleLayout from "./components/SimpleLayout";
 import ScrollToTop from "./components/ScrollToTop";
 
@@ -32,6 +33,7 @@ function App() {
             <Route path="/stores" element={<Stores />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/payment/callback" element={<PaymentCallback />} />
           </Route>
         </Routes>
       </AuthProvider>

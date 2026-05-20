@@ -2,15 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, Navigate } from "react-router-dom";
 import { useFormik } from "formik";
 import { toast } from "sonner";
-import {
-  addDoc,
-  collection,
-  doc,
-  getDoc,
-  serverTimestamp,
-  setDoc,
-} from "firebase/firestore";
-import { db } from "../firebase";
+import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
+import { httpsCallable } from "firebase/functions";
+import { db, functions } from "../firebase";
 import { useAuth } from "../hooks/useAuth";
 import { PickupDetails, DeliveryDetails } from "./CheckoutPages";
 import { checkoutContactSchema } from "../utils/validationSchema";
@@ -38,14 +32,6 @@ const isSavedAddressAllowedForStore = ({ address, store }) => {
   const allowedCities = store?.delivery?.cities || [];
 
   return address.state === lockedState && allowedCities.includes(address.city);
-};
-
-const getDeliveryCategory = (cartItems) => {
-  if (cartItems.some((item) => item.category === "food")) return "food";
-  if (cartItems.some((item) => item.category === "book")) return "book";
-  if (cartItems.some((item) => item.category === "drink")) return "drink";
-
-  return "default";
 };
 
 export default function Checkout() {
@@ -82,6 +68,10 @@ export default function Checkout() {
 
   const [paymentMethod, setPaymentMethod] = useState("card");
 
+  const createCheckoutOrder = useMemo(() => {
+    return httpsCallable(functions, "createCheckoutOrder");
+  }, []);
+
   const contactFormik = useFormik({
     initialValues: {
       fullName: userInfo?.name || user?.displayName || "",
@@ -111,13 +101,11 @@ export default function Checkout() {
     });
   }, [orderType, store, deliveryDetails]);
 
-  const total = useMemo(() => {
-    return subtotal + deliveryFee;
-  }, [subtotal, deliveryFee]);
+  const discountTotal = 0;
 
-  const deliveryCategory = useMemo(() => {
-    return getDeliveryCategory(cartItems);
-  }, [cartItems]);
+  const total = useMemo(() => {
+    return Math.max(subtotal - discountTotal + deliveryFee, 0);
+  }, [subtotal, deliveryFee]);
 
   useEffect(() => {
     const fetchDefaultAddress = async () => {
@@ -191,7 +179,7 @@ export default function Checkout() {
       );
     } catch (error) {
       console.error("Error saving address:", error);
-      toast.error("Could not save your address. Order will still be placed.");
+      toast.error("Could not save your address. Payment will still continue.");
     }
   }, [user?.uid, deliveryDetails, store]);
 
@@ -255,16 +243,10 @@ export default function Checkout() {
         await saveDefaultDeliveryAddress();
       }
 
-      const orderPayload = {
-        userId: user.uid,
-
+      const result = await createCheckoutOrder({
         storeId: store.id,
-        storeName: store.name,
 
         orderType,
-        deliveryCategory: orderType === "delivery" ? deliveryCategory : null,
-
-        status: "pending",
 
         contact: {
           fullName: contactFormik.values.fullName,
@@ -297,51 +279,31 @@ export default function Checkout() {
 
         items: cartItems.map((item) => ({
           productId: item.productId || item.id,
-          name: item.name,
-          img: item.img || "",
-          category: item.category || "",
-          tags: item.tags || [],
-          price: Number(item.price || 0),
           quantity: Number(item.quantity || 0),
-          lineTotal: Number(item.price || 0) * Number(item.quantity || 0),
         })),
 
-        subtotal,
-        deliveryFee,
-        total,
-
-        currency: {
-          code: storeCurrencyCode,
-          locale: storeCurrencyLocale,
-        },
-
-        payment: {
-          method: paymentMethod,
-          status: "pending",
-          provider: paymentMethod === "card" ? "paystack" : null,
-          reference: null,
-          paidAt: null,
-        },
-
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
-
-      const orderRef = await addDoc(collection(db, "orders"), orderPayload);
-
-      toast.success("Order placed successfully!");
-
-      navigate(`/orders/${orderRef.id}`, {
-        replace: true,
+        paymentMethod,
+        discountCode: null,
       });
+
+      const response = result.data;
+
+      if (!response?.authorizationUrl) {
+        throw new Error("Payment initialization failed.");
+      }
+
+      window.location.href = response.authorizationUrl;
     } catch (error) {
-      console.error("Error placing order:", error);
-      toast.error("Could not place order. Please try again.");
+      console.error("Error initializing payment:", error);
+
+      toast.error(
+        error?.message || "Could not initialize payment. Please try again."
+      );
     } finally {
       setIsPlacingOrder(false);
     }
   }, [
-    user,
+    user?.uid,
     contactFormik,
     orderType,
     pickupDetails,
@@ -349,14 +311,8 @@ export default function Checkout() {
     paymentMethod,
     cartItems,
     store,
-    subtotal,
-    deliveryFee,
-    total,
-    deliveryCategory,
-    storeCurrencyCode,
-    storeCurrencyLocale,
     saveDefaultDeliveryAddress,
-    navigate,
+    createCheckoutOrder,
   ]);
 
   if (!store || cartItems.length === 0) {
@@ -529,7 +485,7 @@ export default function Checkout() {
             <div className="space-y-3">
               {cartItems.map((item) => (
                 <div
-                  key={item.id}
+                  key={item.productId || item.id}
                   className="flex justify-between items-start text-sm text-gray-600"
                 >
                   <div>
@@ -552,6 +508,18 @@ export default function Checkout() {
                 <span>
                   {formatMoney(
                     subtotal,
+                    storeCurrencyCode,
+                    storeCurrencyLocale
+                  )}
+                </span>
+              </div>
+
+              <div className="flex justify-between text-gray-600">
+                <span>Discount</span>
+                <span>
+                  -
+                  {formatMoney(
+                    discountTotal,
                     storeCurrencyCode,
                     storeCurrencyLocale
                   )}
@@ -586,7 +554,7 @@ export default function Checkout() {
                 disabled={isPlacingOrder}
                 className="btn btn-neutral w-full mt-6 rounded-full h-10 text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isPlacingOrder ? "Placing order..." : "Pay Now"}
+                {isPlacingOrder ? "Initializing payment..." : "Pay Now"}
               </button>
             </div>
           </div>
