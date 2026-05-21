@@ -28,6 +28,13 @@ const getDefaultDateRange = () => {
   };
 };
 
+
+
+const todayInputValue = formatDateInputValue(new Date());
+
+const isFutureDate = (dateValue) => {
+  return dateValue && dateValue > todayInputValue;
+};
 export default function Orders() {
   const { user } = useAuth();
   const location = useLocation();
@@ -149,7 +156,24 @@ export default function Orders() {
             <input
               type="date"
               value={fromDate}
-              onChange={(event) => setFromDate(event.target.value)}
+              max={todayInputValue}
+              onChange={(event) => {
+                const selectedDate = event.target.value;
+
+                if (isFutureDate(selectedDate)) {
+                  toast.error("Date cannot be later than today.");
+                  setFromDate(todayInputValue);
+                  return;
+                }
+
+                if (toDate && selectedDate && selectedDate > toDate) {
+                  toast.error("Start date cannot be after end date.");
+                  setFromDate(toDate);
+                  return;
+                }
+
+                setFromDate(selectedDate);
+              }}
               className="input input-bordered rounded-xl w-full md:w-44"
             />
           </div>
@@ -159,7 +183,24 @@ export default function Orders() {
             <input
               type="date"
               value={toDate}
-              onChange={(event) => setToDate(event.target.value)}
+              max={todayInputValue}
+              onChange={(event) => {
+                const selectedDate = event.target.value;
+
+                if (isFutureDate(selectedDate)) {
+                  toast.error("Date cannot be later than today.");
+                  setToDate(todayInputValue);
+                  return;
+                }
+
+                if (fromDate && selectedDate && selectedDate < fromDate) {
+                  toast.error("End date cannot be before start date.");
+                  setToDate(fromDate);
+                  return;
+                }
+
+                setToDate(selectedDate);
+              }}
               className="input input-bordered rounded-xl w-full md:w-44"
             />
           </div>
