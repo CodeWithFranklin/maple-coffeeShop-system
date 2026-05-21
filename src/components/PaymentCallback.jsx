@@ -38,11 +38,11 @@ export default function PaymentCallback() {
         setStatus("success");
         toast.success("Payment verified successfully.");
 
-     navigate("/cart", {
+     navigate("/orders", {
        replace: true,
        state: {
          paymentSuccess: true,
-         orderId: data.orderId,
+         recentOrderId: data.orderId,
        },
      });
       } catch (error) {

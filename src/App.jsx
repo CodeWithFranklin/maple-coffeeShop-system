@@ -11,6 +11,8 @@ import Cart from "./components/Cart";
 import Stores from "./components/Stores";
 import Checkout from "./components/Checkout";
 import PaymentCallback from "./components/PaymentCallback";
+import Orders from "./components/orders/Orders";
+import OrderDetails from "./components/orders/OrderDetails";
 import SimpleLayout from "./components/SimpleLayout";
 import ScrollToTop from "./components/ScrollToTop";
 
@@ -24,6 +26,7 @@ function App() {
           <Route element={<Main />}>
             <Route path="/" element={<Home />} />
             <Route path="/order" element={<Order />} />
+            <Route path="/orders/:orderId" element={<OrderDetails />} />
           </Route>
 
           <Route element={<SimpleLayout />}>
@@ -34,6 +37,7 @@ function App() {
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/payment/callback" element={<PaymentCallback />} />
+            <Route path="/orders" element={<Orders />} />
           </Route>
         </Routes>
       </AuthProvider>

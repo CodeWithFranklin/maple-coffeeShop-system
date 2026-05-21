@@ -335,10 +335,10 @@ export default function Header() {
 
                 <ul className="flex flex-col gap-y-2 mt-2 font-semibold px-2">
                   <li>
-                    <a>
+                    <NavLink to="/orders">  
                       <i className="bx bx-xs bx-package"></i>
                       Orders
-                    </a>
+                    </NavLink>
                   </li>
 
                   <li>
