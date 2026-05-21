@@ -69,11 +69,17 @@ export default function Orders() {
       setError("");
 
       try {
-        const ordersQuery = query(
-          collection(db, "orders"),
-          where("userId", "==", user.uid),
-          orderBy("createdAt", "desc")
-        );
+       const ordersQuery = query(
+         collection(db, "orders"),
+         where("userId", "==", user.uid),
+         where("status", "in", [
+           "confirmed",
+           "completed",
+           "needs_refund",
+           "payment_mismatch",
+         ]),
+         orderBy("createdAt", "desc")
+       );
 
         const snap = await getDocs(ordersQuery);
 
