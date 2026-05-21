@@ -43,7 +43,7 @@ export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [activeTab, setActiveTab] = useState("orders");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [hasLoadError, setHasLoadError] = useState(false);
 
   useEffect(() => {
     if (paymentSuccess) {
@@ -66,20 +66,20 @@ export default function Orders() {
       }
 
       setLoading(true);
-      setError("");
+      setHasLoadError(false);
 
       try {
-       const ordersQuery = query(
-         collection(db, "orders"),
-         where("userId", "==", user.uid),
-         where("status", "in", [
-           "confirmed",
-           "completed",
-           "needs_refund",
-           "payment_mismatch",
-         ]),
-         orderBy("createdAt", "desc")
-       );
+        const ordersQuery = query(
+          collection(db, "orders"),
+          where("userId", "==", user.uid),
+          where("status", "in", [
+            "confirmed",
+            "completed",
+            "needs_refund",
+            "payment_mismatch",
+          ]),
+          orderBy("createdAt", "desc")
+        );
 
         const snap = await getDocs(ordersQuery);
 
@@ -95,7 +95,8 @@ export default function Orders() {
         setOrders(nextOrders);
       } catch (fetchError) {
         console.error("Error fetching orders:", fetchError);
-        setError("Could not load your orders. Please try again.");
+        setHasLoadError(true);
+        toast.error("Could not load your orders. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -222,14 +223,21 @@ export default function Orders() {
               </div>
             )}
 
-            {!loading && error && (
-              <div className="alert alert-error rounded-3xl">
-                <i className="bx bx-error-circle text-xl"></i>
-                <span>{error}</span>
+            {!loading && hasLoadError && (
+              <div className="mt-20 text-center">
+                <div className="w-20 h-20 rounded-full bg-red-50 mx-auto flex items-center justify-center">
+                  <i className="bx bx-error-circle text-4xl text-red-400"></i>
+                </div>
+                <h2 className="font-black text-lg mt-5">
+                  Could not load orders
+                </h2>
+                <p className="text-gray-500 text-sm">
+                  Please refresh the page or try again later.
+                </p>
               </div>
             )}
 
-            {!loading && !error && orders.length === 0 && (
+            {!loading && !hasLoadError && orders.length === 0 && (
               <div className="mt-20 text-center">
                 <div className="w-20 h-20 rounded-full bg-gray-50 mx-auto flex items-center justify-center">
                   <i className="bx bx-receipt text-4xl text-gray-300"></i>
@@ -241,7 +249,7 @@ export default function Orders() {
               </div>
             )}
 
-            {!loading && !error && recentOrder && (
+            {!loading && !hasLoadError && recentOrder && (
               <div className="space-y-8">
                 <div>
                   <div className="flex items-center justify-between mb-4">

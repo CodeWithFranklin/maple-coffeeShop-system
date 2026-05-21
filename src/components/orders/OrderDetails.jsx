@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
+import { toast } from "sonner";
 import { db } from "../../firebase";
 import { useAuth } from "../../hooks/useAuth";
 import {
@@ -48,12 +49,29 @@ export default function OrderDetails() {
         setPageState("ready");
       } catch (error) {
         console.error("Error fetching order:", error);
+        toast.error("Could not load this order. Please try again.");
         setPageState("not-found");
       }
     };
 
     fetchOrder();
   }, [user?.uid, orderId]);
+
+  useEffect(() => {
+    if (pageState !== "ready" || !order?.status) return;
+
+    if (order.status === "needs_refund") {
+      toast.warning(
+        "Payment was received, but there was an inventory issue. Support will review this order."
+      );
+    }
+
+    if (order.status === "payment_mismatch") {
+      toast.error(
+        "There is a payment amount issue with this order. Please contact support."
+      );
+    }
+  }, [pageState, order?.status]);
 
   if (pageState === "loading") {
     return (
@@ -156,26 +174,6 @@ export default function OrderDetails() {
                   </span>
                 </div>
               </div>
-
-              {order.status === "needs_refund" && (
-                <div className="alert alert-warning rounded-3xl mt-5">
-                  <i className="bx bx-error-circle text-xl"></i>
-                  <span>
-                    Payment was received, but there was an inventory issue.
-                    Support will review this order.
-                  </span>
-                </div>
-              )}
-
-              {order.status === "payment_mismatch" && (
-                <div className="alert alert-error rounded-3xl mt-5">
-                  <i className="bx bx-error-circle text-xl"></i>
-                  <span>
-                    There is a payment amount issue with this order. Please
-                    contact support.
-                  </span>
-                </div>
-              )}
             </div>
 
             <div className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100">
