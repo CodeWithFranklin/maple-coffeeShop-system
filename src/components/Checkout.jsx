@@ -216,7 +216,11 @@ export default function Checkout() {
       phone: true,
     });
 
-    if (Object.keys(errors).length > 0) return;
+    if (Object.keys(errors).length > 0) {
+      toast.error("Please recheck your contact information.");
+
+      return;
+    }
 
     if (orderType === "pickup") {
       if (
@@ -256,7 +260,7 @@ export default function Checkout() {
     }
     if (paymentMethod === "transfer" && total < 100) {
       toast.error(
-        "Bank transfer is only available for orders of ₦100 and above."
+        "Bank transfer is only available for orders of ₦100 and above, please choose another payment method" 
       );
       return;
     }
@@ -433,8 +437,11 @@ export default function Checkout() {
                   <div>
                     <p className="font-bold text-lg">Contact Information</p>
                     <p className="text-xs text-gray-400">
-                      We'll use this contact info for this order only. Your
-                      login email will not change.
+                      We'll use this contact info for this order only.Your login
+                      email will not change.{" "}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      For better service please use your Whatsapp number{" "}
                     </p>
                   </div>
 
