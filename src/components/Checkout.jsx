@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate, Navigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import { toast } from "sonner";
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
@@ -32,6 +32,16 @@ const isSavedAddressAllowedForStore = ({ address, store }) => {
   const allowedCities = store?.delivery?.cities || [];
 
   return address.state === lockedState && allowedCities.includes(address.city);
+};
+
+const getPaymentButtonText = ({ isPlacingOrder, paymentMethod }) => {
+  if (isPlacingOrder) return "Initializing payment...";
+
+  if (paymentMethod === "transfer") {
+    return "Pay with Bank Transfer";
+  }
+
+  return "Pay with Card";
 };
 
 export default function Checkout() {
@@ -86,10 +96,9 @@ export default function Checkout() {
   const subtotal = useMemo(() => {
     if (passedTotal) return passedTotal;
 
-    return cartItems.reduce(
-      (acc, item) => acc + Number(item.price || 0) * Number(item.quantity || 0),
-      0
-    );
+    return cartItems.reduce((acc, item) => {
+      return acc + Number(item.price || 0) * Number(item.quantity || 0);
+    }, 0);
   }, [cartItems, passedTotal]);
 
   const deliveryFee = useMemo(() => {
@@ -189,6 +198,16 @@ export default function Checkout() {
       return;
     }
 
+    if (!store?.id) {
+      toast.error("Store information is missing. Please select a store again.");
+      return;
+    }
+
+    if (!cartItems.length) {
+      toast.error("Your cart is empty.");
+      return;
+    }
+
     const errors = await contactFormik.validateForm();
 
     contactFormik.setTouched({
@@ -231,11 +250,16 @@ export default function Checkout() {
       }
     }
 
-    if (!paymentMethod) {
-      toast.error("Please select a payment method.");
+    if (!["card", "transfer"].includes(paymentMethod)) {
+      toast.error("Please select a valid payment method.");
       return;
     }
-
+    if (paymentMethod === "transfer" && total < 100) {
+      toast.error(
+        "Bank transfer is only available for orders of ₦100 and above."
+      );
+      return;
+    }
     setIsPlacingOrder(true);
 
     try {
@@ -245,7 +269,6 @@ export default function Checkout() {
 
       const result = await createCheckoutOrder({
         storeId: store.id,
-
         orderType,
 
         contact: {
@@ -304,13 +327,13 @@ export default function Checkout() {
     }
   }, [
     user?.uid,
+    store,
+    cartItems,
     contactFormik,
     orderType,
     pickupDetails,
     deliveryDetails,
     paymentMethod,
-    cartItems,
-    store,
     saveDefaultDeliveryAddress,
     createCheckoutOrder,
   ]);
@@ -554,8 +577,18 @@ export default function Checkout() {
                 disabled={isPlacingOrder}
                 className="btn btn-neutral w-full mt-6 rounded-full h-10 text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isPlacingOrder ? "Initializing payment..." : "Pay Now"}
+                {getPaymentButtonText({
+                  isPlacingOrder,
+                  paymentMethod,
+                })}
               </button>
+
+              {paymentMethod === "transfer" && (
+                <p className="text-xs text-gray-400 text-center">
+                  You will be redirected to Paystack to complete the bank
+                  transfer.
+                </p>
+              )}
             </div>
           </div>
         </div>

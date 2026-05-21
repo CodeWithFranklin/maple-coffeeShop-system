@@ -38,13 +38,13 @@ export default function PaymentCallback() {
         setStatus("success");
         toast.success("Payment verified successfully.");
 
-     navigate("/orders", {
-       replace: true,
-       state: {
-         paymentSuccess: true,
-         recentOrderId: data.orderId,
-       },
-     });
+        navigate("/orders", {
+          replace: true,
+          state: {
+            paymentSuccess: true,
+            recentOrderId: data.orderId,
+          },
+        });
       } catch (error) {
         console.error("Payment verification error:", error);
         setStatus("failed");
@@ -75,9 +75,11 @@ export default function PaymentCallback() {
             <div className="w-16 h-16 rounded-full bg-red-100 mx-auto flex items-center justify-center">
               <i className="bx bx-x text-3xl text-red-600"></i>
             </div>
+
             <h1 className="text-2xl font-black mt-5">
               Payment verification failed
             </h1>
+
             <p className="text-gray-500 mt-2">
               We could not confirm this payment. Please check your orders or try
               again.

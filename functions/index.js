@@ -657,10 +657,10 @@ exports.createCheckoutOrder = functions.https.onCall(async (data, context) => {
     );
   }
 
-  if (paymentMethod !== "card") {
+  if (!["card", "transfer"].includes(paymentMethod)) {
     throw new functions.https.HttpsError(
       "failed-precondition",
-      "Only online card payment is currently supported."
+      "Unsupported payment method."
     );
   }
 
@@ -891,6 +891,16 @@ exports.createCheckoutOrder = functions.https.onCall(async (data, context) => {
         "Order total must be greater than zero."
       );
     }
+    const minimumPaymentAmount = paymentMethod === "transfer" ? 100 : 50;
+
+    if (total < minimumPaymentAmount) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        `Minimum amount for ${
+          paymentMethod === "transfer" ? "bank transfer" : "card payment"
+        } is ₦${minimumPaymentAmount}.`
+      );
+    }
 
     const orderRef = db.collection("orders").doc();
     const reference = generatePaymentReference(orderRef.id);
@@ -965,6 +975,9 @@ exports.createCheckoutOrder = functions.https.onCall(async (data, context) => {
       updatedAt: FieldValue.serverTimestamp(),
     };
 
+    const paystackChannels =
+      paymentMethod === "transfer" ? ["bank_transfer"] : ["card"];
+
     await orderRef.set(orderPayload);
 
     try {
@@ -975,11 +988,13 @@ exports.createCheckoutOrder = functions.https.onCall(async (data, context) => {
           amount: toMinorUnit(total),
           currency: currencyCode,
           reference,
+          channels: paystackChannels,
           callback_url: `${getFrontendUrl()}/payment/callback`,
           metadata: {
             orderId: orderRef.id,
             storeId,
             userId: uid,
+            paymentMethod,
           },
         },
       });
