@@ -1,6 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  startAfter,
+  Timestamp,
+  where,
+} from "firebase/firestore";
 import { toast } from "sonner";
 import { db } from "../../firebase";
 import { useAuth } from "../../hooks/useAuth";
@@ -8,12 +17,15 @@ import {
   formatDateInputValue,
   formatMoney,
   formatOrderDate,
+  getEndOfDay,
   getOrderStatusClass,
   getOrderStatusLabel,
   getPaymentStatusClass,
   getPaymentStatusLabel,
-  isTimestampWithinDateRange,
+  getStartOfDay,
 } from "../../utils/orderStatus";
+
+const ORDERS_PAGE_SIZE = 9;
 
 const getDefaultDateRange = () => {
   const today = new Date();
@@ -27,13 +39,12 @@ const getDefaultDateRange = () => {
   };
 };
 
-
-
 const todayInputValue = formatDateInputValue(new Date());
 
 const isFutureDate = (dateValue) => {
   return dateValue && dateValue > todayInputValue;
 };
+
 export default function Orders() {
   const { user } = useAuth();
   const location = useLocation();
@@ -47,8 +58,11 @@ export default function Orders() {
   const [toDate, setToDate] = useState(defaultDateRange.to);
 
   const [orders, setOrders] = useState([]);
+  const [lastOrderDoc, setLastOrderDoc] = useState(null);
   const [activeTab, setActiveTab] = useState("orders");
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [hasLoadError, setHasLoadError] = useState(false);
 
   useEffect(() => {
@@ -64,19 +78,25 @@ export default function Orders() {
     }
   }, [paymentSuccess, recentOrderId, navigate, location.pathname]);
 
-  useEffect(() => {
-    const fetchOrders = async () => {
+  const fetchOrders = useCallback(
+    async ({ reset = false } = {}) => {
       if (!user?.uid) {
         setLoading(false);
         return;
       }
 
-      setLoading(true);
+      if (!reset && !hasMore) return;
+
+      if (reset) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
       setHasLoadError(false);
 
       try {
-        const ordersQuery = query(
-          collection(db, "orders"),
+        const constraints = [
           where("userId", "==", user.uid),
           where("status", "in", [
             "confirmed",
@@ -84,31 +104,72 @@ export default function Orders() {
             "needs_refund",
             "payment_mismatch",
           ]),
-          orderBy("createdAt", "desc")
-        );
+        ];
 
+        if (fromDate) {
+          constraints.push(
+            where(
+              "createdAt",
+              ">=",
+              Timestamp.fromDate(getStartOfDay(fromDate))
+            )
+          );
+        }
+
+        if (toDate) {
+          constraints.push(
+            where("createdAt", "<=", Timestamp.fromDate(getEndOfDay(toDate)))
+          );
+        }
+
+        constraints.push(orderBy("createdAt", "desc"));
+
+        if (!reset && lastOrderDoc) {
+          constraints.push(startAfter(lastOrderDoc));
+        }
+
+        constraints.push(limit(ORDERS_PAGE_SIZE));
+
+        const ordersQuery = query(collection(db, "orders"), ...constraints);
         const snap = await getDocs(ordersQuery);
 
-        const nextOrders = snap.docs
-          .map((docSnap) => ({
-            id: docSnap.id,
-            ...docSnap.data(),
-          }))
-          .filter((order) =>
-            isTimestampWithinDateRange(order.createdAt, fromDate, toDate)
+        const fetchedOrders = snap.docs.map((docSnap) => ({
+          id: docSnap.id,
+          ...docSnap.data(),
+        }));
+
+        setOrders((currentOrders) => {
+          if (reset) return fetchedOrders;
+
+          const existingIds = new Set(currentOrders.map((order) => order.id));
+          const uniqueOrders = fetchedOrders.filter(
+            (order) => !existingIds.has(order.id)
           );
 
-        setOrders(nextOrders);
+          return [...currentOrders, ...uniqueOrders];
+        });
+
+        setLastOrderDoc(snap.docs[snap.docs.length - 1] || null);
+        setHasMore(snap.docs.length === ORDERS_PAGE_SIZE);
       } catch (fetchError) {
         console.error("Error fetching orders:", fetchError);
         setHasLoadError(true);
         toast.error("Could not load your orders. Please try again.");
       } finally {
         setLoading(false);
+        setLoadingMore(false);
       }
-    };
+    },
+    [user?.uid, fromDate, toDate, lastOrderDoc, hasMore]
+  );
 
-    fetchOrders();
+  useEffect(() => {
+    setOrders([]);
+    setLastOrderDoc(null);
+    setHasMore(true);
+    setHasLoadError(false);
+
+    fetchOrders({ reset: true });
   }, [user?.uid, fromDate, toDate]);
 
   const recentOrder = useMemo(() => {
@@ -274,6 +335,14 @@ export default function Orders() {
                 <p className="text-gray-500 text-sm">
                   Please refresh the page or try again later.
                 </p>
+
+                <button
+                  type="button"
+                  onClick={() => fetchOrders({ reset: true })}
+                  className="btn btn-neutral rounded-full mt-5"
+                >
+                  Try again
+                </button>
               </div>
             )}
 
@@ -301,7 +370,7 @@ export default function Orders() {
                       to={`/orders/${recentOrder.id}`}
                       className="text-sm font-bold text-green-700 hover:underline"
                     >
-                      View details
+                      View order details
                     </Link>
                   </div>
 
@@ -321,6 +390,32 @@ export default function Orders() {
                     </div>
                   </div>
                 )}
+
+                <div className="flex justify-center pt-6 pb-10">
+                  {hasMore ? (
+                    <button
+                      type="button"
+                      onClick={() => fetchOrders()}
+                      disabled={loadingMore}
+                      className="btn btn-neutral rounded-full px-8"
+                    >
+                      {loadingMore ? (
+                        <>
+                          <span className="loading loading-spinner loading-sm"></span>
+                          Loading more...
+                        </>
+                      ) : (
+                        "View more"
+                      )}
+                    </button>
+                  ) : (
+                    orders.length > 0 && (
+                      <p className="text-sm text-gray-400">
+                        No more orders to display.
+                      </p>
+                    )
+                  )}
+                </div>
               </div>
             )}
           </div>
