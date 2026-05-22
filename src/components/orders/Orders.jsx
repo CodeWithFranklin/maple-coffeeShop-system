@@ -8,7 +8,6 @@ import {
   formatDateInputValue,
   formatMoney,
   formatOrderDate,
-  getOrderItemCount,
   getOrderStatusClass,
   getOrderStatusLabel,
   getPaymentStatusClass,
@@ -334,95 +333,108 @@ export default function Orders() {
 function OrderCard({ order, highlighted = false }) {
   const currencyCode = order?.currency?.code || "NGN";
   const currencyLocale = order?.currency?.locale || "en-NG";
-  const itemCount = getOrderItemCount(order.items);
+
+  if (!order?.items || order.items.length === 0) {
+    return null;
+  }
 
   return (
-    <Link
-      to={`/orders/${order.id}`}
-      className={`card bg-base-100 w-full max-w-[320px] shadow-sm border overflow-hidden transition hover:-translate-y-1 hover:shadow-md ${
-        highlighted ? "border-green-200 bg-green-50/70" : "border-gray-100"
-      }`}
-    >
-      <figure className="h-48 bg-gray-100">
-        {order.items?.[0]?.img ? (
-          <img
-            src={order.items[0].img}
-            alt={order.items[0].name || "Order item"}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <i className="bx bx-shopping-bag text-5xl text-gray-400"></i>
-          </div>
-        )}
-      </figure>
+    <>
+      {order.items.map((item, index) => {
+        const displayPrice =
+          item.lineTotal ||
+          Number(item.price || 0) * Number(item.quantity || 1) ||
+          order.total;
 
-      <div className="card-body p-4">
-        <div>
-          <h2 className="card-title font-black text-base leading-tight">
-            {order.items?.[0]?.name || "Item"}
-            <span className="badge badge-neutral badge-sm ml-2">
-              x{order.items?.[0]?.quantity || 1}
-            </span>
-          </h2>
-
-          {order.items?.length > 1 && (
-            <p className="text-xs text-gray-400 mt-1">
-              + {order.items.length - 1} more item
-              {order.items.length - 1 === 1 ? "" : "s"}
-            </p>
-          )}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 mt-2">
-          <span
-            className={`badge badge-sm ${getOrderStatusClass(order.status)}`}
+        return (
+          <Link
+            key={`${order.id}-${item.productId || index}`}
+            to={`/orders/${order.id}`}
+            className={`card bg-base-100 w-full max-w-[320px] shadow-sm border overflow-hidden transition hover:-translate-y-1 hover:shadow-md ${
+              highlighted
+                ? "border-green-200 bg-green-50/70"
+                : "border-gray-100"
+            }`}
           >
-            {getOrderStatusLabel(order.status)}
-          </span>
+            <figure className="h-48 bg-gray-100">
+              {item.img ? (
+                <img
+                  src={item.img}
+                  alt={item.name || "Order item"}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <i className="bx bx-shopping-bag text-5xl text-gray-400"></i>
+                </div>
+              )}
+            </figure>
 
-          <span
-            className={`badge badge-sm ${getPaymentStatusClass(
-              order.payment?.status
-            )}`}
-          >
-            {getPaymentStatusLabel(order.payment?.status)}
-          </span>
-        </div>
+            <div className="card-body p-4">
+              <div>
+                <h2 className="card-title font-black text-base leading-tight">
+                  {item.name || "Item"}
+                  <span className="badge badge-neutral badge-sm ml-2">
+                    x{item.quantity || 1}
+                  </span>
+                </h2>
+              </div>
 
-        <p className="font-black text-xl text-green-700 mt-2">
-          {formatMoney(order.total, currencyCode, currencyLocale)}
-        </p>
+              <div className="flex flex-wrap items-center gap-2 mt-2">
+                <span
+                  className={`badge badge-sm ${getOrderStatusClass(
+                    order.status
+                  )}`}
+                >
+                  {getOrderStatusLabel(order.status)}
+                </span>
 
-        <p className="text-sm text-gray-500">
-          <i className="bx bx-store mr-1"></i>
-          {order.storeName || "Store"}
-        </p>
+                <span
+                  className={`badge badge-sm ${getPaymentStatusClass(
+                    order.payment?.status
+                  )}`}
+                >
+                  {getPaymentStatusLabel(order.payment?.status)}
+                </span>
+              </div>
 
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-400 mt-1">
-          <span>
-            <i className="bx bx-package mr-1"></i>
-            {itemCount} item{itemCount === 1 ? "" : "s"}
-          </span>
+              <p className="font-black text-xl text-green-700 mt-2">
+                {formatMoney(displayPrice, currencyCode, currencyLocale)}
+              </p>
 
-          <span>
-            <i className="bx bx-shopping-bag mr-1"></i>
-            {order.orderType === "delivery" ? "Delivery" : "Pickup"}
-          </span>
-        </div>
+              <p className="text-sm text-gray-500">
+                <i className="bx bx-store mr-1"></i>
+                {order.storeName || "Store"}
+              </p>
 
-        <p className="text-xs text-gray-400 mt-1">
-          <i className="bx bx-calendar mr-1"></i>
-          {formatOrderDate(order.createdAt, currencyLocale)}
-        </p>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-400 mt-1">
+                <span>
+                  <i className="bx bx-package mr-1"></i>
+                  {item.quantity || 1} unit
+                  {Number(item.quantity || 1) === 1 ? "" : "s"}
+                </span>
 
-        <div className="card-actions justify-end mt-3">
-          <span className="btn btn-sm btn-primary rounded-full">
-            View details
-            <i className="bx bx-chevron-right text-lg"></i>
-          </span>
-        </div>
-      </div>
-    </Link>
+                <span>
+                  <i className="bx bx-shopping-bag mr-1"></i>
+                  {order.orderType === "delivery" ? "Delivery" : "Pickup"}
+                </span>
+              </div>
+
+              <p className="text-xs text-gray-400 mt-1">
+                <i className="bx bx-calendar mr-1"></i>
+                {formatOrderDate(order.createdAt, currencyLocale)}
+              </p>
+
+              <div className="card-actions justify-end mt-3">
+                <span className="btn btn-sm btn-primary rounded-full">
+                  View details
+                  <i className="bx bx-chevron-right text-lg"></i>
+                </span>
+              </div>
+            </div>
+          </Link>
+        );
+      })}
+    </>
   );
 }
