@@ -4,6 +4,7 @@
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { getStorage } = require("firebase-admin/storage");
+const { getAuth } = require("firebase-admin/auth");
 const functions = require("firebase-functions/v1");
 const https = require("https");
 const http = require("http");
@@ -512,6 +513,7 @@ exports.createUserDocument = functions.auth.user().onCreate(async (user) => {
   }
 });
 
+
 // ─── User Profile Sync ────────────────────────────────────────────────────────
 exports.syncUserProfile = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
@@ -528,35 +530,41 @@ exports.syncUserProfile = functions.https.onCall(async (data, context) => {
     photoURL,
     contactEmail,
     useAuthEmailAsContact,
-  } = data;
+  } = data || {};
 
   const { uid, token } = context.auth;
-  const name = data.name || token.name || "New User";
-  const email = token.email || "";
-  const provider = token.firebase?.sign_in_provider || "unknown";
-
-  const providers = token.firebase?.identities
-    ? Object.keys(token.firebase.identities)
-    : [provider];
-
-  if (phone && !/^\+?[0-9\s\-()]{10,15}$/.test(phone)) {
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "Invalid phone number format."
-    );
-  }
-
-  const shouldUseAuthEmailAsContact = useAuthEmailAsContact !== false;
-  let finalContactEmail = shouldUseAuthEmailAsContact ? email : contactEmail;
-
-  if (!shouldUseAuthEmailAsContact && !finalContactEmail) {
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "Contact email is required."
-    );
-  }
 
   try {
+    const authUser = await getAuth().getUser(uid);
+
+    const providers =
+      authUser.providerData?.map((provider) => provider.providerId) || [];
+
+    const authMethod = getAuthMethod(providers);
+
+    const name = data?.name || authUser.displayName || token.name || "New User";
+    const email = authUser.email || token.email || "";
+
+    if (phone && !/^\+?[0-9\s\-()]{10,15}$/.test(phone)) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Invalid phone number format."
+      );
+    }
+
+    const shouldUseAuthEmailAsContact = useAuthEmailAsContact !== false;
+
+    const finalContactEmail = shouldUseAuthEmailAsContact
+      ? email
+      : contactEmail;
+
+    if (!shouldUseAuthEmailAsContact && !finalContactEmail) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Contact email is required."
+      );
+    }
+
     const userRef = db.collection("users").doc(String(uid));
     const snapshot = await userRef.get();
 
@@ -568,11 +576,15 @@ exports.syncUserProfile = functions.https.onCall(async (data, context) => {
         : undefined;
 
     let finalData = {
-      ...(data.name !== undefined && { name }),
+      ...(data?.name !== undefined && { name }),
       ...(phone !== undefined && { phone }),
       ...(country !== undefined && { country }),
       ...(state !== undefined && { state }),
       ...(safePhotoURL !== undefined && { photoURL: safePhotoURL }),
+
+      authMethod,
+      allProviders: providers.map(normalizeProvider),
+
       contactEmail: finalContactEmail,
       useAuthEmailAsContact: shouldUseAuthEmailAsContact,
       updatedAt: FieldValue.serverTimestamp(),
@@ -585,7 +597,7 @@ exports.syncUserProfile = functions.https.onCall(async (data, context) => {
           email,
           name,
           photoURL: null,
-          authMethod: getAuthMethod(providers),
+          authMethod,
           providers,
         }),
         ...finalData,
@@ -596,8 +608,15 @@ exports.syncUserProfile = functions.https.onCall(async (data, context) => {
 
     return {
       success: true,
+      authMethod,
+      providers,
+      allProviders: providers.map(normalizeProvider),
     };
   } catch (error) {
+    if (error instanceof functions.https.HttpsError) {
+      throw error;
+    }
+
     console.error("Error in syncUserProfile:", error);
 
     throw new functions.https.HttpsError(

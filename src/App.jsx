@@ -3,6 +3,7 @@ import { Toaster } from "sonner";
 import { AuthProvider } from "./context/AuthProvider";
 import SignUp from "./components/SignUp";
 import SignIn from "./components/SignIn";
+import ForgotPassword from "./components/auth/ForgotPassword";
 import Home from "./components/Home";
 import Account from "./components/updateAccountPage/Account";
 import Main from "./components/Main";
@@ -32,6 +33,7 @@ function App() {
           <Route element={<SimpleLayout />}>
             <Route path="/signup" element={<SignUp />} />
             <Route path="/signin" element={<SignIn />} />
+            <Route path="/auth/forgot-password" element={<ForgotPassword />} />
             <Route path="/account" element={<Account />} />
             <Route path="/stores" element={<Stores />} />
             <Route path="/cart" element={<Cart />} />
