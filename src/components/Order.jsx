@@ -146,11 +146,17 @@ export default function Order() {
   const handleCheckout = useCallback(() => {
     if (!cartSummary.canCheckout) return;
 
-    if (!user) {
-      savePendingStore(store);
-      navigate("/signup");
-      return;
-    }
+  if (!user) {
+    savePendingStore(store);
+
+    navigate("/signin", {
+      state: {
+        authNotice: "Please sign in or create an account before checking out.",
+      },
+    });
+
+    return;
+  }
 
     navigate("/checkout", {
       state: {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from "react";
 import { useFormik } from "formik";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { auth } from "../firebase.js";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { handleGoogleAuth } from "../utils/authHelpers.js";
@@ -13,6 +13,8 @@ export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const authNotice = location.state?.authNotice;
   const { user, userInfoLoading } = useContext(AuthContext);
 
   const redirectToRelevantPage = () => {
@@ -35,6 +37,17 @@ export default function SignIn() {
       redirectToRelevantPage();
     }
   }, [user, userInfoLoading]);
+
+  useEffect(() => {
+    if (!authNotice) return;
+
+    toast.info(authNotice);(authNotice);
+
+    navigate(location.pathname, {
+      replace: true,
+      state: {},
+    });
+  }, [authNotice, location.pathname, navigate]);
 
   const formik = useFormik({
     initialValues: {

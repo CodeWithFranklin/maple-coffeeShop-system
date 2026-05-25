@@ -416,12 +416,18 @@ export default function Cart() {
     (group) => {
       if (!group.summary.canCheckout) return;
 
-      if (!user?.uid) {
-        savePendingStore(group.store);
-        toast.message("Please log in to continue checkout.");
-        navigate("/signin");
-        return;
-      }
+     if (!user?.uid) {
+       savePendingStore(group.store);
+
+       navigate("/signin", {
+         state: {
+           authNotice:
+             "Please sign in or create an account before checking out.",
+         },
+       });
+
+       return;
+     }
 
       navigate("/checkout", {
         state: {
@@ -774,7 +780,14 @@ export default function Cart() {
                   {isGuest && (
                     <button
                       type="button"
-                      onClick={() => navigate("/signin")}
+                      onClick={() =>
+                        navigate("/signin", {
+                          state: {
+                            authNotice:
+                              "Please sign in or create an account before checking out.",
+                          },
+                        })
+                      }
                       className="btn btn-primary rounded-full w-full mt-5"
                     >
                       Log in to checkout
