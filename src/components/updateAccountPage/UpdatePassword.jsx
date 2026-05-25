@@ -8,15 +8,19 @@ import {
 } from "firebase/auth";
 import { auth } from "../../firebase.js";
 import { customAlert } from "../../utils/customizeAlerts.js";
-import {
-    passwordChangeSchema
-    
-} from "../../utils/validationSchema.js";
- 
+import { passwordChangeSchema } from "../../utils/validationSchema.js";
+
 export default function UpdatePassword({ user }) {
-  const isGoogleUser = user?.providerData?.some(
+  const hasGoogleProvider = user?.providerData?.some(
     (p) => p.providerId === "google.com"
   );
+
+  const hasPasswordProvider = user?.providerData?.some(
+    (p) => p.providerId === "password"
+  );
+  console.log(user?.providerData);
+
+  const isGoogleOnlyUser = hasGoogleProvider && !hasPasswordProvider;
 
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
@@ -31,7 +35,6 @@ export default function UpdatePassword({ user }) {
     validationSchema: passwordChangeSchema,
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       try {
-       
         const credential = EmailAuthProvider.credential(
           user.email,
           values.currentPassword
@@ -43,14 +46,14 @@ export default function UpdatePassword({ user }) {
         toast.success("Password updated successfully!");
         resetForm();
       } catch (error) {
-        toast.error(customAlert(error.message, error.code));
+        toast.error(customAlert(error.message, error.code, "updatePassword"));
       } finally {
         setSubmitting(false);
       }
     },
   });
 
-  if (isGoogleUser) {
+  if (isGoogleOnlyUser) {
     return (
       <div className="lg:col-span-8 bg-white rounded-3xl p-8 shadow-sm">
         <h2 className="text-2xl font-bold mb-8 text-black">
