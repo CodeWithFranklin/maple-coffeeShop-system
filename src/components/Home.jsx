@@ -8,7 +8,6 @@ import { usePrevNextButtons } from "./hooks/usePrevNextButtons";
 import { useVerticalCarousel } from "./hooks/useVerticalCarousel";
 import { NextButton, PrevButton } from "./embela/EmblaCarouselArrowButtons";
 import { feedBack } from "./ListItems.js";
-import { updateMapleAbujaInventoryPrices } from "./MigrateData.jsx";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -80,12 +79,7 @@ export default function Home() {
                 </p>
                 <p className="">save up to 20% off your first order.</p>
               </div>
-              <button
-                className="btn btn-primary"
-                onClick={() => updateMapleAbujaInventoryPrices()}
-              >
-                Migrate Data
-              </button>
+              
               <div className="badge badge-soft border-0 py-[23px] pe-0 font-semibold px-5 mt-6 bg-lime-300 rounded-3xl">
                 <a href="">
                   Our Services?
