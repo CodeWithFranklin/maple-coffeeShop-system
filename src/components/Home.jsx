@@ -175,7 +175,7 @@ export default function Home() {
             <div className="w-full sm:w-[50%] flex justify-center flex-col">
               <p className="text-4xl lg:text-5xl pb-2 lg:w-[90%] w-full font-extrabold box-decoration-clone leading-[1.2] text-black">
                 Maple is so more than just{" "}
-                <span className="text-info font-family">coffee</span>
+               coffee
                 {""}
               </p>
               <p className="mb-2 text-md lg:w-[85%] w-[95%] text-gray-500">
@@ -192,7 +192,7 @@ export default function Home() {
                 Delivery Service
                 <i className="bx bx-sm bxs-truck"></i>
               </p>
-              <p className="badge badge-soft font-semibold py-[16px] flex items-center rounded-4xl border-0">
+              <p className="badge badge-soft font-semibold py-[16px] flex items-center rounded-4xl border-0 text-black">
                 Co-work-Hub
                 <i className="bx bx-sm bxs-group"></i>
               </p>
@@ -201,10 +201,10 @@ export default function Home() {
                 <i className="bx bx-sm bxs-book"></i>
               </p>
               <p className="badge badge-soft font-semibold py-[16px] flex items-center rounded-4xl bg-red-200 text-red-900 border-0">
-                Lounge
-                <i className="bx bx-sm bxs-drink"></i>
+                Pastries
+                <i class="bx bxs-baguette bx-sm"></i>
               </p>
-              <p className="badge badge-soft font-semibold py-[16px] flex items-center rounded-4xl bg-lime-200 text-lime-900 border-0">
+              <p className="badge badge-soft font-semibold py-[16px] flex items-center rounded-4xl bg-lime-200 text-lime-800 border-0">
                 Spa
                 <i className="bx bx-sm mx-1 bxs-spa"></i>
               </p>
@@ -322,7 +322,7 @@ export default function Home() {
                     className="flex flex-col max-w-95 sm:p-6 p-5 rounded-4xl overflow-hidden shadow-sm bg-secondary text-white w-full sm:w-[45%] lg:w-[30%] transition-transform"
                   >
                     {/* Title */}
-                    <h3 className="text-3xl font-extrabold line-clamp-1 py- mb-2 font-family text-secondary- ">
+                    <h3 className="text-3xl font-extrabold line-clamp-1 py- mb-2 font-family ">
                       {menu.name}
                     </h3>
 
@@ -421,9 +421,9 @@ export default function Home() {
               {feedBack.map((slide, index) => {
                 // Explicitly define background and matching text contrast utilities
                 const colors = [
-                  { bg: "bg-info"},
-                  { bg: "bg-success"},
-                  { bg: "bg-secondary-content"},
+                  { bg: "bg-info" },
+                  { bg: "bg-success" },
+                  { bg: "bg-secondary-content" },
                 ];
 
                 // Cycle safely using the item's index position
