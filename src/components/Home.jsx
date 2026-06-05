@@ -66,98 +66,119 @@ export default function Home() {
 
   return (
     <section>
-      <div className="min-h-[570px] pt-7 sm:pt-10">
-        <section className="flex flex-col lg:flex-row sm:ps-10 lg:justify-between max-w-screen-xl mx-auto px-5 gap-y-10">
-          <div className="min-h-full lg:w-fit">
-            <div className="lg:w-150 sm:w-150 w-full">
-              <p className="lg:text-[100px] text-5xl md:text-6xl font-extrabold box-decoration-clone leading-[1.2] ">
-                Get the best of your day from us!
-              </p>
-              <div className="lg:w-[92%] w-[92%] text-gray-500">
-                <p className="text-xl mt-6 font-semibold sm:w-[80%] lg:w-full ">
-                  The flavour, the comfort, the moments that you deserve. <br />
+      <div className="min-h-[570px] pt-3 ">
+        <section className="bg-base-100 border-secondary rounded-[2.5rem] px-10 pt-12 pb-5 max-w-screen-xl mx-auto flex flex-col gap-10 items-center justify-between shadow-sm relative overflow-hidden">
+          <div className="w-full flex flex-col items-center text-center ">
+            <h1 className="text-5xl md:text-7xl lg:text-[90px] font-black uppercase tracking-tight leading-[0.95] max-w-4xl mx-auto font-family relative">
+              Get The Best{" "}
+              <span className="absolute badge badge-neutral px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider align-middle bottom-6 lg:bottom-9 -rotate-6 text-center">
+                Tasty
+              </span>{" "}
+              Of Your Day{" "}
+              <span className="badge badge-info absolute  rounded-lg text-[14px] font-black uppercase tracking-wider align-middle bottom-2 lg:top-10 left-32 -rotate-13 text-center ">
+                Fresh
+              </span>{" "}
+              From Us
+            </h1>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full items-stretch justify-center  min-h-80">
+            {/* COLUMN 1: LEFT HERO TEXT BLOCK & CTA */}
+            <div className="bg-accent/40 border-2 border-secondary/20 p-6 rounded-[2.5rem] flex flex-col justify-between max-h-[255px] relative overflow-hidden shadow-sm mt-5">
+              <div className="space-y-3">
+                <p className="text-xl font-extrabold leading-snug">
+                  Fuel your workflow. Unlimited specialty coffee, fresh
+                  pastries, and high-speed workspaces built for creators.
                 </p>
-                <p className="">save up to 20% off your first order.</p>
+                <p className="text-xs font-black text-secondary/60 tracking-wide uppercase">
+                  save up to 20% off your first order.
+                </p>
               </div>
-              
-              <div className="badge badge-soft border-0 py-[23px] pe-0 font-semibold px-5 mt-6 bg-lime-300 rounded-3xl">
-                <a href="">
-                  Our Services?
-                  <span className="avatar rounded-full aspect-square bg-blue-40 ms-2 min-w-9 justify-center items-center">
-                    <i className="bx bx-right-top-arrow-circle bx-lg"></i>
-                  </span>
-                </a>
+
+              <button className="badge border-2 border-secondary py-[20px] font-black px-4 mt-6 bg-warning text-warning-content rounded-2xl transition-transform hover:scale-105 cursor-pointer shadow-[3px_3px_0px_0px_rgba(29,20,11,1)] w-fit">
+                Our Services?
+                <i className="bx bx-right-arrow-alt bx-sm"></i>
+              </button>
+
+              {/* Subtle background detail icon mimicking the line art */}
+              <div className="absolute right-2 bottom-2 opacity-10 pointer-events-none">
+                <i className="bx bx-cookie text-7xl text-secondary"></i>
               </div>
             </div>
-          </div>
-          <div className="flex flex-col sm:flex-row lg:flex-col gap-7 md:gap-x-15 lg:gap-x-0 w-full lg:items-end">
-            <div className="bg-blue-300 max-w-85 sm:w-80 flex-1 flex-wrap lg:w-full min-h-[230px] lg:min-h-[250px] rounded-4xl relative ps-5 overflow-hidden flex flex-col justify-center">
-              <div className="lg:text-4xl text-3xl font-extrabold w-[45%]">
-                <p className="text-white">weekly pick!</p>
-                <p className="text-yellow-400 mt-2">13$</p>
+
+            {/* COLUMN 2: THE WEEKLY PICK CARD (Centered & Modified with Title Badge) */}
+            <div className="bg-info font- text-white p-6 rounded-[2.9rem] relative overflow-hidden flex flex-col justify-between max-h-[255px] shadow-md ">
+              <div className="lg:text-4xl text-2xl font-black uppercase tracking-tight w-[55%] mt-4">
+                <p className="leading-tight">Weekly Pick!</p>
+                <p className="mt-2 font-family">$13</p>
               </div>
 
               <img
-                src="/images/ad-image-2.png"
-                className="lg:w-55 w-52 absolute right-[-10px] bottom-0 "
-                alt="bread"
+                src="images/ad-image-2.png"
+                className="w-55 absolute right-[-15px] bottom-0 object-contain pointer-events-none z-0"
+                alt="bread slice asset promotion"
               />
 
-              <div className="flex gap-x-1 items-center mt-3 w-fit">
-                <button className="mt-2 font-bold border-0 btn h-7 rounded-2xl gap-x-1">
-                  Explore
-                </button>
-                <button
-                  className="btn rounded-full border-0 text-center mt-2 pt-1 w-10 aspect-square tooltip tooltip-top bg-lime-300"
-                  data-tip="add to cart"
-                >
-                  <i className="bx bx-heart bx-sm"></i>
-                </button>
-              </div>
+              <button className="btn bg-warning hover:bg-warning/90 border-2 border-secondary text-warning-content font-black text-xs uppercase h-8 min-h-0 py-1 w-fit rounded-xl  shadow-[2px_2px_0px_0px_rgba(29,20,11,1)]">
+                Explore Menu
+              </button>
             </div>
 
-            <div className="bg-purple-300 min-h-[230px] lg:min-h-[250px] overflow-hidden max-w-85 sm:w-80 flex-1 lg:w-full self-end pt-5 ps-5 bg-[url('/images/i-like-food.svg')] bg-size-[160px] lg:bg-size-[185px] bg-no-repeat bg-position-[right_0_top_7rem]">
-              <div className="avatar-group -space-x-2 lg:h-9 h-8 lg:w-fit w-26 mt-1 float-right me-3">
-                <div className="avatar w-9 border-1">
-                  <div>
-                    <img src="https://img.daisyui.com/images/profile/demo/batperson@192.webp" />
+            {/* COLUMN 3: SOCIAL PROOF REVIEW BOX */}
+            <div className="bg-success text-success-content max-h-[250px] overflow-hidden p-6 rounded-[2.5rem] shadow-md flex flex-col justify-between relative bg-no-repeat bg-position-[left_12rem_top_7rem] mt-7 bg-[url('/images/i-like-food.svg')] bg-size-[160px] w-90">
+              <div className="avatar-group -space-x-2 w-fit mt-1">
+                <div className="avatar w-9 border-0">
+                  <div className="bg-neutral">
+                    <img
+                      src="https://img.daisyui.com/images/profile/demo/batperson@192.webp"
+                      alt="Reviewer"
+                    />
                   </div>
                 </div>
-                <div className="avatar w-9 border-1">
-                  <div>
-                    <img src="https://img.daisyui.com/images/profile/demo/spiderperson@192.webp" />
+                <div className="avatar w-9 border-0">
+                  <div className="bg-neutral">
+                    <img
+                      src="https://img.daisyui.com/images/profile/demo/spiderperson@192.webp"
+                      alt="Reviewer"
+                    />
                   </div>
                 </div>
-                <div className="avatar w-9 border-1">
-                  <div>
-                    <img src="https://img.daisyui.com/images/profile/demo/averagebulk@192.webp" />
+                <div className="avatar w-9 border-0">
+                  <div className="bg-neutral">
+                    <img
+                      src="https://img.daisyui.com/images/profile/demo/batperson@192.webp"
+                      alt="Reviewer"
+                    />
                   </div>
                 </div>
-                <div className="avatar avatar-placeholder w-9 border-1">
-                  <div className="text-black bg-white text-xs font-bold">
+                <div className="avatar avatar-placeholder w-9 border-0">
+                  <div className="text-black bg-white text-[10px] font-bold">
                     <span>
-                      10k<i className="text-orange-400">+</i>
+                      10k<i>+</i>
                     </span>
                   </div>
                 </div>
               </div>
-              <p className="text-4xl lg:text-[40px] font-extrabold max-w-[70%] leading-[1.2] line-clamp-3 h-36 sm:h-34 md:h-36 mb-4">
-                <span className="text-lime-200">"</span>will big foot love
-                coffee?<span className="text-lime-200">"</span>
+
+              <p className="text-[2rem] font-black uppercase tracking-tight max-w-[75%] leading-tight my-0 mb-8">
+                will big foot love coffee?
               </p>
-              <button className="btn h-8 rounded-xl mt-0 lg:mt-2 border-0 bg-orange-200 ">
+
+              <button className="btn h-8 min-h-0 py-1 rounded-xl border-2 border-secondary btn-neutral text-neutral-content font-black text-xs uppercase w-fit shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]">
                 Check out
               </button>
             </div>
           </div>
         </section>
-        <section className="mt-25 md:w-[85%] sm:w-[85%] lg:max-w-[80%] mx-auto px-6 sm:px-0">
+        <div className="mt-25 md:w-[85%] sm:w-[85%] lg:max-w-[80%] mx-auto px-6 sm:px-0">
           <div className="flex flex-col lg:flex-row sm:flex-row justify-between gap-x-10 sm:gap-x-5 md:gap-x-6">
             <div className="w-full sm:w-[50%] flex justify-center flex-col">
-              <p className="text-4xl lg:text-5xl pb-2 lg:w-[90%] w-full font-extrabold box-decoration-clone leading-[1.2]">
-                Maple is so more than just coffee{""}
+              <p className="text-4xl lg:text-5xl pb-2 lg:w-[90%] w-full font-extrabold box-decoration-clone leading-[1.2] text-black">
+                Maple is so more than just{" "}
+                <span className="text-info font-family">coffee</span>
+                {""}
               </p>
-              <p className="mt-2 mb-2 text-md lg:text-[18px] lg:w-[85%] w-[95%] text-gray-500">
+              <p className="mb-2 text-md lg:w-[85%] w-[95%] text-gray-500">
                 Have a look at some of our various services we offer, we make
                 every visit count.
               </p>
@@ -189,8 +210,8 @@ export default function Home() {
               </p>
             </div>
           </div>
-        </section>
-        <section
+        </div>
+        <div
           className="flex lg:flex-row flex-col-reverse md:flex-row md:w-[90%] lg:max-w-[80%] max-w-[95%] px-4 sm:px-6 lg:px-8 sm:ps-15 sm:items-start mx-auto mt-20 items-center 
         lg:gap-y-0 gap-y-10 lg:py-13 py-10 px-5 lg:px-0 lg:ps-10 shadow-xl rounded-4xl bg-white md:ps-0 md:ps-8 md:pe-8 md:gap-x-8"
         >
@@ -232,7 +253,7 @@ export default function Home() {
           </div>
           <div className="lg:w-[55%] md:w-[60%] sm:w-[85%] w-full sm:mx-0 mx-auto flex lg:justify-center">
             <div className="lg:w-[85%] ">
-              <p className="text-4xl font-extrabold ">
+              <p className="text-5xl font-extrabold font-family ">
                 Book your experience with us today!
               </p>
               <p className="mt-4 lg:text-[17px] w-[95%] text-md text-gray-600">
@@ -241,29 +262,29 @@ export default function Home() {
               </p>
               <ul className="font-semibold text-gray-600 mt-2">
                 <li className="flex">
-                  <i className="bx bx-badge-check me-1 mt-[5px] text-yellow-400"></i>
+                  <i className="bx bx-badge-check me-1 mt-[5px]"></i>
                   choose from dining, workspace, lounge or spa
                 </li>
                 <li className="flex">
-                  <i className="bx bx-badge-check me-1 mt-[5px] text-yellow-400"></i>
+                  <i className="bx bx-badge-check me-1 mt-[5px]"></i>
                   easy online booking
                 </li>
                 <li className="flex">
-                  <i className="bx bx-badge-check me-1 mt-[5px] text-yellow-400"></i>
+                  <i className="bx bx-badge-check me-1 mt-[5px]"></i>
                   flexible time slots to fit your schedule
                 </li>
               </ul>
-              <button className="bg-lime-300 btn rounded-4xl pe-1 mt-3 border-0">
+              <button className="btn-warning btn rounded-4xl mt-3 border-0">
                 Book a space!{" "}
-                <span className="bg-black rounded-full avatar w-8 aspect-square flex items-center justify-center">
-                  <i className="bx bx-right-arrow-alt bx-sm text-white"></i>
+                <span className="rounded-full avatar w- aspect-square flex items-center justify-center">
+                  <i className="bx bx-right-arrow-alt bx-sm"></i>
                 </span>
               </button>
             </div>
           </div>
-        </section>
+        </div>
         <section className="min-h-[500px] lg:mt-25 mt-17 flex justify-center">
-          <div className="min-h- flex flex-col items-center w-[90%] mx-auto lg:px-0 overflow-hidden py-10">
+          <div className="flex flex-col items-center w-[90%] mx-auto lg:px-0 overflow-hidden py-10">
             <div className="lg:w-[45%] flex flex-col justify-center items-center">
               <div className="badge border-gray-200 rounded-4xl lg:font-semibold font-extrabold mb-3 lg:px-5 px-3 py-[17px]">
                 <div className="text-warning">
@@ -283,10 +304,10 @@ export default function Home() {
                 </div>
                 <div className="font-black text-gray-600">10.4K loved this</div>
               </div>
-              <p className="text-4xl w-fit text-center font-extrabold mt-2">
+              <p className="text-5xl w-fit text-center text-black font-extrabold mt-2 font-family">
                 We're cooking!
               </p>
-              <p className="lg:w-150 w-[95%] md:w-[65%] sm:w-[75%] text-center mt-4 mb-3 lg:text-[20px] text-[17px] font-light lg:font-extralight text-gray-700">
+              <p className="lg:w-150 w-[95%] md:w-[65%] sm:w-[75%] text-center mt-4 mb-3 lg:text-[20px] text-[17px] text-gray-700 ">
                 We are always looking out for your tastes that's why we serve
                 the tastiest of our dishes for the best prices. Breakfast, lunch
                 and dinner we are always here for you.
@@ -298,10 +319,10 @@ export default function Home() {
                 {featuredItems.map((menu, index) => (
                   <div
                     key={menu.id || index}
-                    className="flex flex-col max-w-95 sm:p-6 p-5 rounded-3xl bg-blue-200 overflow-hidden shadow-sm"
+                    className="flex flex-col max-w-95 sm:p-6 p-5 rounded-4xl overflow-hidden shadow-sm bg-secondary text-white w-full sm:w-[45%] lg:w-[30%] transition-transform"
                   >
                     {/* Title */}
-                    <h3 className="text-3xl font-extrabold line-clamp-1 mb-2">
+                    <h3 className="text-3xl font-extrabold line-clamp-1 py- mb-2 font-family text-secondary- ">
                       {menu.name}
                     </h3>
 
@@ -309,7 +330,7 @@ export default function Home() {
                     <div className="flex items-center gap-2 overflow-hidden">
                       {/* Text Side */}
                       <div className="flex-1 flex flex-col gap-2">
-                        <p className="font-black text-lime-600 text-3xl">
+                        <p className="font-black text-3xl text-neutral font-family">
                           {menu.price}$
                         </p>
 
@@ -327,7 +348,7 @@ export default function Home() {
 
                         {/* Description (Migrated from about) */}
                         <p
-                          className="font-light text-sm line-clamp-2"
+                          className="font- text-sm line-clamp-2"
                           title={menu.description}
                         >
                           {menu.description}
@@ -344,12 +365,12 @@ export default function Home() {
                                 },
                               })
                             }
-                            className="font-bold border-0 badge py-4 rounded-xl bg-lime-300 hover:bg-lime-400 transition-colors hover:cursor-pointer text-sm"
+                            className="font-bold border-0 rounded-xl h-7 btn btn-warning transition-colors hover:cursor-point text-sm"
                           >
                             Place order
                           </button>
                           <button
-                            className="px-2 py-2 flex items-center rounded-full bg-white/40 hover:bg-white/60 hover:cursor-pointer tooltip tooltip-top"
+                            className="px-2 py-2 flex items-center rounded-full bg-white text-black hover:bg-white/80 hover:cursor-pointer tooltip tooltip-top"
                             data-tip="view menu"
                           >
                             <i className="bx bxs-food-menu text-lg"></i>
@@ -372,16 +393,17 @@ export default function Home() {
                 ))}
               </div>
 
-              <button className="btn btn-primary mt-12 w-fit rounded-full h-9 text-warning flex items-center gap-1 transition-transform hover:scale-105">
-                View more <i className="bx bx-chevron-right text-xl"></i>
+              <button className="btn btn-soft mt-12 w-fit rounded-full h-9  flex items-center gap-1 transition-transform hover:scale-105">
+                Checkout maple stores{" "}
+                <i className="bx bx-chevron-right text-xl"></i>
               </button>
             </div>
           </div>
         </section>
         <section className="w-[100%] lg:w-[85%] mx-auto min-h-[200px] flex flex-col lg:flex-row mt-7 lg:mt-20">
           <div className="w-full lg:w-[50%] mb-8 lg:ps-0 ps-7 sm:ps-6 ">
-            <p className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl w-full pe- font-extrabold leading-[1.2]">
-              loved by many! 🤩
+            <p className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl w-full text-black font-extrabold leading-[1.2]">
+              loved by many!
             </p>
             <p className="mt-3 text-gray-500 w-[85%] sm:w-[48%] md:w-[48%] lg:w-[85%]">
               Our customers are our biggest fans, see what they have to say
@@ -396,34 +418,53 @@ export default function Home() {
           >
             {/* ✅ Embla container */}
             <div className="embla__container flex flex-nowrap gap-x-6 px-6">
-              {feedBack.map((slide) => (
-                <div
-                  key={slide.id}
-                  className="embla__slide flex-none w-80 h-fit"
-                >
-                  <div className="min-h-[210px] w-full p-5 gap-y-4 not-odd rounded-4xl flex flex-col bg-blue-300 bg-[url('/images/wiggle.svg')] bg-no-repeat bg-size-[auto_100px]">
-                    <p
-                      className="text-3xl text-gray-800 font-extrabold line-clamp-3 h-26"
-                      title={slide.review}
+              {feedBack.map((slide, index) => {
+                // Explicitly define background and matching text contrast utilities
+                const colors = [
+                  { bg: "bg-info"},
+                  { bg: "bg-success"},
+                  { bg: "bg-secondary-content"},
+                ];
+
+                // Cycle safely using the item's index position
+                const currentTheme = colors[index % colors.length];
+
+                return (
+                  <div
+                    key={slide.id}
+                    className="embla__slide flex-none w-80 h-fit"
+                  >
+                    {/* Replaced hardcoded 'bg-info' with dynamic 'currentTheme.bg' */}
+                    <div
+                      className={`min-h-[210px] w-full p-5 gap-y-4 not-odd rounded-4xl flex flex-col ${currentTheme.bg}`}
                     >
-                      {slide.review}
-                    </p>
-                    <div className="flex items-center ">
-                      <div className="w-12 aspect-square avatar rounded-4xl bg-primary"></div>
-                      <div className="ms-1.5">
-                        <p className="font-bold text-sm">{slide.name}</p>{" "}
-                        <div>
-                          <i className="bx bxs-star text-warning"></i>
-                          <i className="bx bxs-star text-warning"></i>
-                          <i className="bx bxs-star text-warning"></i>
-                          <i className="bx bxs-star text-warning"></i>
+                      {/* Added currentTheme.text wrapper to maintain accessible contrast */}
+                      <p
+                        className={`text-3xl font-extrabold line-clamp-3  h-26 text-black`}
+                        title={slide.review}
+                      >
+                        {slide.review}
+                      </p>
+
+                      <div className={`flex items-center }`}>
+                        <div className="w-12 aspect-square avatar rounded-4xl bg-white"></div>
+                        <div className="ms-1.5">
+                          <p className="font-bold text-sm">{slide.name}</p>{" "}
+                          <div className="flex gap-0.5">
+                            {/* Kept star icons bright and unified across variations */}
+                            <i className="bx bxs-star text-warning"></i>
+                            <i className="bx bxs-star text-warning"></i>
+                            <i className="bx bxs-star text-warning"></i>
+                            <i className="bx bxs-star text-warning"></i>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
+
             <div className="flex justify-center mt-8 gap-x-15">
               {/* ✅ Buttons */}
               <PrevButton

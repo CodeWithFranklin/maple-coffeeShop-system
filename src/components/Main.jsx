@@ -4,7 +4,7 @@ import Footer from "./Footer";
 
 export default function Main() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-base-300">
       <Header />
       <section>
         <Outlet />

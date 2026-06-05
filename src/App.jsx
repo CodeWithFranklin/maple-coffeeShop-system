@@ -19,7 +19,7 @@ import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
   return (
-    <div className="bg-purple-50 selection:bg-purple-300 min-h-screen">
+    <div className=" selection:bg-info min-h-screen">
       <Toaster position="top-center" richColors />
       <ScrollToTop />
       <AuthProvider>

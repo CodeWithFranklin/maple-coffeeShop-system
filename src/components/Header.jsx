@@ -215,8 +215,8 @@ export default function Header() {
           </ul>
         </div>
 
-        <div className="navbar-center flex">
-          <NavLink to="/" className="text-3xl font-extrabold flex items-center">
+        <div className="navbar-center flex font-family">
+          <NavLink to="/" className="text-3xl font-extrabold flex items-center ">
             Maple{" "}
             <img
               src="/images/bx-coffee-togo.svg"
@@ -266,7 +266,7 @@ export default function Header() {
 
               <NavLink
                 to="/signup"
-                className="btn btn-primary btn-sm rounded-xl font-bold px-5"
+                className="btn btn-warning btn-sm rounded-xl font-bold px-5"
               >
                 Sign Up
               </NavLink>
