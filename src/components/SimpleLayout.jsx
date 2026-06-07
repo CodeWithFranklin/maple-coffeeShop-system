@@ -3,7 +3,7 @@ import Header from "./Header";
 
 export default function SimpleLayout() {
   return (
-    <div className="bg-base-300">
+    <div>
       <Header />
       <main>
         <Outlet />

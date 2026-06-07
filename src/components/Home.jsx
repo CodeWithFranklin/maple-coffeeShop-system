@@ -71,7 +71,7 @@ export default function Home() {
           <div className="w-full flex flex-col items-center text-center ">
             <h1 className="text-5xl md:text-7xl lg:text-[90px] font-black uppercase tracking-tight leading-[0.95] max-w-4xl mx-auto font-family relative">
               Get The Best{" "}
-              <span className="absolute badge badge-neutral px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider align-middle bottom-6 lg:bottom-9 -rotate-6 text-center">
+              <span className="absolute badge badge-accent px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider align-middle bottom-6 lg:bottom-9 -rotate-6 text-center">
                 Tasty
               </span>{" "}
               Of Your Day{" "}
@@ -82,15 +82,14 @@ export default function Home() {
             </h1>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full items-stretch justify-center  min-h-80">
-            {/* COLUMN 1: LEFT HERO TEXT BLOCK & CTA */}
-            <div className="bg-accent/40 border-2 border-secondary/20 p-6 rounded-[2.5rem] flex flex-col justify-between max-h-[255px] relative overflow-hidden shadow-sm mt-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full items-stretch justify-center min-h-80">
+            <div className="bg-primary/10 border-2 border-primary/20 p-6 rounded-[2.5rem] flex flex-col justify-between max-h-[255px] relative overflow-hidden shadow-sm mt-5 text-black">
               <div className="space-y-3">
                 <p className="text-xl font-extrabold leading-snug">
                   Fuel your workflow. Unlimited specialty coffee, fresh
                   pastries, and high-speed workspaces built for creators.
                 </p>
-                <p className="text-xs font-black text-secondary/60 tracking-wide uppercase">
+                <p className="text-xs font-black text-primary/60 tracking-wide uppercase">
                   save up to 20% off your first order.
                 </p>
               </div>
@@ -102,7 +101,7 @@ export default function Home() {
 
               {/* Subtle background detail icon mimicking the line art */}
               <div className="absolute right-2 bottom-2 opacity-10 pointer-events-none">
-                <i className="bx bx-cookie text-7xl text-secondary"></i>
+                <i className="bx bx-cookie text-7xl"></i>
               </div>
             </div>
 
@@ -119,7 +118,7 @@ export default function Home() {
                 alt="bread slice asset promotion"
               />
 
-              <button className="btn bg-warning hover:bg-warning/90 border-2 border-secondary text-warning-content font-black text-xs uppercase h-8 min-h-0 py-1 w-fit rounded-xl  shadow-[2px_2px_0px_0px_rgba(29,20,11,1)]">
+              <button className="btn bg-warning hover:bg-warning/90 border-2 border-secondary text-warning-content font-black text-xs uppercase h-8 min-h-0 py-1 w-fit rounded-xl shadow-[2px_2px_0px_0px_rgba(29,20,11,1)]">
                 Explore Menu
               </button>
             </div>
@@ -164,7 +163,7 @@ export default function Home() {
                 will big foot love coffee?
               </p>
 
-              <button className="btn h-8 min-h-0 py-1 rounded-xl border-2 border-secondary btn-neutral text-neutral-content font-black text-xs uppercase w-fit shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]">
+              <button className="btn h-8 min-h-0 py-1 rounded-xl border-2 border-primary btn-accent text-accent-content font-black text-xs uppercase w-fit shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]">
                 Check out
               </button>
             </div>
@@ -174,8 +173,7 @@ export default function Home() {
           <div className="flex flex-col lg:flex-row sm:flex-row justify-between gap-x-10 sm:gap-x-5 md:gap-x-6">
             <div className="w-full sm:w-[50%] flex justify-center flex-col">
               <p className="text-4xl lg:text-5xl pb-2 lg:w-[90%] w-full font-extrabold box-decoration-clone leading-[1.2] text-black">
-                Maple is so more than just{" "}
-               coffee
+                Maple is so more than just coffee
                 {""}
               </p>
               <p className="mb-2 text-md lg:w-[85%] w-[95%] text-gray-500">
@@ -192,7 +190,7 @@ export default function Home() {
                 Delivery Service
                 <i className="bx bx-sm bxs-truck"></i>
               </p>
-              <p className="badge badge-soft font-semibold py-[16px] flex items-center rounded-4xl border-0 text-black">
+              <p className="badge bg-gray-200 font-semibold py-[16px] flex items-center rounded-4xl border-0 text-black">
                 Co-work-Hub
                 <i className="bx bx-sm bxs-group"></i>
               </p>
@@ -319,7 +317,7 @@ export default function Home() {
                 {featuredItems.map((menu, index) => (
                   <div
                     key={menu.id || index}
-                    className="flex flex-col max-w-95 sm:p-6 p-5 rounded-4xl overflow-hidden shadow-sm bg-secondary text-white w-full sm:w-[45%] lg:w-[30%] transition-transform"
+                    className="flex flex-col max-w-95 sm:p-6 p-5 rounded-4xl overflow-hidden shadow-sm bg-primary text-white w-full sm:w-[45%] lg:w-[30%] transition-transform"
                   >
                     {/* Title */}
                     <h3 className="text-3xl font-extrabold line-clamp-1 py- mb-2 font-family ">
@@ -330,7 +328,7 @@ export default function Home() {
                     <div className="flex items-center gap-2 overflow-hidden">
                       {/* Text Side */}
                       <div className="flex-1 flex flex-col gap-2">
-                        <p className="font-black text-3xl text-neutral font-family">
+                        <p className="font-black text-3xl text-accent font-family">
                           {menu.price}$
                         </p>
 
@@ -423,7 +421,7 @@ export default function Home() {
                 const colors = [
                   { bg: "bg-info" },
                   { bg: "bg-success" },
-                  { bg: "bg-secondary-content" },
+                  { bg: "bg-primary/40" },
                 ];
 
                 // Cycle safely using the item's index position
@@ -436,11 +434,11 @@ export default function Home() {
                   >
                     {/* Replaced hardcoded 'bg-info' with dynamic 'currentTheme.bg' */}
                     <div
-                      className={`min-h-[210px] w-full p-5 gap-y-4 not-odd rounded-4xl flex flex-col ${currentTheme.bg}`}
+                      className={`min-h-[210px] w-full p-5 gap-y-4 not-odd rounded-4xl flex flex-col text-black ${currentTheme.bg}`}
                     >
                       {/* Added currentTheme.text wrapper to maintain accessible contrast */}
                       <p
-                        className={`text-3xl font-extrabold line-clamp-3  h-26 text-black`}
+                        className={`text-3xl font-extrabold line-clamp-3  h-26`}
                         title={slide.review}
                       >
                         {slide.review}
