@@ -20,6 +20,7 @@
     "formik": "^2.4.9",
     "libphonenumber-js": "^1.12.42",
     "react": "^19.1.1",
+    "react-cool-img": "^1.2.12",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.13.0",
     "sonner": "^2.0.7",

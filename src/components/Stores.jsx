@@ -18,6 +18,8 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezonePlugin from "dayjs/plugin/timezone";
 import customParseFormat from "dayjs/plugin/customParseFormat";
+import Img from "react-cool-img";
+import FallbackImageBlock from "../utils/FallBackImgBlock.jsx";
 
 dayjs.extend(utc);
 dayjs.extend(timezonePlugin);
@@ -54,16 +56,6 @@ const createSlug = (text = "") =>
 
 const sortByRating = (stores) =>
   [...stores].sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
-
-const getTodayHours = (store) => {
-  const timezone = store?.timezone || "Africa/Lagos";
-  const openingHours = store?.openingHours || DEFAULT_OPENING_HOURS;
-
-  const storeNow = dayjs().tz(timezone);
-  const today = DAYS[storeNow.day()];
-
-  return openingHours?.[today] || null;
-};
 
 const getStoreOpenStatus = (store) => {
   const timezone = store?.timezone || "Africa/Lagos";
@@ -192,6 +184,58 @@ const fetchStoresByLocation = async ({
   return sortByRating(stores);
 };
 
+function StoreAvatar({ store, storeIsOpen }) {
+  const [imageFailed, setImageFailed] = useState(!store?.img);
+
+  useEffect(() => {
+    setImageFailed(!store?.img);
+  }, [store?.img]);
+
+  return (
+    <div className="avatar flex-shrink-0">
+      <div
+        className={`w-12 aspect-square rounded-full overflow-hidden ring ring-offset-2 ring-offset-base-100 bg-neutral ${
+          storeIsOpen ? "ring-success" : "ring-error"
+        }`}
+      >
+        {!imageFailed ? (
+          <Img
+            src={store.img}
+            alt={store.name}
+            className="w-full h-full object-cover"
+            onError={() => setImageFailed(true)}
+          />
+        ) : (
+          <FallbackImageBlock text={store.name} textSize="text-sm" />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PreviewImageSlide({ img, storeName, alt }) {
+  const [imageFailed, setImageFailed] = useState(!img);
+
+  useEffect(() => {
+    setImageFailed(!img);
+  }, [img]);
+
+  return (
+    <div className="flex-[0_0_100%] min-w-0 h-full bg-neutral">
+      {!imageFailed ? (
+        <Img
+          src={img}
+          alt={alt}
+          className="w-full h-full object-cover"
+          onError={() => setImageFailed(true)}
+        />
+      ) : (
+        <FallbackImageBlock text={storeName} textSize="text-6xl" />
+      )}
+    </div>
+  );
+}
+
 function LocationDropdown({
   label,
   value,
@@ -209,7 +253,7 @@ function LocationDropdown({
       <div
         tabIndex={disabled ? -1 : 0}
         role="button"
-        className={`btn m-1 text-[16px] flex justify-between w-full border-0 bg-white border-gray-300 hover:bg-gray-50 text-black ${
+        className={`btn m-1 text-[16px] flex justify-between w-full border-0 bg-white border-gray-300 hover:bg-gray-50 ${
           disabled ? "cursor-not-allowed" : ""
         }`}
       >
@@ -243,7 +287,7 @@ function LocationDropdown({
               <li key={option}>
                 <button
                   type="button"
-                  onMouseDown={(e) => e.preventDefault()}
+                  onMouseDown={(event) => event.preventDefault()}
                   onClick={() => {
                     onSelect(option);
                     document.activeElement.blur();
@@ -464,19 +508,37 @@ export default function Stores() {
   }, [selectedCountry, selectedState, selectedCity]);
 
   const previewStatus = previewStore ? getStoreOpenStatus(previewStore) : null;
-  const previewTodayHours = previewStore ? getTodayHours(previewStore) : null;
 
   const previewImages =
     previewStore?.images?.length > 0
       ? previewStore.images
-      : [
-          previewStore?.img ||
-            "https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp",
-        ];
+      : previewStore?.img
+      ? [previewStore.img]
+      : [];
 
   const showClosedStoreToast = () => {
     toast.error("Pickup is currently unavailable. This store is closed.");
   };
+  function StoreRating({ rating = 0 }) {
+    const safeRating = Math.max(0, Math.min(5, Number(rating || 0)));
+    const fullStars = Math.floor(safeRating);
+    const hasHalfStar = safeRating % 1 >= 0.5;
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+    return (
+      <div className="flex items-center gap-[1px] text-orange-400">
+        {Array.from({ length: fullStars }).map((_, index) => (
+          <i key={`full-${index}`} className="bx bxs-star"></i>
+        ))}
+
+        {hasHalfStar && <i className="bx bxs-star-half"></i>}
+
+        {Array.from({ length: emptyStars }).map((_, index) => (
+          <i key={`empty-${index}`} className="bx bx-star text-gray-300"></i>
+        ))}
+      </div>
+    );
+  }
 
   if (locationsLoading || !profileLocationChecked) {
     return (
@@ -490,26 +552,23 @@ export default function Stores() {
   return (
     <section className="min-h-screen flex flex-col">
       <div className="mx-18 mt-13">
-        <h1 className="text-7xl font-extrabold mb-13 leading-[1.2]">
-          Discover wonderful maple stores near{" "}
-          <span className="text-lime-300">you!</span>
+        <h1 className="text-7xl font-extrabold mb-13 leading-[1.2] w-250 mx-auto text-center">
+          Discover wonderful maple stores near you!
         </h1>
 
-        <div className="flex gap-x-3">
-          <div className="lg:w-200">
-            <div className="mb-6 w-fit mx-auto">
-              <ul className="steps font-bold">
-                <li className="step step-primary">Select store</li>
-                <li className="step">Select Product</li>
-                <li className="step">Purchase</li>
-                <li className="step">Receive Product</li>
-              </ul>
-            </div>
+        <div className="w-fit mx-auto accent">
+          <ul className="steps font-bold">
+            <li className="step step-warning">Select store</li>
+            <li className="step">Select Product</li>
+            <li className="step">Purchase</li>
+            <li className="step">Receive Product</li>
+          </ul>
+        </div>
 
+        <div className="flex gap-x-3 pt-10">
+          <div className="lg:w-200">
             <div className="mb-8">
-              <h3 className="font-semibold mb-3">
-                <i className="bx bxs-map"></i> Location
-              </h3>
+              <h3 className="font-bold mb-7 text-2xl">Select store location</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <LocationDropdown
@@ -576,9 +635,7 @@ export default function Stores() {
               {relaySearch && (
                 <p className="text-xs text-gray-400 mt-1">
                   Showing stores that have{" "}
-                  <span className="font-semibold text-black">
-                    {relaySearch}
-                  </span>{" "}
+                  <span className="font-semibold">{relaySearch}</span>{" "}
                   available.
                 </p>
               )}
@@ -607,7 +664,7 @@ export default function Stores() {
 
               {storesLoading ? (
                 <div className="py-12 flex items-center justify-center">
-                  <span className="loading loading-spinner loading-md text-lime-400"></span>
+                  <span className="loading loading-spinner loading-md"></span>
                   <p className="ml-3 font-semibold">Finding stores...</p>
                 </div>
               ) : storesWithStatus.length === 0 ? (
@@ -633,66 +690,35 @@ export default function Stores() {
               ) : (
                 storesWithStatus.map((store) => {
                   const storeIsOpen = store.openStatus.isOpen;
-                  const todayHours = store.openStatus.todayHours;
 
                   return (
                     <div
                       key={store.id}
-                      className={`flex items-center justify-between border min-h-22 w-full rounded-full px-5 py-3 mb-5 transition-all ${
+                      className={`flex items-center justify-between border w-full rounded-full px-5 py-3 mb-5 transition-all h-25 ${
                         storeIsOpen
                           ? "border-gray-400 bg-white"
                           : "border-gray-200 bg-gray-50 opacity-90"
                       }`}
                     >
-                      <div className="min-w-40 max-w-75 flex h-fit gap-x-3 items-center">
-                        <div className="avatar">
-                          <div className="bg-neutral text-neutral-content w-10 h-10 rounded-full overflow-hidden">
-                            {store.img ? (
-                              <img
-                                src={store.img}
-                                alt={store.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <span className="flex items-center justify-center h-full">
-                                {store.name?.slice(0, 2).toUpperCase()}
-                              </span>
-                            )}
-                          </div>
-                        </div>
+                      <div className="flex-1 min-w-0 flex h-fit gap-x-3 items-center mr-4">
+                        <StoreAvatar store={store} storeIsOpen={storeIsOpen} />
 
-                        <div className="text-sm">
+                        <div className="text-sm min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <p className="font-bold">{store.name}</p>
-
-                            {storeIsOpen ? (
-                              <span className="badge badge-success rounded-full text-[10px]">
-                                Open
-                              </span>
-                            ) : (
-                              <span className="badge badge-error rounded-full text-[10px]">
-                                Closed
-                              </span>
-                            )}
+                            <p className="font-bold truncate">{store.name}</p>
                           </div>
 
-                          <p>{store.address}</p>
-
-                          <p className="text-xs text-gray-400">
-                            ⭐ {store.rating || 0} ·{" "}
-                            {store.reviewCount || store.ratingCount || 0}{" "}
-                            reviews
+                          <p className="text-gray-500 truncate">
+                            {store.address}
                           </p>
-
-                          <p className="text-xs text-gray-400">
-                            Today: {todayHours?.open || "08:00"} -{" "}
-                            {todayHours?.close || "18:00"} ·{" "}
-                            {store.timezone || "Africa/Lagos"}
-                          </p>
+                          <div className="flex items-center gap-x-1 text-xs text-gray-400 mt-0.5">
+                            Ratings:
+                            <StoreRating rating={store.rating} />
+                          </div>
                         </div>
                       </div>
 
-                      <div className="flex gap-x-2">
+                      <div className="flex gap-x-2 flex-shrink-0">
                         <button
                           type="button"
                           onClick={() => setPreviewStore(store)}
@@ -734,59 +760,66 @@ export default function Stores() {
             {previewStore ? (
               <div className="card bg-base-100 w-80 shadow-sm sticky rounded-t-2xl rounded-b-none top-10 self-start translate-y-20 translate-x-10 h-fit">
                 <figure
-                  className="relative overflow-hidden rounded-t-2xl h-60"
+                  className="relative overflow-hidden rounded-t-2xl h-60 bg-neutral"
                   ref={emblaRef}
                 >
-                  <div className="flex w-full h-full">
-                    {previewImages.map((img, index) => (
-                      <div
-                        key={`${img}-${index}`}
-                        className="flex-[0_0_100%] min-w-0 h-full"
-                      >
-                        <img
-                          src={img}
-                          className="w-full h-full object-cover"
-                          alt={`${previewStore.name} preview ${index + 1}`}
-                        />
+                  {previewImages.length > 0 ? (
+                    <>
+                      <div className="flex w-full h-full">
+                        {previewImages.map((img, index) => (
+                          <PreviewImageSlide
+                            key={`${img || "store-fallback"}-${index}`}
+                            img={img}
+                            storeName={previewStore.name}
+                            alt={`${previewStore.name} preview ${index + 1}`}
+                          />
+                        ))}
                       </div>
-                    ))}
-                  </div>
 
-                  <div className="absolute inset-0 flex items-center justify-between px-2 pointer-events-none">
-                    <div className="pointer-events-auto">
-                      <PrevButton
-                        onClick={onPrevButtonClick}
-                        disabled={prevBtnDisabled}
-                        className="touch-manipulation btn aspect-square w-10 px-0 flex justify-center items-center rounded-full cursor-pointer shadow opacity-70"
-                      />
-                    </div>
+                      <div className="absolute inset-0 flex items-center justify-between px-2 pointer-events-none">
+                        <div className="pointer-events-auto">
+                          <PrevButton
+                            onClick={onPrevButtonClick}
+                            disabled={prevBtnDisabled}
+                            className="touch-manipulation btn aspect-square w-10 px-0 flex justify-center items-center rounded-full cursor-pointer shadow opacity-70"
+                          />
+                        </div>
 
-                    <div className="pointer-events-auto">
-                      <NextButton
-                        onClick={onNextButtonClick}
-                        disabled={nextBtnDisabled}
-                        className="touch-manipulation btn aspect-square w-10 px-0 flex justify-center items-center rounded-full cursor-pointer shadow opacity-70"
-                      />
-                    </div>
-                  </div>
+                        <div className="pointer-events-auto">
+                          <NextButton
+                            onClick={onNextButtonClick}
+                            disabled={nextBtnDisabled}
+                            className="touch-manipulation btn aspect-square w-10 px-0 flex justify-center items-center rounded-full cursor-pointer shadow opacity-70"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <FallbackImageBlock
+                      text={previewStore.name}
+                      textSize="text-6xl"
+                    />
+                  )}
                 </figure>
 
-                <div className="card-body">
+                <div className="card-body px-5">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="card-title">{previewStore.name}</h2>
+                    <h2 className="card-title font-extrabold">
+                      {previewStore.name}
+                    </h2>
 
                     {previewStatus?.isOpen ? (
-                      <span className="badge badge-success rounded-full">
+                      <span className="badge badge-success badge-sm rounded-full">
                         Open
                       </span>
                     ) : (
-                      <span className="badge badge-error rounded-full">
+                      <span className="badge badge-error badge-sm rounded-full">
                         Closed
                       </span>
                     )}
                   </div>
 
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 ">
                     {previewStore.address}
                   </p>
 
@@ -795,22 +828,15 @@ export default function Stores() {
                       `Experience the finest Maple blends at our ${previewStore.name} location.`}
                   </p>
 
-                  <p className="text-xs text-gray-400">
-                    ⭐ {previewStore.rating || 0} ·{" "}
-                    {previewStore.reviewCount || previewStore.ratingCount || 0}{" "}
-                    reviews
-                  </p>
-
-                  <div className="text-xs text-gray-400 mt-2">
-                    <p>Opens: {previewTodayHours?.open || "08:00"}</p>
-                    <p>Closes: {previewTodayHours?.close || "18:00"}</p>
-                    <p>Timezone: {previewStore.timezone || "Africa/Lagos"}</p>
+                  <div className="flex items-center gap-x-1 text-sm text-gray-400">
+                    Rating:
+                    <StoreRating rating={previewStore.rating} />
                   </div>
 
                   <div className="card-actions justify-end mt-4">
                     <button
                       type="button"
-                      className="btn btn-secondary"
+                      className="btn btn-secondary h-8 px-3 rounded-3xl border-0"
                       onClick={() => setPreviewStore(null)}
                     >
                       Close Preview
@@ -824,7 +850,7 @@ export default function Stores() {
                           autoSearch: relaySearch,
                           productId: relayProductId,
                         }}
-                        className="btn h-9 border-0 rounded-3xl border border-gray-400"
+                        className="btn h-8 border-0 rounded-3xl px-3 border border-gray-400"
                       >
                         Order Here
                       </NavLink>

@@ -7,20 +7,21 @@
 
   --font-family: "Lilita One", sans-serif;
 }
+
 @plugin "daisyui/theme" {
-  name: "light";
+  name: "mapleTheme";
   default: true;
   prefersdark: false;
   color-scheme: "light";
   --color-base-100: oklch(99.2% 0.023 343.198);
   --color-base-200: oklch(97% 0.014 343.198);
   --color-base-300: oklch(94% 0.028 342.258);
-  --color-base-content:  oklch(28.7% 0.077 45.635);
-  --color-primary:oklch(23.5% 0.079 36.259);
+  --color-base-content: oklch(0% 0 0);
+  --color-primary: oklch(23.5% 0.079 36.259);
   --color-primary-content: oklch(94.8% 0.095 66.4);
   --color-secondary: oklch(90% 0.182 98.111);
   --color-secondary-content: oklch(40% 0.123 38.172);
-  --color-accent: oklch(81.5% 0.228 49.400);
+  --color-accent: oklch(81.5% 0.228 49.4);
   --color-accent-content: oklch(40% 0.123 38.172);
   --color-neutral: oklch(0% 0 0);
   --color-neutral-content: oklch(100% 0 0);
@@ -41,6 +42,7 @@
   --depth: 1;
   --noise: 0;
 }
+
 
 
 @layer utilities {
