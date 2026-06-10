@@ -722,7 +722,7 @@ export default function Stores() {
                         <button
                           type="button"
                           onClick={() => setPreviewStore(store)}
-                          className="btn h-9 border-0 rounded-3xl border border-gray-400"
+                          className="btn h-9 border-0 rounded-3xl border border-gray-800 bg-gray-100 hover:bg-gray-200" 
                         >
                           Preview Store
                         </button>
@@ -735,7 +735,7 @@ export default function Stores() {
                               autoSearch: relaySearch,
                               productId: relayProductId,
                             }}
-                            className="btn h-9 border-0 rounded-3xl border border-gray-400"
+                            className="btn h-9 border-0 rounded-3xl border border-gray-800 bg-gray-100 hover:bg-gray-200"
                           >
                             Order Here
                           </NavLink>
@@ -858,7 +858,7 @@ export default function Stores() {
                       <button
                         type="button"
                         onClick={showClosedStoreToast}
-                        className="btn h-9 border-0 rounded-3xl bg-gray-200 text-gray-500 hover:bg-gray-200 cursor-not-allowed"
+                        className="btn h-8 border-0 rounded-3xl bg-gray-200 text-gray-500 hover:bg-gray-200 cursor-not-allowed"
                       >
                         Closed
                       </button>
