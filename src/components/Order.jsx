@@ -146,17 +146,18 @@ export default function Order() {
   const handleCheckout = useCallback(() => {
     if (!cartSummary.canCheckout) return;
 
-  if (!user) {
-    savePendingStore(store);
+    if (!user) {
+      savePendingStore(store);
 
-    navigate("/signin", {
-      state: {
-        authNotice: "Please sign in or create an account before checking out.",
-      },
-    });
+      navigate("/signin", {
+        state: {
+          authNotice:
+            "Please sign in or create an account before checking out.",
+        },
+      });
 
-    return;
-  }
+      return;
+    }
 
     navigate("/checkout", {
       state: {
@@ -301,23 +302,36 @@ export default function Order() {
   return (
     <section className="min-h-screen flex flex-col">
       <div className="mx-18 mt-13">
-        <h1 className="text-7xl font-extrabold mb-13 leading-[1.2]">
+        <div
+          onClick={() => navigate("/stores")}
+          className="group flex w-fit items-center font-bold cursor-pointer"
+        >
+          <button
+            type="button"
+            className="btn btn-soft shadow-none w-8 h-8 me-2 rounded-full"
+          >
+            <i className="bx bx-chevron-left bx-sm transition-transform group-hover:-translate-x-1"></i>
+          </button>
+
+          <span className="border-b border-dashed">Back to stores</span>
+        </div>
+
+        <h1 className="text-7xl font-extrabold mb-10 mt-6 leading-[1.2]">
           {store.name}
         </h1>
-
         <div className="flex gap-x-3">
           <div className="lg:w-200">
-            <div className="w-fit mb-19 mx-auto">
+            <div className="w-fit mb-19 mx-aut">
               <ul className="steps font-bold">
-                <li className="step step-primary">Select store</li>
-                <li className="step step-primary">Select Product</li>
+                <li className="step step-success">Select store</li>
+                <li className="step step-success">Select Product</li>
                 <li className="step">Purchase</li>
                 <li className="step">Receive Product</li>
               </ul>
             </div>
 
             <div className="flex justify-between mb-7">
-              <form className="filter flex flex-nowrap lg:w-110 overflow-x-scroll no-scrollbar gap-2">
+              <form className="filter flex flex-nowrap lg:w-110 overflow-x-scroll no-scrollbar gap-2  ps-1">
                 {categories.map((tag) => {
                   const isActive = !searchTerm && selectedCategory === tag;
 
@@ -328,7 +342,7 @@ export default function Order() {
                       onClick={() => handleCategoryFilter(tag)}
                       className={`btn rounded-full h-9 transition-all ${
                         isActive
-                          ? "btn-primary shadow-md scale-105"
+                          ? "btn-neutral text-neutral-content"
                           : "bg-white/50 border-none hover:bg-white text-gray-500"
                       }`}
                     >
@@ -369,7 +383,9 @@ export default function Order() {
                     <div
                       key={item.id}
                       className={`flex flex-col max-w-95 sm:p-6 p-5 rounded-3xl overflow-hidden shadow-sm ${
-                        isOutOfStock ? "bg-gray-100 opacity-70" : "bg-blue-200"
+                        isOutOfStock
+                          ? "bg-gray-100 opacity-70"
+                          : "bg-primary text-white"
                       }`}
                     >
                       <h3 className="text-3xl font-extrabold line-clamp-1 mb-2">
@@ -378,7 +394,7 @@ export default function Order() {
 
                       <div className="flex items-center gap-2 overflow-hidden">
                         <div className="flex-1 flex flex-col gap-2">
-                          <p className="font-black text-lime-600 text-3xl">
+                          <p className="font-black text- text-3xl text-primary-content">
                             {formatMoney(
                               item.price,
                               storeCurrencyCode,
@@ -386,32 +402,23 @@ export default function Order() {
                             )}
                           </p>
 
-                          <div className="flex gap-2 flex-wrap min-h-[24px]">
-                            {item.tags?.map((tag, tagIndex) => (
-                              <span
-                                key={tagIndex}
-                                className="badge font-semibold text-[11px] px-2 py-1 rounded-full bg-white/50 border-0"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-
                           {isOutOfStock ? (
-                            <span className="badge badge-error w-fit">
-                              Out of stock
+                            <span className="w-fit text-error w-fit">
+                              <i class="bx bx-info-circle"></i> Out of stock
                             </span>
                           ) : isLowStock ? (
-                            <span className="badge badge-warning w-fit">
-                              Only {item.stock} left
+                            <span className="w-fit text-accent font-bold">
+                              <i class="bx bx-info-circle"></i> {item.stock}{" "}
+                              available
                             </span>
                           ) : (
-                            <span className="badge badge-success w-fit">
-                              {item.stock} available
+                            <span className="w-fit text-accent font-bold">
+                              <i class="bx bx-info-circle"></i> {item.stock}{" "}
+                              available
                             </span>
                           )}
 
-                          <p className="font-light text-sm line-clamp-2">
+                          <p className="text-sm line-clamp-2">
                             {item.description}
                           </p>
 
@@ -420,7 +427,7 @@ export default function Order() {
                               type="button"
                               disabled={isOutOfStock}
                               onClick={() => openModal(item)}
-                              className="font-bold border-0 badge py-4 rounded-xl bg-lime-300 hover:bg-lime-400 transition-colors hover:cursor-pointer text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="font-bold border-0 rounded-xl h-7 btn btn-secondary transition-colors hover:cursor-point text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {isOutOfStock ? "Out of stock" : "Place order"}
                             </button>
@@ -444,10 +451,13 @@ export default function Order() {
             </div>
           </div>
 
-          <div className="lg:w-100 mx-auto relative">
-            <ul className="list bg-base-100 rounded-3xl shadow-md w-85 sticky top-29 mx-auto pb-4">
-              <li className="p-4 pb-2 text-lg font-extrabold opacity-60 tracking-wide">
-                Order Summary ({cartSummary.itemCount})
+          <div className="lg:w-100 relative pt-35">
+            <ul className="list ms-auto pt-5 bg-base-100 rounded-3xl shadow-md w-90 sticky top-29 pb-4">
+              <li className="mx-5 text-lg font-extrabold tracking-wide">
+                Order Summary
+              </li>
+              <li className="mx-5 mb-2 mt-1 font-bold tracking-wide">
+                Items: {cartSummary.itemCount}
               </li>
 
               {cartSummary.blockedItems.length > 0 && (
@@ -465,27 +475,21 @@ export default function Order() {
                 cartSummary.items.map((item) => (
                   <li
                     key={item.productId || item.id}
-                    className={`list-row flex items-center px-4 py-2 ${
-                      item.blocked ? "opacity-60" : ""
+                    className={`list-row flex items-center gap-x-1 py-2 after:hidden before:hidden ${
+                      item.blocked ? "opacity-60 " : ""
                     }`}
                   >
-                    <div className="avatar avatar-placeholder">
+                    <div className="avatar avatar-placeholder text-md ">
                       <div
-                        className={`font-bold text-neutral-content w-10 rounded-full ${
-                          item.blocked ? "bg-red-200" : "bg-red-100"
-                        }`}
+                        className={`font-bold w-10 rounded-full bg-neutral text-primary-content`}
                       >
-                        <span className="text-md text-error">
-                          {item.quantity}x
-                        </span>
+                        <span>{item.quantity}x</span>
                       </div>
                     </div>
 
                     <div className="w-60 px-2">
-                      <div className="font-bold truncate">{item.name}</div>
-
-                      <div className="text-xs uppercase font-semibold opacity-60 truncate">
-                        {item.tags?.[0] || "Item"}
+                      <div className="font-bold truncate max-w-35 text-wrap">
+                        {item.name}
                       </div>
 
                       <div className="text-xs font-bold opacity-70">
@@ -516,7 +520,7 @@ export default function Order() {
                           cartActionLoading ||
                           (item.blocked && item.blockReason !== "")
                         }
-                        className="btn btn-circle h-7 w-7 btn-ghost bg-lime-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="btn btn-circle h-7 w-7 bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <i className="bx bx-minus"></i>
                       </button>
@@ -527,31 +531,39 @@ export default function Order() {
                           handleUpdateCartQuantity(item.productId || item.id, 1)
                         }
                         disabled={cartActionLoading || item.blocked}
-                        className="btn btn-circle h-7 w-7 btn-ghost bg-lime-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="btn btn-circle h-7 w-7 bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <i className="bx bx-plus"></i>
                       </button>
                     </div>
 
-                    <button
-                      type="button"
+                    <p
                       onClick={() =>
                         handleRemoveFromCart(item.productId || item.id)
                       }
                       disabled={cartActionLoading}
-                      className="btn btn-square btn-ghost text-error disabled:opacity-40"
+                      className="ms-1 me-1 text-error disabled:opacity-40 cursor-pointer"
                     >
                       <svg width="18" height="18" fill="currentColor">
                         <path d="M6 7H5v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7H6zm10.618-3L15 2H9L7.382 4H3v2h18V4z"></path>
                       </svg>
-                    </button>
+                    </p>
                   </li>
                 ))
               )}
-
-              <li className="flex mx-5 mt-6 justify-between border-t border-gray-300 pt-4">
-                <p className="text-lg">Total</p>
-                <p className="font-bold text-lg">
+              <li className="flex mx-5 mt-3 justify-between border-t border-gray-300 pt-4">
+                <p className="text-[16px]">Sub total</p>
+                <p className="text-[16px]">
+                  {formatMoney(
+                    cartSummary.subtotal,
+                    storeCurrencyCode,
+                    storeCurrencyLocale
+                  )}
+                </p>
+              </li>
+              <li className="flex mx-5 mt-2 justify-between">
+                <p className="text-[16px] font-bold">Total</p>
+                <p className="text-[16px] font-bold">
                   {formatMoney(
                     cartSummary.subtotal,
                     storeCurrencyCode,
@@ -571,9 +583,9 @@ export default function Order() {
                   type="button"
                   onClick={handleCheckout}
                   disabled={!cartSummary.canCheckout || cartActionLoading}
-                  className="btn btn-primary my-4 rounded-full w-70 mx-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn btn-neutral my-4 rounded-full w-70 mx-auto disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Order
+                  Confirm Order
                 </button>
               </div>
             </ul>
