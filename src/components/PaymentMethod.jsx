@@ -9,16 +9,16 @@ export const PaymentMethod = ({ onSelect }) => {
 
   return (
     <div className="mt-10 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 bg-white rounded-4xl p-7">
-      <p className="font-bold text-lg">Payment Method</p>
+      <p className="font-bold text-xl">Payment Method</p>
 
       <div className="flex flex-col md:flex-row gap-4">
         <button
           type="button"
           onClick={() => setSelected("card")}
-          className={`flex-1 flex items-center gap-x-4 p-4 rounded-3xl border-2 transition-all text-left ${
+          className={`flex-1 flex items-center gap-x-4 p-4 rounded-3xl border-2 transition-all text-left cursor-pointer ${
             selected === "card"
               ? "bg-green-50 border-green-600 ring-4 ring-green-100"
-              : "bg-white border-gray-100 hover:border-gray-300"
+              : "bg-white  border-gray-200 hover:border-gray-400"
           }`}
         >
           <div
@@ -48,10 +48,10 @@ export const PaymentMethod = ({ onSelect }) => {
         <button
           type="button"
           onClick={() => setSelected("transfer")}
-          className={`flex-1 flex items-center gap-x-4 p-4 rounded-3xl border-2 transition-all text-left ${
+          className={`flex-1 flex items-center gap-x-4 p-4 rounded-3xl border-2 transition-all text-left cursor-pointer ${
             selected === "transfer"
               ? "bg-green-50 border-green-600 ring-4 ring-green-100"
-              : "bg-white border-gray-100 hover:border-gray-300"
+              : "bg-white border-gray-200 hover:border-gray-400"
           }`}
         >
           <div

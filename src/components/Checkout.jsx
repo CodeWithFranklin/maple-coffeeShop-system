@@ -260,7 +260,7 @@ export default function Checkout() {
     }
     if (paymentMethod === "transfer" && total < 100) {
       toast.error(
-        "Bank transfer is only available for orders of ₦100 and above, please choose another payment method" 
+        "Bank transfer is only available for orders of ₦100 and above, please choose another payment method"
       );
       return;
     }
@@ -347,20 +347,23 @@ export default function Checkout() {
   }
 
   return (
-    <section className="min-h-screen bg-gray-50/50">
+    <section>
       <div className="w-[90%] max-w-7xl mx-auto py-8 grid grid-cols-1 lg:grid-cols-12 gap-10">
         <div className="lg:col-span-8 space-y-8">
           <div>
-            <h2 className="text-2xl font-bold flex items-center gap-x-1">
-              <button
-                type="button"
-                onClick={handleBackToStore}
-                className="btn btn-soft shadow-none w-8 h-8 rounded-full group"
-              >
-                <i className="bx bx-chevron-left bx-sm group-hover:-translate-x-1 transition-transform"></i>
-              </button>
-              Checkout
-            </h2>
+            <div className="group flex w-fit mb-10 items-center font-bold cursor-pointer">
+              <div onClick={handleBackToStore}>
+                <button
+                  type="button"
+                  className="btn btn-soft shadow-none w-8 h-8 me-2 rounded-full"
+                >
+                  <i className="bx bx-chevron-left bx-sm transition-transform group-hover:-translate-x-1"></i>
+                </button>
+
+                <span className="border-b border-dashed">Back to order</span>
+              </div>
+            </div>
+            <h3 className="text-4xl font-bold">Checkout</h3>
 
             <div className="flex flex-col md:flex-row gap-6 mt-6">
               <button
@@ -369,7 +372,7 @@ export default function Checkout() {
                 className={`flex-1 flex items-center gap-x-4 p-5 rounded-full cursor-pointer transition-all text-left ${
                   orderType === "pickup"
                     ? "bg-green-50 border border-green-600 ring-2 ring-green-100"
-                    : "bg-white border border-black shadow-sm grayscale hover:grayscale-0"
+                    : "bg-white shadow-sm grayscale hover:grayscale-0"
                 }`}
               >
                 <div
@@ -435,54 +438,98 @@ export default function Checkout() {
               <div className="space-y-6">
                 <div className="space-y-3 animate-in fade-in slide-in-from-left-4 duration-300 mb-10 bg-white rounded-4xl p-7 shadow-sm">
                   <div>
-                    <p className="font-bold text-lg">Contact Information</p>
-                    <p className="text-xs text-gray-400">
-                      We'll use this contact info for this order only.Your login
-                      email will not change.{" "}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      For better service please use your Whatsapp number{" "}
-                    </p>
+                    <p className="font-bold text-xl">Contact Information</p>
                   </div>
-
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {[
-                      { name: "fullName", label: "Full Name", type: "text" },
-                      {
-                        name: "contactEmail",
-                        label: "Contact Email",
-                        type: "email",
-                      },
-                      { name: "phone", label: "Phone", type: "tel" },
-                    ].map(({ name, label, type }) => (
-                      <div key={name}>
-                        <label className="text-xs font-semibold text-gray-500">
-                          {label}
-                        </label>
+                    {/* Full Name */}
+                    <div>
+                      <label className="text-sm font-semibold text-gray-500">
+                        Full Name
+                      </label>
 
-                        <input
-                          name={name}
-                          type={type}
-                          value={contactFormik.values[name]}
-                          onChange={contactFormik.handleChange}
-                          onBlur={contactFormik.handleBlur}
-                          className={`input input-bordered w-full rounded-2xl mt-1 ${
-                            contactFormik.touched[name] &&
-                            contactFormik.errors[name]
-                              ? "border-red-500"
-                              : ""
-                          }`}
-                        />
+                      <input
+                        name="fullName"
+                        type="text"
+                        value={contactFormik.values.fullName}
+                        onChange={contactFormik.handleChange}
+                        onBlur={contactFormik.handleBlur}
+                        className={`input input-bordered w-full rounded-2xl bg-white mt-1 ${
+                          contactFormik.touched.fullName &&
+                          contactFormik.errors.fullName
+                            ? "border-red-500"
+                            : ""
+                        }`}
+                      />
 
-                        {contactFormik.touched[name] &&
-                          contactFormik.errors[name] && (
-                            <p className="text-red-500 text-xs mt-1">
-                              {contactFormik.errors[name]}
-                            </p>
-                          )}
-                      </div>
-                    ))}
+                      {contactFormik.touched.fullName &&
+                        contactFormik.errors.fullName && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {contactFormik.errors.fullName}
+                          </p>
+                        )}
+                    </div>
+
+                    {/* Contact Email */}
+                    <div>
+                      <label className="text-sm font-semibold text-gray-500">
+                        Contact Email
+                      </label>
+
+                      <input
+                        name="contactEmail"
+                        type="email"
+                        value={contactFormik.values.contactEmail}
+                        onChange={contactFormik.handleChange}
+                        onBlur={contactFormik.handleBlur}
+                        className={`input input-bordered w-full rounded-2xl bg-white mt-1 ${
+                          contactFormik.touched.contactEmail &&
+                          contactFormik.errors.contactEmail
+                            ? "border-red-500"
+                            : ""
+                        }`}
+                      />
+
+                      {contactFormik.touched.contactEmail &&
+                        contactFormik.errors.contactEmail && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {contactFormik.errors.contactEmail}
+                          </p>
+                        )}
+                    </div>
+
+                    {/* Phone */}
+                    <div>
+                      <label className="text-sm font-semibold text-gray-500">
+                        Phone
+                      </label>
+
+                      <input
+                        name="phone"
+                        type="tel"
+                        value={contactFormik.values.phone}
+                        onChange={contactFormik.handleChange}
+                        onBlur={contactFormik.handleBlur}
+                        className={`input input-bordered w-full rounded-2xl bg-white mt-1 ${
+                          contactFormik.touched.phone &&
+                          contactFormik.errors.phone
+                            ? "border-red-500"
+                            : ""
+                        }`}
+                      />
+
+                      {contactFormik.touched.phone &&
+                        contactFormik.errors.phone && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {contactFormik.errors.phone}
+                          </p>
+                        )}
+                    </div>
                   </div>
+
+                  <p className="text-sm text-gray-600">
+                    <i className="bx bxs-info-circle bx-xs text-info"></i> For
+                    better service please use your whatsapp number{" "}
+                  </p>
                 </div>
 
                 {orderType === "pickup" ? (
@@ -509,80 +556,80 @@ export default function Checkout() {
         </div>
 
         <div className="lg:col-span-4">
-          <div className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100 sticky top-8">
-            <h3 className="font-bold text-xl mb-4">Order Summary</h3>
+          <ul className="list bg-base-100 rounded-3xl shadow-md w-90 sticky top-25 py-5 ms-auto px-5">
+            <li className=" text-lg font-extrabold tracking-wide mb-4">
+              Order Summary
+            </li>
 
-            <div className="space-y-3">
-              {cartItems.map((item) => (
-                <div
-                  key={item.productId || item.id}
-                  className="flex justify-between items-start text-sm text-gray-600"
-                >
-                  <div>
-                    <p className="font-semibold text-black">{item.name}</p>
-                    <p className="text-xs">Qty: {item.quantity}</p>
+            {/* Cart Items Loop */}
+            {cartItems.map((item) => (
+              <li
+                key={item.productId || item.id}
+                className="list-row flex items-center gap-x-1 py-2 after:hidden before:hidden -mx-4"
+              >
+                {/* Rounded Quantity Avatar */}
+                <div className="avatar avatar-placeholder text-md flex-shrink-0">
+                  <div className="font-bold w-10 rounded-full bg-neutral text-primary-content flex items-center justify-center">
+                    <span>{item.quantity}x</span>
+                  </div>
+                </div>
+
+                {/* Item Metadata Details Block */}
+                <div className="w-60 px-2 flex-1 min-w-0">
+                  <div className="font-bold truncate max-w-35 text-wrap text-black">
+                    {item.name}
                   </div>
 
-                  <span>
+                  <div className="text-xs font-bold opacity-70 mt-0.5">
                     {formatMoney(
                       Number(item.price || 0) * Number(item.quantity || 0),
                       storeCurrencyCode,
                       storeCurrencyLocale
                     )}
-                  </span>
+                  </div>
                 </div>
-              ))}
+              </li>
+            ))}
 
-              <div className="flex justify-between text-gray-600 border-t pt-3 mt-3">
-                <span>Subtotal</span>
-                <span>
-                  {formatMoney(
-                    subtotal,
-                    storeCurrencyCode,
-                    storeCurrencyLocale
-                  )}
-                </span>
-              </div>
+            {/* Financial Metrics Section Break */}
+            <li className="flex mt-3 justify-between border-t border-gray-300 pt-4 text-[16px]">
+              <p className="text-gray-600">Subtotal</p>
+              <p className="font-semibold">
+                {formatMoney(subtotal, storeCurrencyCode, storeCurrencyLocale)}
+              </p>
+            </li>
 
-              <div className="flex justify-between text-gray-600">
-                <span>Discount</span>
-                <span>
-                  -
-                  {formatMoney(
-                    discountTotal,
-                    storeCurrencyCode,
-                    storeCurrencyLocale
-                  )}
-                </span>
-              </div>
+            {/* Conditional Delivery Fee Element */}
+            {orderType === "delivery" && (
+              <li className="flex mt-2 justify-between text-[16px]">
+                <p className="text-gray-600">Delivery Fee</p>
+                <p className="font-semibold">
+                  {deliveryDetails.city
+                    ? formatMoney(
+                        deliveryFee,
+                        storeCurrencyCode,
+                        storeCurrencyLocale
+                      )
+                    : "Select city"}
+                </p>
+              </li>
+            )}
 
-              {orderType === "delivery" && (
-                <div className="flex justify-between text-gray-600">
-                  <span>Delivery Fee</span>
-                  <span>
-                    {deliveryDetails.city
-                      ? formatMoney(
-                          deliveryFee,
-                          storeCurrencyCode,
-                          storeCurrencyLocale
-                        )
-                      : "Select city"}
-                  </span>
-                </div>
-              )}
+            {/* Grand Total Row */}
+            <li className="flex mt-2 justify-between border-t border-gray-200 pt-3">
+              <p className="text-[16px] font-bold">Total</p>
+              <p className="text-[16px] font-bold text-green-700">
+                {formatMoney(total, storeCurrencyCode, storeCurrencyLocale)}
+              </p>
+            </li>
 
-              <div className="flex justify-between font-bold text-lg border-t pt-3 mt-3">
-                <span>Total</span>
-                <span className="text-green-700">
-                  {formatMoney(total, storeCurrencyCode, storeCurrencyLocale)}
-                </span>
-              </div>
-
+            {/* Action Container Control Block */}
+            <div className="flex flex-col items-center justify-center mt-4 px-5">
               <button
                 type="button"
                 onClick={handlePayNow}
                 disabled={isPlacingOrder}
-                className="btn btn-neutral w-full mt-6 rounded-full h-10 text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn btn-neutral my-2 rounded-full w-full mx-auto text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed h-10"
               >
                 {getPaymentButtonText({
                   isPlacingOrder,
@@ -591,13 +638,13 @@ export default function Checkout() {
               </button>
 
               {paymentMethod === "transfer" && (
-                <p className="text-xs text-gray-400 text-center">
+                <p className="text-xs text-gray-400 text-center mt-1 max-w-[90%] leading-tight">
                   You will be redirected to Paystack to complete the bank
                   transfer.
                 </p>
               )}
             </div>
-          </div>
+          </ul>
         </div>
       </div>
     </section>

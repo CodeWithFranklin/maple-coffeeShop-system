@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import TimePicker from "../utils/TimePicker";
-import { PaymentMethod } from "./PaymentOptions";
+import { PaymentMethod } from "./PaymentMethod";
 
 //  Shared LocationDropdown
 function LocationDropdown({
@@ -13,14 +13,14 @@ function LocationDropdown({
 }) {
   return (
     <div className={`dropdown group w-full ${disabled ? "opacity-50" : ""}`}>
-      <label className="label">
-        <span className="label-text font-bold text-gray-500">{label}</span>
+      <label className="label mb-1">
+        <span className="label-text font-bold text-neutral">{label}</span>
       </label>
 
       <div
         tabIndex={disabled ? -1 : 0}
         role="button"
-        className={`btn text-[16px] flex justify-between w-full border border-gray-200 bg-gray-50 hover:bg-gray-50 text-black rounded-2xl ${
+        className={`btn text-[16px] flex justify-between w-full border border-gray-200 bg-white hover:bg-gray-50 text-black rounded-2xl ${
           disabled ? "cursor-not-allowed" : ""
         }`}
       >
@@ -84,7 +84,7 @@ export const PickupDetails = ({ store, value, onChange, onPaymentSelect }) => {
       <div className="space-y-4 animate-in fade-in slide-in-from-left-4 duration-500 bg-white rounded-4xl p-7 relative shadow-sm">
         <div className="flex justify-between items-start">
           <div>
-            <p className="font-bold text-lg">Pick-up Information</p>
+            <p className="font-bold text-xl">Pick-up Information</p>
             <p className="text-xs text-gray-400">
               {store?.name || "Selected store"} • {store?.city || "City"},{" "}
               {store?.state || "State"}
@@ -100,7 +100,7 @@ export const PickupDetails = ({ store, value, onChange, onPaymentSelect }) => {
                   scheduledTime: null,
                 })
               }
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              className={`px-4 py-2 rounded-xl cursor-pointer text-xs font-bold transition-all ${
                 !isScheduled
                   ? "bg-white shadow-sm text-green-700"
                   : "text-gray-500"
@@ -117,7 +117,7 @@ export const PickupDetails = ({ store, value, onChange, onPaymentSelect }) => {
                   scheduledTime: value?.scheduledTime || null,
                 })
               }
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all ${
                 isScheduled
                   ? "bg-white shadow-sm text-green-700"
                   : "text-gray-500"
@@ -128,7 +128,7 @@ export const PickupDetails = ({ store, value, onChange, onPaymentSelect }) => {
           </div>
         </div>
 
-        <div className="flex items-center justify-between border-t border-dashed border-gray-100 pt-4 mt-2">
+        <div className="flex items-center justify-between border-t border-dashed border-gray-200 pt-4 mt-2">
           <div className="flex items-center gap-x-3">
             <i className="bx bx-time-five text-xl text-green-600"></i>
 
@@ -151,8 +151,8 @@ export const PickupDetails = ({ store, value, onChange, onPaymentSelect }) => {
           </div>
 
           {isScheduled && (
-            <div className="flex items-center gap-x-2 text-[10px] font-bold text-orange-500 bg-orange-50 px-3 py-1 rounded-full">
-              <i className="bx bx-info-circle"></i>
+            <div className="flex items-center gap-x-2 text-[13px] font-bold text-accent bg-orange-50 px-3 py-1 rounded-full">
+              <i className="bx bx-info-circle bx-xs"></i>
               Uses store local time
             </div>
           )}
@@ -239,15 +239,11 @@ export const DeliveryDetails = ({
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-x-2">
               <i className="bx bxs-map text-green-600 text-xl"></i>
-              <p className="font-bold text-lg">Delivery Address</p>
+              <p className="font-bold text-xl">Delivery Address</p>
             </div>
-
-            <span className="badge badge-success rounded-full font-bold">
-              Local delivery
-            </span>
           </div>
 
-          <p className="text-xs text-gray-400">
+          <p className="text-sm font-semibold text-gray-600">
             Delivery is available within {lockedState || "this store’s state"}.
             Select your city and enter your full address.
           </p>
@@ -256,8 +252,8 @@ export const DeliveryDetails = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Street Address */}
           <div className="form-control w-full md:col-span-2">
-            <label className="label">
-              <span className="label-text font-bold text-gray-500">
+            <label className="label mb-1">
+              <span className="label-text font-bold text-neutral">
                 Street Address
               </span>
             </label>
@@ -267,37 +263,35 @@ export const DeliveryDetails = ({
               value={value.address}
               onChange={(e) => updateField("address", e.target.value)}
               placeholder="e.g. 123 Maple Street, GRA Phase 2"
-              className="input input-bordered w-full rounded-2xl border-gray-200 focus:border-green-600 bg-gray-50"
+              className="input input-bordered w-full rounded-xl border-gray-200 bg-white "
             />
           </div>
 
           {/* Country — locked */}
           <div className="form-control w-full">
-            <label className="label">
-              <span className="label-text font-bold text-gray-500">
-                Country
-              </span>
+            <label className="label mb-1">
+              <span className="label-text font-bold text-neutral">Country</span>
             </label>
 
             <input
               type="text"
               value={deliveryCountry}
               disabled
-              className="input input-bordered w-full rounded-2xl border-gray-200 bg-gray-100 font-semibold cursor-not-allowed"
+              className="input input-bordered w-full rounded-2xl border-gray-200 font-semibold cursor-not-allowed"
             />
           </div>
 
           {/* State — locked */}
           <div className="form-control w-full">
-            <label className="label">
-              <span className="label-text font-bold text-gray-500">State</span>
+            <label className="label mb-1">
+              <span className="label-text font-bold text-neutral">State</span>
             </label>
 
             <input
               type="text"
               value={lockedState}
               disabled
-              className="input input-bordered w-full rounded-2xl border-gray-200 bg-gray-100 font-semibold cursor-not-allowed"
+              className="input input-bordered w-full rounded-xl border-gray-200 bg-gray-100 font-semibold cursor-not-allowed"
             />
           </div>
 
@@ -320,8 +314,8 @@ export const DeliveryDetails = ({
 
           {/* Landmark */}
           <div className="form-control w-full">
-            <label className="label">
-              <span className="label-text font-bold text-gray-500">
+            <label className="label mb-1">
+              <span className="label-text font-bold text-neutral">
                 Closest Landmark
               </span>
             </label>
@@ -331,13 +325,13 @@ export const DeliveryDetails = ({
               value={value.landmark}
               onChange={(e) => updateField("landmark", e.target.value)}
               placeholder="e.g. Opposite Next Cash & Carry"
-              className="input input-bordered w-full rounded-2xl border-gray-200 focus:border-green-600 bg-gray-50"
+              className="input input-bordered w-full rounded-xl border-gray-200 focus:border-green-600 bg-white"
             />
           </div>
 
           {/* Delivery Fee */}
           {value.city && (
-            <div className="md:col-span-2 rounded-2xl bg-gray-50 border border-gray-100 p-4 flex items-center justify-between">
+            <div className="md:col-span-2 rounded-xl bg-gray-50 border border-gray-100 p-4 flex items-center justify-between">
               <div>
                 <p className="font-bold text-sm">Estimated delivery fee</p>
                 <p className="text-xs text-gray-400">
@@ -352,7 +346,7 @@ export const DeliveryDetails = ({
           )}
 
           {/* Save as default */}
-          <label className="md:col-span-2 flex items-start gap-3 p-4 rounded-2xl bg-green-50 border border-green-100 cursor-pointer">
+          <label className="md:col-span-2 flex items-start gap-3 p-4 rounded-xl bg-green-50 border border-green-100 cursor-pointer">
             <input
               type="checkbox"
               checked={value.saveAsDefault}
