@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import TimePicker from "../utils/TimePicker";
 import { PaymentMethod } from "./PaymentMethod";
 
@@ -79,6 +79,30 @@ function LocationDropdown({
 export const PickupDetails = ({ store, value, onChange, onPaymentSelect }) => {
   const isScheduled = value?.pickupType === "scheduled";
 
+  const handleAsapSelect = useCallback(() => {
+    onChange({
+      pickupType: "asap",
+      scheduledTime: null,
+    });
+  }, [onChange]);
+
+  const handleScheduleSelect = useCallback(() => {
+    onChange({
+      pickupType: "scheduled",
+      scheduledTime: value?.scheduledTime || null,
+    });
+  }, [onChange, value?.scheduledTime]);
+
+  const handleScheduledTimeChange = useCallback(
+    (time) => {
+      onChange({
+        pickupType: "scheduled",
+        scheduledTime: time,
+      });
+    },
+    [onChange]
+  );
+
   return (
     <>
       <div className="space-y-4 animate-in fade-in slide-in-from-left-4 duration-500 bg-white rounded-4xl p-7 relative shadow-sm">
@@ -94,12 +118,7 @@ export const PickupDetails = ({ store, value, onChange, onPaymentSelect }) => {
           <div className="flex bg-gray-100 p-1 rounded-2xl">
             <button
               type="button"
-              onClick={() =>
-                onChange({
-                  pickupType: "asap",
-                  scheduledTime: null,
-                })
-              }
+              onClick={handleAsapSelect}
               className={`px-4 py-2 rounded-xl cursor-pointer text-xs font-bold transition-all ${
                 !isScheduled
                   ? "bg-white shadow-sm text-green-700"
@@ -111,12 +130,7 @@ export const PickupDetails = ({ store, value, onChange, onPaymentSelect }) => {
 
             <button
               type="button"
-              onClick={() =>
-                onChange({
-                  pickupType: "scheduled",
-                  scheduledTime: value?.scheduledTime || null,
-                })
-              }
+              onClick={handleScheduleSelect}
               className={`px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all ${
                 isScheduled
                   ? "bg-white shadow-sm text-green-700"
@@ -136,12 +150,7 @@ export const PickupDetails = ({ store, value, onChange, onPaymentSelect }) => {
               <TimePicker
                 timezone={store?.timezone || "Africa/Lagos"}
                 openingHours={store?.openingHours}
-                onChange={(time) =>
-                  onChange({
-                    pickupType: "scheduled",
-                    scheduledTime: time,
-                  })
-                }
+                onChange={handleScheduledTimeChange}
               />
             ) : (
               <p className="font-semibold text-sm text-gray-700">
@@ -250,7 +259,6 @@ export const DeliveryDetails = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Street Address */}
           <div className="form-control w-full md:col-span-2">
             <label className="label mb-1">
               <span className="label-text font-bold text-neutral">
@@ -263,11 +271,10 @@ export const DeliveryDetails = ({
               value={value.address}
               onChange={(e) => updateField("address", e.target.value)}
               placeholder="e.g. 123 Maple Street, GRA Phase 2"
-              className="input input-bordered w-full rounded-xl border-gray-200 bg-white "
+              className="input input-bordered w-full rounded-xl border-gray-200 bg-white"
             />
           </div>
 
-          {/* Country — locked */}
           <div className="form-control w-full">
             <label className="label mb-1">
               <span className="label-text font-bold text-neutral">Country</span>
@@ -281,7 +288,6 @@ export const DeliveryDetails = ({
             />
           </div>
 
-          {/* State — locked */}
           <div className="form-control w-full">
             <label className="label mb-1">
               <span className="label-text font-bold text-neutral">State</span>
@@ -295,7 +301,6 @@ export const DeliveryDetails = ({
             />
           </div>
 
-          {/* City */}
           <LocationDropdown
             label="City"
             value={value.city}
@@ -312,7 +317,6 @@ export const DeliveryDetails = ({
             }
           />
 
-          {/* Landmark */}
           <div className="form-control w-full">
             <label className="label mb-1">
               <span className="label-text font-bold text-neutral">
@@ -329,7 +333,6 @@ export const DeliveryDetails = ({
             />
           </div>
 
-          {/* Delivery Fee */}
           {value.city && (
             <div className="md:col-span-2 rounded-xl bg-gray-50 border border-gray-100 p-4 flex items-center justify-between">
               <div>
@@ -345,7 +348,6 @@ export const DeliveryDetails = ({
             </div>
           )}
 
-          {/* Save as default */}
           <label className="md:col-span-2 flex items-start gap-3 p-4 rounded-xl bg-green-50 border border-green-100 cursor-pointer">
             <input
               type="checkbox"
